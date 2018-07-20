@@ -747,7 +747,7 @@ void FRCRobotHWInterface::init(void)
 	ROS_INFO_NAMED("frcrobot_hw_interface", "FRCRobotHWInterface Ready.");
 }
 
-void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motorcontrol::can::TalonSRX> talon, 
+void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motorcontrol::can::TalonSRX> talon,
 		std::shared_ptr<hardware_interface::TalonHWState> state,
 		std::shared_ptr<std::atomic<bool>> mp_written,
 		std::shared_ptr<std::mutex> mutex)
@@ -824,7 +824,7 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 		hardware_interface::MotionProfileStatus internal_status;
 
 		// Vastly reduce the stuff being read while
-		// buffering motion profile points. This lets CAN
+		// buffering motion profile poinstate-> This lets CAN
 		// bus bandwidth be used for writing points as
 		// quickly as possible
 		if (writing_points_.load(std::memory_order_relaxed))
@@ -906,7 +906,6 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 		//safeTalonCall(talon->GetLastError(), "GetTemperature");
 
 		//closed-loop
-		const hardware_interface::TalonMode talon_mode = state->getTalonMode();
 		double closed_loop_error;
 		double integral_accumulator;
 		double error_derivative;
@@ -969,8 +968,8 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 			//mp_top_level_buffer_count = talon->GetMotionProfileTopLevelBufferCount();
 		}
 
-		//ctre::phoenix::motorcontrol::Faulstate faulstate;
-		//safeTalonCall(talon->GetFaulstate(faulstate), "GetFaultstate");
+		//ctre::phoenix::motorcontrol::Faultstate faultstate;
+		//safeTalonCall(talon->GetFaultstate(faulstate), "GetFaultstate");
 
 		// Grab limit switch and softlimit here
 		bool forward_limit_switch;
@@ -988,7 +987,7 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 		if (counter % 100 == 0)
 			safeTalonCall(talon->GetStickyFaults(sticky_faults), "GetStickyFault");
 
-		// Actually update the TalonHWState shared between 
+		// Actually update the TalonHWState shared between
 		// this thread and read()
 		{
 			// Lock the state entry to make sure writes
@@ -1031,14 +1030,12 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 				//state->setMotionProfileTopLevelBufferCount(mp_top_level_buffer_count;);
 			}
 			//state->setFaultState(faultstate->ToBitfield());
-			//state->setForwardLimitSwitch(sensor_collection.IsFwdLimitSwitchClosed());
-			//state->setReverseLimitSwitch(sensor_collection.IsRevLimitSwitchClosed());
 
-			//state->setForwardSoftlimitHit(faulstate->ForwardSoftLimit);
-			//state->setReverseSoftlimitHit(faulstate->ReverseSoftLimit);
+			//state->setForwardSoftlimitHit(faultstate->ForwardSoftLimit);
+			//state->setReverseSoftlimitHit(faultstate->ReverseSoftLimit);
 			if (counter % 100 == 0)
 				state->setStickyFaults(sticky_faults.ToBitfield());
-		}	
+		}
 		counter += 1;
 		rate.sleep();
 	}
@@ -1913,6 +1910,17 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 					}
 					else
 						talon->Set(out_mode, command);
+				}
+
+				// If any of the talons are set to MotionProfile and
+				// command == 1 to start the profile, set 
+				// profile_is_live_ to true. If this is false
+				// for all of them, set profile_is_live_ to false.
+				if ((out_mode == ctre::phoenix::motorcontrol::ControlMode::MotionProfile) &&
+					(command == 1))
+				{
+					profile_is_live = true;
+					can_talons_mp_running_[joint_id]->store(true, std::memory_order_relaxed);
 				}
 
 				// If any of the talons are set to MotionProfile and
