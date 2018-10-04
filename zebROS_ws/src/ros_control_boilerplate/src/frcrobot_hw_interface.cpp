@@ -748,15 +748,15 @@ void FRCRobotHWInterface::init(void)
 }
 
 void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motorcontrol::can::TalonSRX> talon,
-		std::shared_ptr<hardware_interface::TalonHWState> state,
-		std::shared_ptr<std::atomic<bool>> mp_written,
-		std::shared_ptr<std::mutex> mutex)
+											std::shared_ptr<hardware_interface::TalonHWState> state,
+											std::shared_ptr<std::atomic<bool>> mp_written,
+											std::shared_ptr<std::mutex> mutex)
 {
 	ros::Rate rate(75); // TODO : configure me from a file
 
 	double time_sum = 0.;
 	unsigned iteration_count = 0;
-	const unsigned slow_loop_mod = 8;
+	const unsigned slow_loop_mod = 8; // read some data only once every N times through loop
 
 	// This never changes so read it once when the thread is started
 	int can_id;
@@ -803,6 +803,8 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 		if (can_id == 31 || can_id == 32) // Don't read any status for intake motors
 			return;
 
+		// TODO : in main read() loop copy status from talon being followed
+		// into follower talon state?
 		if (talon_mode == hardware_interface::TalonMode_Follower)
 			return;
 
