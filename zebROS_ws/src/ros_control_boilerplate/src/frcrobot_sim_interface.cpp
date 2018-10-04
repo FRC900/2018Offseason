@@ -428,7 +428,7 @@ class TeleopJointsKeyboard
                     break;
                 case KEYCODE_SPACE:
                     dirty = true;
-                } 
+                }
                 if(cmd_last_.buttonAButton && !cmd_.buttonAButton) {
                     cmd_.buttonARelease = true;
                 }
@@ -521,15 +521,15 @@ void FRCRobotSimInterface::init(void)
 {
 	// Do base class init. This loads common interface info
 	// used by both the real and sim interfaces
-	ROS_WARN("Passes");	
+	ROS_WARN("Passes");
 	FRCRobotInterface::init();
-	ROS_WARN("Passes");	
+	ROS_WARN("Passes");
     ros::NodeHandle nh_;
 
 	sim_joy_thread_ = std::thread(&FRCRobotSimInterface::loop_joy, this);
     cube_state_sub_ = nh_.subscribe("/frcrobot/cube_state_sim", 1, &FRCRobotSimInterface::cube_state_callback, this);
     match_data_sub_ = nh_.subscribe("/frcrobot/match_data", 1, &FRCRobotSimInterface::match_data_callback, this);
-	
+
 	ROS_WARN("fails here?1");
 	// Loop through the list of joint names
 	// specified as params for the hardware_interface.
@@ -546,10 +546,10 @@ void FRCRobotSimInterface::init(void)
 		ROS_INFO_STREAM_NAMED("frcrobot_sim_interface",
 							  "Loading joint " << i << "=" << can_talon_srx_names_[i] <<
 							  " as CAN id " << can_talon_srx_can_ids_[i]);
-		
+
 		ROS_WARN_STREAM("fails here? 56789: " << i);
-	// Loop through the list of joint names
-		
+		// Loop through the list of joint names
+
 		custom_profile_threads_.push_back(std::thread(&FRCRobotSimInterface::custom_profile_thread, this, i));
 		ROS_WARN("post and stuff");
 	}
@@ -604,7 +604,7 @@ void FRCRobotSimInterface::init(void)
 		ROS_INFO_STREAM_NAMED("frcrobot_hw_interface",
 							  "Loading joint " << i << "=" << compressor_names_[i] <<
 							  " as Compressor with pcm " << compressor_pcm_ids_[i]);
- 
+
 	for(size_t i = 0; i < num_dummy_joints_; i++)
 		ROS_INFO_STREAM_NAMED("frcrobot_hw_interface",
 							  "Loading dummy joint " << i << "=" << dummy_joint_names_[i]);
@@ -626,16 +626,16 @@ void FRCRobotSimInterface::read(ros::Duration &/*elapsed_time*/)
             }
         }
     }
-    for (size_t i = 0; i < num_digital_inputs_; i++) 
-        {    
+    for (size_t i = 0; i < num_digital_inputs_; i++)
+        {
             //State should really be a bool - but we're stuck using
             //ROS control code which thinks everything to and from
             //hardware are doubles
             if(digital_input_names_[i] == "intake_line_break_high") {
-                digital_input_state_[i] = (intake_high) ? 1 : 0; 
+                digital_input_state_[i] = (intake_high) ? 1 : 0;
             }
             if(digital_input_names_[i] == "intake_line_break_low") {
-                digital_input_state_[i] = (intake_low) ? 1 : 0; 
+                digital_input_state_[i] = (intake_low) ? 1 : 0;
             }
             if(digital_input_names_[i] == "intake_line_break") {
                 digital_input_state_[i] = (has_cube) ? 1 : 0;
@@ -704,9 +704,9 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 		{
 			// If this is a switch from enabled to
 			// disabled, set talon command to current
-			// talon mode and then disable the talon. 
+			// talon mode and then disable the talon.
 			// This will set up the talon to return
-			// to the current mode once the robot is 
+			// to the current mode once the robot is
 			// re-enabled
 			// Need to first setMode to disabled because there's
 			// a check in setMode to see if requested_mode == current_mode
@@ -744,7 +744,7 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 		if (tc.encoderFeedbackChanged(internal_feedback_device, feedback_coefficient))
 		{
 			ROS_INFO("feedback");
- 			ts.setEncoderFeedback(internal_feedback_device);
+			ts.setEncoderFeedback(internal_feedback_device);
 			ts.setFeedbackCoefficient(feedback_coefficient);
 		}
 
@@ -859,7 +859,7 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 			ts.setVelocityMeasurementWindow(v_m_window);
 			ROS_INFO_STREAM("Updated joint " << joint_id << "=" << can_talon_srx_names_[joint_id] <<" velocity measurement period / window");
 		}
-		
+
 		double sensor_position;
 		if (tc.sensorPositionChanged(sensor_position))
 		{
@@ -981,7 +981,7 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 		else if (simulate_mode == hardware_interface::TalonMode_MotionMagic)
 		{
 			double setpoint;
-		
+
 			if (tc.commandChanged(setpoint))
 				ts.setSetpoint(setpoint);
 
@@ -1073,10 +1073,10 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 		if (double_solenoid_state_[i] != setpoint)
 		{
 			double_solenoid_state_[i] = setpoint;
-			ROS_INFO_STREAM("Double solenoid " << double_solenoid_names_[i] <<  
-					"at forward id " << double_solenoid_forward_ids_[i] <<  
+			ROS_INFO_STREAM("Double solenoid " << double_solenoid_names_[i] <<
+					"at forward id " << double_solenoid_forward_ids_[i] <<
 					"/ reverse id " << double_solenoid_reverse_ids_[i] <<
-				   	" / pcm " << double_solenoid_pcms_[i] <<
+					" / pcm " << double_solenoid_pcms_[i] <<
 					" = " << setpoint);
 		}
 	}

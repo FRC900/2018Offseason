@@ -755,7 +755,8 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 	ros::Rate rate(75); // TODO : configure me from a file
 
 	double time_sum = 0.;
-	double time_count = 0;
+	unsigned iteration_count = 0;
+	const unsigned slow_loop_mod = 8;
 
 	// This never changes so read it once when the thread is started
 	int can_id;
@@ -806,7 +807,7 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 			return;
 
 		const double radians_scale = getConversionFactor(encoder_ticks_per_rotation, encoder_feedback, hardware_interface::TalonMode_Position) * conversion_factor;
-		const double radians_per_second_scale = getConversionFactor(encoder_ticks_per_rotation, encoder_feedback, hardware_interface::TalonMode_Velocity)* conversion_factor;
+		const double radians_per_second_scale = getConversionFactor(encoder_ticks_per_rotation, encoder_feedback, hardware_interface::TalonMode_Velocity) * conversion_factor;
 
 		if (profile_is_live_.load(std::memory_order_relaxed))
 		{
@@ -898,17 +899,23 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 		const double output_current = talon->GetOutputCurrent();
 		safeTalonCall(talon->GetLastError(), "GetOutputCurrent");
 
-		const double bus_voltage = talon->GetBusVoltage();
-		safeTalonCall(talon->GetLastError(), "GetBusVoltage");
+		// Temp / Voltage status 4 == 160 mSec default
+		double temperature;
+		double bus_voltage;
+		if (((iteration_count + can_id) % slow_loop_mod) == 0)
+		{
+			bus_voltage = talon->GetBusVoltage();
+			safeTalonCall(talon->GetLastError(), "GetBusVoltage");
+
+			temperature = talon->GetTemperature(); //returns in Celsius
+			safeTalonCall(talon->GetLastError(), "GetTemperature");
+		}
 
 		const double motor_output_percent = talon->GetMotorOutputPercent();
 		safeTalonCall(talon->GetLastError(), "GetMotorOutputPercent");
 
 		const double output_voltage = talon->GetMotorOutputVoltage();
 		safeTalonCall(talon->GetLastError(), "GetMotorOutputVoltage");
-
-		const double temperature = talon->GetTemperature(); //returns in Celsius
-		safeTalonCall(talon->GetLastError(), "GetTemperature");
 
 		//closed-loop
 		double closed_loop_error;
@@ -924,35 +931,36 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 		{
 			const double closed_loop_scale = getConversionFactor(encoder_ticks_per_rotation, encoder_feedback, talon_mode)* conversion_factor;
 
-			const double closed_loop_error = talon->GetClosedLoopError(pidIdx) * closed_loop_scale;
-			safeTalonCall(talon->GetLastError(), "GetClosedLoopError");
-			state->setClosedLoopError(closed_loop_error);
-			const double integral_accumulator = talon->GetIntegralAccumulator(pidIdx) * closed_loop_scale;
-			safeTalonCall(talon->GetLastError(), "GetIntegralAccumulator");
-			state->setIntegralAccumulator(integral_accumulator);
+			if (((iteration_count + can_id) % slow_loop_mod) == 0) // PIDF0 Status 13 - 160 mSec default
+			{
+				closed_loop_error = talon->GetClosedLoopError(pidIdx) * closed_loop_scale;
+				safeTalonCall(talon->GetLastError(), "GetClosedLoopError");
 
-			const double error_derivative = talon->GetErrorDerivative(pidIdx) * closed_loop_scale;
-			safeTalonCall(talon->GetLastError(), "GetErrorDerivative");
-			state->setErrorDerivative(error_derivative);
+				integral_accumulator = talon->GetIntegralAccumulator(pidIdx) * closed_loop_scale;
+				safeTalonCall(talon->GetLastError(), "GetIntegralAccumulator");
 
-			const double closed_loop_target = talon->GetClosedLoopTarget(pidIdx) * closed_loop_scale;
-			safeTalonCall(talon->GetLastError(), "GetClosedLoopTarget");
-			state->setClosedLoopTarget(closed_loop_target);
+				error_derivative = talon->GetErrorDerivative(pidIdx) * closed_loop_scale;
+				safeTalonCall(talon->GetLastError(), "GetErrorDerivative");
 
-			// Reverse engineer the individual P,I,D,F components used
-			// to generate closed-loop control signals to the motor
-			// This is just for debugging PIDF tuning
-			const int pidf_slot = state->getSlot();
-			const double kp = state->getPidfP(pidf_slot);
-			const double ki = state->getPidfI(pidf_slot);
-			const double kd = state->getPidfD(pidf_slot);
-			const double kf = state->getPidfF(pidf_slot);
+				const double closed_loop_target = talon->GetClosedLoopTarget(pidIdx) * closed_loop_scale;
+				safeTalonCall(talon->GetLastError(), "GetClosedLoopTarget");
+				state->setClosedLoopTarget(closed_loop_target);
 
-			const double native_closed_loop_error = closed_loop_error / closed_loop_scale;
-			state->setPTerm(native_closed_loop_error * kp);
-			state->setITerm(integral_accumulator * ki);
-			state->setDTerm(error_derivative * kd);
-			state->setFTerm(closed_loop_target / closed_loop_scale * kf);
+				// Reverse engineer the individual P,I,D,F components used
+				// to generate closed-loop control signals to the motor
+				// This is just for debugging PIDF tuning
+				const int pidf_slot = state->getSlot();
+				const double kp = state->getPidfP(pidf_slot);
+				const double ki = state->getPidfI(pidf_slot);
+				const double kd = state->getPidfD(pidf_slot);
+				const double kf = state->getPidfF(pidf_slot);
+
+				const double native_closed_loop_error = closed_loop_error / closed_loop_scale;
+				state->setPTerm(native_closed_loop_error * kp);
+				state->setITerm(integral_accumulator * ki);
+				state->setDTerm(error_derivative * kd);
+				state->setFTerm(closed_loop_target / closed_loop_scale * kf);
+			}
 		}
 
 		double active_trajectory_position;
@@ -962,14 +970,17 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 		if ((talon_mode == hardware_interface::TalonMode_MotionProfile) ||
 			(talon_mode == hardware_interface::TalonMode_MotionMagic))
 		{
-			active_trajectory_position = talon->GetActiveTrajectoryPosition() * radians_scale;
-			safeTalonCall(talon->GetLastError(), "GetActiveTrajectoryPosition");
+			if (((iteration_count + can_id) % slow_loop_mod) == 0) // Targets Status 10 - 160 mSec default
+			{
+				active_trajectory_position = talon->GetActiveTrajectoryPosition() * radians_scale;
+				safeTalonCall(talon->GetLastError(), "GetActiveTrajectoryPosition");
 
-			active_trajectory_velocity = talon->GetActiveTrajectoryVelocity() * radians_per_second_scale;
-			safeTalonCall(talon->GetLastError(), "GetActiveTrajectoryVelocity");
+				active_trajectory_velocity = talon->GetActiveTrajectoryVelocity() * radians_per_second_scale;
+				safeTalonCall(talon->GetLastError(), "GetActiveTrajectoryVelocity");
 
-			active_trajectory_heading = talon->GetActiveTrajectoryHeading() * 2.*M_PI / 360.; //returns in degrees
-			safeTalonCall(talon->GetLastError(), "GetActiveTrajectoryHeading");
+				active_trajectory_heading = talon->GetActiveTrajectoryHeading() * 2.*M_PI / 360.; //returns in degrees
+				safeTalonCall(talon->GetLastError(), "GetActiveTrajectoryHeading");
+			}
 			mp_top_level_buffer_count = talon->GetMotionProfileTopLevelBufferCount();
 		}
 
@@ -1001,28 +1012,37 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 			state->setPosition(position);
 			state->setSpeed(speed);
 			state->setOutputCurrent(output_current);
-			state->setBusVoltage(bus_voltage);
+			if (((iteration_count + can_id) % slow_loop_mod) == 0)
+			{
+				state->setBusVoltage(bus_voltage);
+				state->setTemperature(temperature);
+			}
 			state->setMotorOutputPercent(motor_output_percent);
 			state->setOutputVoltage(output_voltage);
-			state->setTemperature(temperature);
 			if ((talon_mode == hardware_interface::TalonMode_Position) ||
 				(talon_mode == hardware_interface::TalonMode_Velocity) ||
 				(talon_mode == hardware_interface::TalonMode_Current ) ||
 				(talon_mode == hardware_interface::TalonMode_MotionProfile) ||
 				(talon_mode == hardware_interface::TalonMode_MotionMagic))
 			{
-				state->setClosedLoopError(closed_loop_error);
-				state->setIntegralAccumulator(integral_accumulator);
-				state->setErrorDerivative(error_derivative);
+				if (((iteration_count + can_id) % slow_loop_mod) == 0) // PIDF0 Status 13 - 160 mSec default
+				{
+					state->setClosedLoopError(closed_loop_error);
+					state->setIntegralAccumulator(integral_accumulator);
+					state->setErrorDerivative(error_derivative);
+				}
 				state->setClosedLoopTarget(closed_loop_target);
 			}
 
 			if ((talon_mode == hardware_interface::TalonMode_MotionProfile) ||
 				(talon_mode == hardware_interface::TalonMode_MotionMagic))
 			{
-				state->setActiveTrajectoryPosition(active_trajectory_position);
-				state->setActiveTrajectoryVelocity(active_trajectory_velocity);
-				state->setActiveTrajectoryHeading(active_trajectory_heading);
+				if (((iteration_count + can_id) % slow_loop_mod) == 0)
+				{
+					state->setActiveTrajectoryPosition(active_trajectory_position);
+					state->setActiveTrajectoryVelocity(active_trajectory_velocity);
+					state->setActiveTrajectoryHeading(active_trajectory_heading);
+				}
 				state->setMotionProfileTopLevelBufferCount(mp_top_level_buffer_count);
 			}
 			state->setFaults(faults.ToBitfield());
@@ -1036,8 +1056,8 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 		time_sum +=
 			((double)end_time.tv_sec -  (double)start_time.tv_sec) +
 			((double)end_time.tv_nsec - (double)start_time.tv_nsec) /1000000000.;
-		time_count += 1;
-		ROS_INFO_STREAM_THROTTLE(2, "Read thread " << can_id << " = " << time_sum / time_count);
+		iteration_count += 1;
+		ROS_INFO_STREAM_THROTTLE(2, "Read thread " << can_id << " = " << time_sum / iteration_count);
 		rate.sleep();
 	}
 }

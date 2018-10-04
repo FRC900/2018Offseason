@@ -717,7 +717,7 @@ void FRCRobotInterface::custom_profile_set_talon(hardware_interface::TalonMode m
 		// Maybe clear out demand1Type, demand1Value, just to be safe?
 	}
 	else
-	{	
+	{
 		// TODO - not needed after integrating with write(), handled by setMode() below
 		customProfileSetMode(joint_id, mode, setpoint, hardware_interface::DemandType::DemandType_ArbitraryFeedForward, fTerm);
 
@@ -730,10 +730,10 @@ void FRCRobotInterface::custom_profile_set_talon(hardware_interface::TalonMode m
 
 		talon_state_[joint_id].setDemand1Type(demand1_type_internal);
 		talon_state_[joint_id].setDemand1Value(fTerm);
-	}	
+	}
 
 	//ROS_INFO_STREAM("setpoint: " << setpoint << " fterm: " << fTerm << " id: " << joint_id << " offset " << pos_offset << " slot: " << pidSlot << " pos mode? " << posMode);
-	
+
 	// Make sure talon_command is in sync with data set above
 	talon_command_[joint_id].setMode(mode);
 	talon_command_[joint_id].newMode(mode);
@@ -747,10 +747,8 @@ void FRCRobotInterface::custom_profile_set_talon(hardware_interface::TalonMode m
 	// verify this is needed ... it should be handled by
 	// the write() code which sets mode and setpoint
 	talon_state_[joint_id].setNeutralOutput(false); // maybe make this a part of setSetpoint?
-	
-
 	// The check for .3 seconds after starting is to make
-	// sure PIDf values stick? Verify this is needed 
+	// sure PIDf values stick? Verify this is needed
 	// after unthreading and moving to write()
 	if ((ros::Time::now().toSec() - start_run < .3) || (slot_last != pidSlot))
     {
@@ -766,7 +764,7 @@ void FRCRobotInterface::custom_profile_set_talon(hardware_interface::TalonMode m
 
 		// All of this should just be calls to setP/I/D/f/etc
 		talon_command_[joint_id].pidfChanged(p, i, d, f, iz, allowable_closed_loop_error, max_integral_accumulator, closed_loop_peak_output, closed_loop_period, pidSlot);
-		
+
 		customProfileSetPIDF(joint_id, pidSlot, p, i, d, f, iz, allowable_closed_loop_error, max_integral_accumulator, closed_loop_peak_output, closed_loop_period);
 
 		// Set talon_state status to match data written to hardware above
@@ -796,12 +794,12 @@ void FRCRobotInterface::custom_profile_set_talon(hardware_interface::TalonMode m
 
 // TODO : convert the following into a method which can be called
 // from write() instead of being a thread.  Make it not a loop, just
-// common code shared between the sim and hw write() loop. Each time 
+// common code shared between the sim and hw write() loop. Each time
 // through write() this will be called once, effectively looping it
 // without needing an explicit while (ros::ok()) loop.
 // Local vars will have to be made into a vector, 1 entry per talon,
 // and stored as a member var so their state remains between
-// calls. 
+// calls.
 // Yeah, given they're already vectors of vectors it'll get
 // a bit strange.
 // In init() resize each of these vectors to num_talons_.
@@ -812,10 +810,10 @@ void FRCRobotInterface::custom_profile_set_talon(hardware_interface::TalonMode m
 // talon_command_.  The later code in write() will read those
 // values and update the actual talon hardware.  This will
 // simplify things a good bit - no need for all of the nonsense
-// in talon_profile_set_talon which also does writes to the 
+// in talon_profile_set_talon which also does writes to the
 // talon HW and has to fake out a bunch of other code to make
-// it work. Instead, have that code just set talon_command 
-// and let later code in the write call actually write to 
+// it work. Instead, have that code just set talon_command
+// and let later code in the write call actually write to
 // HW.
 // Hopefully the threaded read will allow us to run the read/
 // update/write loop at 50+ hz.  If not, add code to skip every
@@ -825,7 +823,7 @@ void FRCRobotInterface::custom_profile_set_talon(hardware_interface::TalonMode m
 // get?
 void FRCRobotInterface::custom_profile_thread(int joint_id)
 {
-	//I wonder how inefficient it is to have all of these threads 
+	//I wonder how inefficient it is to have all of these threads
 	//running at the specified hz just copying to the status
 
 	double time_start = ros::Time::now().toSec();
@@ -859,15 +857,15 @@ void FRCRobotInterface::custom_profile_thread(int joint_id)
 		bool run = talon_command_[joint_id].getCustomProfileRun();
 
 		if(status.running && !run)
-		{		
+		{
 			std::vector<hardware_interface::CustomProfilePoint> empty_points;
-			talon_command_[joint_id].overwriteCustomProfilePoints(empty_points, status.slotRunning);	
+			talon_command_[joint_id].overwriteCustomProfilePoints(empty_points, status.slotRunning);
 			//Right now we wipe everything if the profile is stopped
 			//This could be changed to a pause type feature in which the first point has zeroPos set and the other
 			//positions get shifted
 			points_run = 0;
 		}
-		if((run && !status.running) || !run) 
+		if((run && !status.running) || !run)
 		{
 			time_start = ros::Time::now().toSec();
 		}
@@ -877,13 +875,13 @@ void FRCRobotInterface::custom_profile_thread(int joint_id)
 		{
 			ROS_WARN("transitioned between two profile slots without any break between. Intended?");
 			std::vector<hardware_interface::CustomProfilePoint> empty_points;
-			talon_command_[joint_id].overwriteCustomProfilePoints(empty_points, status.slotRunning);	
+			talon_command_[joint_id].overwriteCustomProfilePoints(empty_points, status.slotRunning);
 			//Right now we wipe everything if the slots are flipped
 			//Should try to be analagous to having a break between
 			points_run = 0;
 			time_start = ros::Time::now().toSec();
 		}
-		status.slotRunning = slot;	
+		status.slotRunning = slot;
 		static int fail_flag = 0;
 		if(run)
 		{
@@ -906,7 +904,7 @@ void FRCRobotInterface::custom_profile_thread(int joint_id)
 			double time_since_start = ros::Time::now().toSec() - time_start;
 			for(; start < (int)saved_points[slot].size(); start++)
 			{
-				//Find the point just greater than time since start	
+				//Find the point just greater than time since start
 				if(saved_times[slot][start] > time_since_start)
 				{
 					status.outOfPoints = false;
@@ -920,7 +918,7 @@ void FRCRobotInterface::custom_profile_thread(int joint_id)
 			}
 			else
 			{
-				points_run = end - 1;	
+				points_run = end - 1;
 				if(points_run < 0) points_run = 0;
 			}
 			if(status.outOfPoints)
@@ -929,7 +927,7 @@ void FRCRobotInterface::custom_profile_thread(int joint_id)
 
 				//If all points have been exhausted, just use the last point
 				custom_profile_set_talon(saved_points[slot].back().mode, saved_points[slot].back().setpoint, saved_points[slot].back().fTerm, joint_id, saved_points[slot].back().pidSlot, saved_points[slot].back().zeroPos, time_start, slot_last);
-				if (next_slot.size() > 0) 
+				if (next_slot.size() > 0)
 				{
 					talon_command_[joint_id].setCustomProfileSlot(next_slot[0]);
 					next_slot.erase(next_slot.begin());
@@ -954,11 +952,11 @@ void FRCRobotInterface::custom_profile_thread(int joint_id)
 				else
 				{
 					//linear interpolation
-					double setpoint = saved_points[slot][end - 1].setpoint + (saved_points[slot][end].setpoint - saved_points[slot][end - 1].setpoint) / 
+					double setpoint = saved_points[slot][end - 1].setpoint + (saved_points[slot][end].setpoint - saved_points[slot][end - 1].setpoint) /
 						(saved_times[slot][end] - saved_times[slot][end-1]) * (time_since_start - saved_times[slot][end-1]);
 
 
-					double fTerm = saved_points[slot][end - 1].fTerm + (saved_points[slot][end].fTerm - saved_points[slot][end - 1].fTerm) / 
+					double fTerm = saved_points[slot][end - 1].fTerm + (saved_points[slot][end].fTerm - saved_points[slot][end - 1].fTerm) /
 						(saved_times[slot][end] - saved_times[slot][end-1]) * (time_since_start - saved_times[slot][end-1]);
 
 					custom_profile_set_talon(saved_points[slot][end].mode, setpoint, fTerm, joint_id, saved_points[slot][end].pidSlot, saved_points[slot][end-1].zeroPos, time_start, slot_last);
