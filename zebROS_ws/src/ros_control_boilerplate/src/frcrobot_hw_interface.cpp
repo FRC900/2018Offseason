@@ -37,7 +37,7 @@
            For a more detailed simulation example, see sim_hw_interface.cpp
 
 	The hardware interface code reads and writes directly from/to hardware
-	connected to the RoboRIO. This include DIO, Analog In, pneumatics, 
+	connected to the RoboRIO. This include DIO, Analog In, pneumatics,
 	and CAN Talons, among other things.
 
 	The two main methods are read() and write().
@@ -1925,17 +1925,7 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 #endif
 						talon->Set(out_mode, command);
 					}
-					// If any of the talons are set to MotionProfile and
-					// command == 1 to start the profile, set
-					// profile_is_live_ to true. If this is false
-					// for all of them, set profile_is_live_ to false.
-					if ((in_mode == hardware_interface::TalonMode_MotionProfile) &&
-						(command == 1))
-					{
-						profile_is_live = true;
-						can_talons_mp_running_[joint_id]->store(true, std::memory_order_relaxed);
-						ROS_INFO_STREAM("Set profile_is_live / can_talons_mp_running for " << joint_id << "=" << can_talon_srx_names_[joint_id]);
-					}
+					can_talons_mp_running_[joint_id]->store((in_mode == hardware_interface::TalonMode_MotionProfile) && (command == 1), std::memory_order_relaxed);
 				}
 
 				// If any of the talons are set to MotionProfile and
@@ -1961,6 +1951,15 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 				}
 
 				//ROS_WARN_STREAM("set at: " << ts.getCANID() << " new mode: " << b1 << " command_changed: " << b2 << " cmd: " << command);
+			}
+			// If any of the talons are set to MotionProfile and
+			// command == 1 to start the profile, set
+			// profile_is_live_ to true. If this is false
+			// for all of them, set profile_is_live_ to false.
+			if ((in_mode == hardware_interface::TalonMode_MotionProfile) &&
+				(command == 1))
+			{
+				profile_is_live = true;
 			}
 		}
 		else
