@@ -1925,6 +1925,17 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 #endif
 						talon->Set(out_mode, command);
 					}
+					// If any of the talons are set to MotionProfile and
+					// command == 1 to start the profile, set
+					// profile_is_live_ to true. If this is false
+					// for all of them, set profile_is_live_ to false.
+					if ((in_mode == hardware_interface::TalonMode_MotionProfile) &&
+						(command == 1))
+					{
+						profile_is_live = true;
+						can_talons_mp_running_[joint_id]->store(true, std::memory_order_relaxed);
+						ROS_INFO_STREAM("Set profile_is_live / can_talons_mp_running for " << joint_id << "=" << can_talon_srx_names_[joint_id]);
+					}
 				}
 
 				// If any of the talons are set to MotionProfile and
