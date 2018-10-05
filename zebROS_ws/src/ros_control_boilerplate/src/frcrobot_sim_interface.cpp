@@ -781,7 +781,7 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 			if (slot_changed)
 			{
 				ts.setSlot(slot);
-				ROS_INFO_STREAM("Updated joint " << joint_id << "=" << can_talon_srx_names_[joint_id] <<" PIDF slot to " << slot);
+				ROS_INFO_STREAM("Updated joint " << joint_id << "=" << can_talon_srx_names_[joint_id] << " PIDF slot to " << slot);
 			}
 		}
 		// Invert / sensor phase matters for all modes
