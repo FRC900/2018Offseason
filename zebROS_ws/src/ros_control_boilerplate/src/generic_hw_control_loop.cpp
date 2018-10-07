@@ -67,7 +67,7 @@ GenericHWControlLoop::GenericHWControlLoop(
 void GenericHWControlLoop::run(void)
 {
 	ros::Rate rate(loop_hz_);
-	while(ros::ok()) 
+	while(ros::ok())
 	{
 		update();
 		rate.sleep();
@@ -79,8 +79,10 @@ void GenericHWControlLoop::update(void)
 	// Get change in time
 	clock_gettime(CLOCK_MONOTONIC, &current_time_);
 	elapsed_time_ =
-		ros::Duration((double)current_time_.tv_sec - (double)last_time_.tv_sec + ((double)current_time_.tv_nsec - (double)last_time_.tv_nsec) / BILLION);
+		ros::Duration((double)current_time_.tv_sec - (double)last_time_.tv_sec +
+				      ((double)current_time_.tv_nsec - (double)last_time_.tv_nsec) / BILLION);
 	last_time_ = current_time_;
+
 	// ROS_DEBUG_STREAM_THROTTLE_NAMED(1, "generic_hw_main","Sampled update loop with elapsed
 	// time " << elapsed_time_.toSec());
 
@@ -88,8 +90,8 @@ void GenericHWControlLoop::update(void)
 	const double cycle_time_error = (elapsed_time_ - desired_update_period_).toSec();
 	if (cycle_time_error > cycle_time_error_threshold_)
 		ROS_WARN_STREAM_NAMED(name_, "Cycle time exceeded error threshold by: "
-							  << std::setprecision(3)
-							  << cycle_time_error << ", cycle time: " << elapsed_time_
+							  << std::setprecision(3) << cycle_time_error
+							  << ", cycle time: " << std::setprecision(3) << elapsed_time_
 							  << ", threshold: " << cycle_time_error_threshold_);
 
 	// Input

@@ -811,6 +811,10 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 		const double radians_scale = getConversionFactor(encoder_ticks_per_rotation, encoder_feedback, hardware_interface::TalonMode_Position) * conversion_factor;
 		const double radians_per_second_scale = getConversionFactor(encoder_ticks_per_rotation, encoder_feedback, hardware_interface::TalonMode_Velocity) * conversion_factor;
 
+		bool update_mp_status = false;
+		hardware_interface::MotionProfileStatus internal_status;
+
+#ifdef USE_TALON_MOTION_PROFILE
 		if (profile_is_live_.load(std::memory_order_relaxed))
 		{
 			// TODO - this should be if (!drivebase) 
@@ -826,9 +830,6 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 			rate.sleep();
 			continue;
 		}
-
-		bool update_mp_status = false;
-		hardware_interface::MotionProfileStatus internal_status;
 
 		// Vastly reduce the stuff being read while
 		// buffering motion profile poinstate-> This lets CAN
@@ -891,6 +892,7 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 			internal_status.timeDurMs = talon_status.timeDurMs;
 			update_mp_status = true;
 		}
+#endif
 
 		const double position = talon->GetSelectedSensorPosition(pidIdx) * radians_scale;
 		safeTalonCall(talon->GetLastError(), "GetSelectedSensorPosition");
@@ -984,6 +986,22 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 				safeTalonCall(talon->GetLastError(), "GetActiveTrajectoryHeading");
 			}
 			mp_top_level_buffer_count = talon->GetMotionProfileTopLevelBufferCount();
+
+			ctre::phoenix::motion::MotionProfileStatus talon_status;
+			safeTalonCall(talon->GetMotionProfileStatus(talon_status), "GetMotionProfileStatus");
+
+			internal_status.topBufferRem = talon_status.topBufferRem;
+			internal_status.topBufferCnt = talon_status.topBufferCnt;
+			internal_status.btmBufferCnt = talon_status.btmBufferCnt;
+			internal_status.hasUnderrun = talon_status.hasUnderrun;
+			internal_status.isUnderrun = talon_status.isUnderrun;
+			internal_status.activePointValid = talon_status.activePointValid;
+			internal_status.isLast = talon_status.isLast;
+			internal_status.profileSlotSelect0 = talon_status.profileSlotSelect0;
+			internal_status.profileSlotSelect1 = talon_status.profileSlotSelect1;
+			internal_status.outputEnable = static_cast<hardware_interface::SetValueMotionProfile>(talon_status.outputEnable);
+			internal_status.timeDurMs = talon_status.timeDurMs;
+			update_mp_status = true;
 		}
 
 		ctre::phoenix::motorcontrol::Faults faults;
@@ -1066,7 +1084,7 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 
 void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 {
-#if 0
+#if 1
 	for (std::size_t joint_id = 0; joint_id < num_can_talon_srxs_; ++joint_id)
 	{
 		std::lock_guard<std::mutex> l(*talon_read_state_mutexes_[joint_id]);
@@ -1214,8 +1232,10 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 		compressor_state_[i] = compressors_[i]->GetCompressorCurrent();
 	}*/
 	// TODO : move me to a separate thread
-	if (!profile_is_live_.load(std::memory_order_relaxed) && 
+#ifdef USE_TALON_MOTION_PROFILE
+	if (!profile_is_live_.load(std::memory_order_relaxed) &&
 	    !writing_points_.load(std::memory_order_relaxed))
+#endif
 	{
 		//read info from the PDP hardware
 		pdp_state_.setVoltage(pdp_joint_.GetVoltage());
@@ -1776,10 +1796,12 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 
 		if (motion_profile_mode)
 		{
+#ifdef USE_TALON_MOTION_PROFILE
 			// Lock this so that the motion profile update
 			// thread doesn't update in the middle of writing
 			// motion profile params
 			std::lock_guard<std::mutex> l(*motion_profile_mutexes_[joint_id]);
+#endif
 
 			if (motion_profile_mode)
 			{
@@ -2003,7 +2025,9 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 	}
 	last_robot_enabled = robot_enabled;
 
+#ifdef USE_TALON_MOTION_PROFILE
 	profile_is_live_.store(profile_is_live, std::memory_order_relaxed);
+#endif
 
 	for (size_t i = 0; i < num_nidec_brushlesses_; i++)
 	{
