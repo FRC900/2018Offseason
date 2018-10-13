@@ -398,6 +398,7 @@ void FRCRobotHWInterface::hal_keepalive_thread(void)
 				game_specific_message_seen = false;
 			}
 		}
+
 		hardware_interface::RobotControllerState rcs;
 		int32_t status;
 		rcs.SetFPGAVersion(HAL_GetFPGAVersion(&status));
