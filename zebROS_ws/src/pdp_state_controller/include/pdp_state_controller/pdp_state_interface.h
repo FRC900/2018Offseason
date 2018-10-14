@@ -19,14 +19,14 @@ class PDPHWState
 		{}
 
 		//access and set
-		double getVoltage(void) const 		{return voltage_;}
-		double getTemperature(void) const 	{return temperature_;}
-		double getTotalCurrent(void) const 	{return total_current_;}
-		double getTotalPower(void) const 	{return total_power_;}
-		double getTotalEnergy(void) const 	{return total_energy_;}
+		double getVoltage(void) const		{return voltage_;}
+		double getTemperature(void) const	{return temperature_;}
+		double getTotalCurrent(void) const	{return total_current_;}
+		double getTotalPower(void) const	{return total_power_;}
+		double getTotalEnergy(void) const	{return total_energy_;}
 		double getCurrent(int channel) const {
 			if(channel >= 0 && channel <= 15)
-				return current_[channel]; 
+				return current_[channel];
 			else
 			{
 				ROS_WARN_STREAM("Invalid channel. Cannot read current.");
@@ -34,11 +34,11 @@ class PDPHWState
 			}
 		}
 
-		void setVoltage(double voltage) 			{voltage_ = voltage;}
+		void setVoltage(double voltage)				{voltage_ = voltage;}
 		void setTemperature(double temperature)		{temperature_ = temperature;}
 		void setTotalCurrent(double total_current)	{total_current_ = total_current;}
 		void setTotalPower(double total_power)		{total_power_ = total_power;}
-		void setTotalEnergy(double total_energy) 	{total_energy_ = total_energy;}
+		void setTotalEnergy(double total_energy)	{total_energy_ = total_energy;}
 		void setCurrent(double current, int channel) {
 			if(channel >= 0 && channel <= 15)
 				current_[channel] = current;
@@ -53,7 +53,6 @@ class PDPHWState
 		double total_power_;
 		double total_energy_;
 		double current_[16];
-
 };
 
 /* PDPHWState pdp_state_;
@@ -67,7 +66,7 @@ class PDPStateHandle
 	public:
 		PDPStateHandle(void) : state_(0) {}
 
-		PDPStateHandle(const std::string &name, const PDPHWState *state) : 
+		PDPStateHandle(const std::string &name, const PDPHWState *state) :
 			name_(name),
 			state_(state)
 		{
@@ -83,7 +82,7 @@ class PDPStateHandle
 		}
 
 	private:
-		std::string 	name_;
+		std::string	name_;
 		const PDPHWState *state_;
 };
 

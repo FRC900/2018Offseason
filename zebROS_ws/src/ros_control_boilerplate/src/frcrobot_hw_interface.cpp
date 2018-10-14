@@ -46,7 +46,7 @@
 	a buffered copy of it. This buffered copy of the hardware state
 	can be accessed by various controllers to figure out what to do next.
 
-	write() does teh opposite. It takes commands that have been buffered
+	write() does the opposite. It takes commands that have been buffered
 	by various controllers and sends them to the hardware.  The design goal
 	here is to minimize redundant writes to the HW.  Previous values written
 	are cached, and subsequent writes of the same value are skipped.
@@ -111,6 +111,7 @@ FRCRobotHWInterface::~FRCRobotHWInterface()
 		custom_profile_threads_[i].join();
 		talon_read_threads_[i].join();
 	}
+	pdp_thread_.join();
 }
 
 // Loop running a basic iterative robot. Used to show robot code ready,
@@ -741,6 +742,7 @@ void FRCRobotHWInterface::init(void)
 
 	pdp_joint_.ClearStickyFaults();
 	pdp_joint_.ResetTotalEnergy();
+	pdp_thread_ = std::thread(&FRCRobotHWInterface::pdp_read_thread, this);
 
 	for (size_t i = 0; i < num_can_talon_srxs_; i++)
 		motion_profile_mutexes_.push_back(std::make_shared<std::mutex>());
@@ -1165,9 +1167,36 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 	}
 }
 
+void FRCRobotHWInterface::pdp_read_thread(void)
+{
+	ros::Rate r(40); // TODO : Tune me?
+	hardware_interface::PDPHWState pdp_state;
+	while (ros::ok())
+	{
+#ifdef USE_TALON_MOTION_PROFILE
+		if (!profile_is_live_.load(std::memory_order_relaxed) &&
+				!writing_points_.load(std::memory_order_relaxed))
+#endif
+		{
+			//read info from the PDP hardware
+			pdp_state.setVoltage(pdp_joint_.GetVoltage());
+			pdp_state.setTemperature(pdp_joint_.GetTemperature());
+			pdp_state.setTotalCurrent(pdp_joint_.GetTotalCurrent());
+			pdp_state.setTotalPower(pdp_joint_.GetTotalPower());
+			pdp_state.setTotalEnergy(pdp_joint_.GetTotalEnergy());
+			for (int channel = 0; channel <= 15; channel++)
+			{
+				pdp_state.setCurrent(pdp_joint_.GetCurrent(channel), channel);
+			}
+			std::lock_guard<std::mutex> l(pdp_read_thread_mutex_);
+			pdp_read_thread_state_ = pdp_state;
+		}
+		r.sleep();
+	}
+}
+
 void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 {
-#if 1
 	for (std::size_t joint_id = 0; joint_id < num_can_talon_srxs_; ++joint_id)
 	{
 		std::lock_guard<std::mutex> l(*talon_read_state_mutexes_[joint_id]);
@@ -1208,7 +1237,6 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 		ts.setReverseSoftlimitHit(trts->getReverseSoftlimitHit());
 		ts.setStickyFaults(trts->getStickyFaults());
 	}
-#endif
 
 	for (size_t i = 0; i < num_nidec_brushlesses_; i++)
 	{
@@ -1310,26 +1338,14 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 		navX_state_[i] = offset_navX_[i];
 	}
 
+	// TODO : thread me also?
 	/*for (size_t i = 0; i < num_compressors_; i++)
 	{
 		compressor_state_[i] = compressors_[i]->GetCompressorCurrent();
 	}*/
-	// TODO : move me to a separate thread
-#ifdef USE_TALON_MOTION_PROFILE
-	if (!profile_is_live_.load(std::memory_order_relaxed) &&
-	    !writing_points_.load(std::memory_order_relaxed))
-#endif
 	{
-		//read info from the PDP hardware
-		pdp_state_.setVoltage(pdp_joint_.GetVoltage());
-		pdp_state_.setTemperature(pdp_joint_.GetTemperature());
-		pdp_state_.setTotalCurrent(pdp_joint_.GetTotalCurrent());
-		pdp_state_.setTotalPower(pdp_joint_.GetTotalPower());
-		pdp_state_.setTotalEnergy(pdp_joint_.GetTotalEnergy());
-		for (int channel = 0; channel <= 15; channel++)
-		{
-			pdp_state_.setCurrent(pdp_joint_.GetCurrent(channel), channel);
-		}
+		std::lock_guard<std::mutex> l(pdp_read_thread_mutex_);
+		pdp_state_ = pdp_read_thread_state_;
 	}
 
 	{

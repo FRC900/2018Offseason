@@ -66,7 +66,7 @@ namespace frcrobot_control
 {
 // Very simple code to communicate with the HAL. This recieves
 // packets from the driver station and lets the field management
-// know our robot is alive.  
+// know our robot is alive.
 class ROSIterativeRobot : public frc::IterativeRobotBase
 {
 	public:
@@ -263,6 +263,10 @@ class FRCRobotHWInterface : public ros_control_boilerplate::FRCRobotInterface
 		std::thread motion_profile_thread_;
 		std::vector<std::shared_ptr<std::mutex>> motion_profile_mutexes_;
 
+		std::mutex pdp_read_thread_mutex_;
+		hardware_interface::PDPHWState pdp_read_thread_state_;
+		void pdp_read_thread(void);
+		std::thread pdp_thread_;
 		PowerDistributionPanel pdp_joint_;
 		hardware_interface::RobotControllerState shared_robot_controller_state_;
 		std::mutex robot_controller_state_mutex_;

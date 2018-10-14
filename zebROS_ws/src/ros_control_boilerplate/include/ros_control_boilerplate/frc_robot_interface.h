@@ -198,26 +198,26 @@ class FRCRobotInterface : public hardware_interface::RobotHW
 		std::vector<int>         solenoid_ids_;
 		std::vector<int>         solenoid_pcms_;
 		std::size_t              num_solenoids_;
-		
+
 		std::vector<std::string> double_solenoid_names_;
 		std::vector<int>         double_solenoid_forward_ids_;
 		std::vector<int>         double_solenoid_reverse_ids_;
 		std::vector<int>         double_solenoid_pcms_;
 		std::size_t              num_double_solenoids_;
-		
+
 		std::vector<std::string> compressor_names_;
 		std::vector<int>         compressor_pcm_ids_;
 		std::size_t              num_compressors_;
-		
+
 		std::vector<std::string> rumble_names_;
 		std::vector<int>         rumble_ports_;
 		std::size_t              num_rumble_;
 
 		std::vector<std::string> navX_names_;
 		std::vector<std::string> navX_frame_ids_;
-		std::vector<int>	 	 navX_ids_;
-		std::size_t		 		 num_navX_;
-		
+		std::vector<int>		 navX_ids_;
+		std::size_t				 num_navX_;
+
 		std::vector<std::string> analog_input_names_;
 		std::vector<int>         analog_input_analog_channels_;
 		std::vector<double>      analog_input_a_;
@@ -226,7 +226,7 @@ class FRCRobotInterface : public hardware_interface::RobotHW
 
 		std::vector<std::string> dummy_joint_names_;
 		std::size_t              num_dummy_joints_;
-		
+
 		urdf::Model *urdf_model_;
 
 		// Array holding master cached state of hardware
