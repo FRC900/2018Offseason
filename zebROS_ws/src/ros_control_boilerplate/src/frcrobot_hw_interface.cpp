@@ -2265,34 +2265,34 @@ bool FRCRobotHWInterface::convertControlMode(
 {
 	switch (input_mode)
 	{
-	case hardware_interface::TalonMode_PercentOutput:
-		output_mode = ctre::phoenix::motorcontrol::ControlMode::PercentOutput;
-		break;
-	case hardware_interface::TalonMode_Position:      // CloseLoop
-		output_mode = ctre::phoenix::motorcontrol::ControlMode::Position;
-		break;
-	case hardware_interface::TalonMode_Velocity:      // CloseLoop
-		output_mode = ctre::phoenix::motorcontrol::ControlMode::Velocity;
-		break;
-	case hardware_interface::TalonMode_Current:       // CloseLoop
-		output_mode = ctre::phoenix::motorcontrol::ControlMode::Current;
-		break;
-	case hardware_interface::TalonMode_Follower:
-		output_mode = ctre::phoenix::motorcontrol::ControlMode::Follower;
-		break;
-	case hardware_interface::TalonMode_MotionProfile:
-		output_mode = ctre::phoenix::motorcontrol::ControlMode::MotionProfile;
-		break;
-	case hardware_interface::TalonMode_MotionMagic:
-		output_mode = ctre::phoenix::motorcontrol::ControlMode::MotionMagic;
-		break;
-	case hardware_interface::TalonMode_Disabled:
-		output_mode = ctre::phoenix::motorcontrol::ControlMode::Disabled;
-		break;
-	default:
-		output_mode = ctre::phoenix::motorcontrol::ControlMode::Disabled;
-		ROS_WARN("Unknown mode seen in HW interface");
-		return false;
+		case hardware_interface::TalonMode_PercentOutput:
+			output_mode = ctre::phoenix::motorcontrol::ControlMode::PercentOutput;
+			break;
+		case hardware_interface::TalonMode_Position:      // CloseLoop
+			output_mode = ctre::phoenix::motorcontrol::ControlMode::Position;
+			break;
+		case hardware_interface::TalonMode_Velocity:      // CloseLoop
+			output_mode = ctre::phoenix::motorcontrol::ControlMode::Velocity;
+			break;
+		case hardware_interface::TalonMode_Current:       // CloseLoop
+			output_mode = ctre::phoenix::motorcontrol::ControlMode::Current;
+			break;
+		case hardware_interface::TalonMode_Follower:
+			output_mode = ctre::phoenix::motorcontrol::ControlMode::Follower;
+			break;
+		case hardware_interface::TalonMode_MotionProfile:
+			output_mode = ctre::phoenix::motorcontrol::ControlMode::MotionProfile;
+			break;
+		case hardware_interface::TalonMode_MotionMagic:
+			output_mode = ctre::phoenix::motorcontrol::ControlMode::MotionMagic;
+			break;
+		case hardware_interface::TalonMode_Disabled:
+			output_mode = ctre::phoenix::motorcontrol::ControlMode::Disabled;
+			break;
+		default:
+			output_mode = ctre::phoenix::motorcontrol::ControlMode::Disabled;
+			ROS_WARN("Unknown mode seen in HW interface");
+			return false;
 	}
 	return true;
 }
@@ -2303,19 +2303,19 @@ bool FRCRobotHWInterface::convertNeutralMode(
 {
 	switch (input_mode)
 	{
-	case hardware_interface::NeutralMode_EEPROM_Setting:
-		output_mode = ctre::phoenix::motorcontrol::EEPROMSetting;
-		break;
-	case hardware_interface::NeutralMode_Coast:
-		output_mode = ctre::phoenix::motorcontrol::Coast;
-		break;
-	case hardware_interface::NeutralMode_Brake:
-		output_mode = ctre::phoenix::motorcontrol::Brake;
-		break;
-	default:
-		output_mode = ctre::phoenix::motorcontrol::EEPROMSetting;
-		ROS_WARN("Unknown neutral mode seen in HW interface");
-		return false;
+		case hardware_interface::NeutralMode_EEPROM_Setting:
+			output_mode = ctre::phoenix::motorcontrol::EEPROMSetting;
+			break;
+		case hardware_interface::NeutralMode_Coast:
+			output_mode = ctre::phoenix::motorcontrol::Coast;
+			break;
+		case hardware_interface::NeutralMode_Brake:
+			output_mode = ctre::phoenix::motorcontrol::Brake;
+			break;
+		default:
+			output_mode = ctre::phoenix::motorcontrol::EEPROMSetting;
+			ROS_WARN("Unknown neutral mode seen in HW interface");
+			return false;
 	}
 
 	return true;
@@ -2327,36 +2327,36 @@ bool FRCRobotHWInterface::convertFeedbackDevice(
 {
 	switch (input_fd)
 	{
-	case hardware_interface::FeedbackDevice_QuadEncoder:
-		output_fd = ctre::phoenix::motorcontrol::QuadEncoder;
-		break;
-	case hardware_interface::FeedbackDevice_Analog:
-		output_fd = ctre::phoenix::motorcontrol::Analog;
-		break;
-	case hardware_interface::FeedbackDevice_Tachometer:
-		output_fd = ctre::phoenix::motorcontrol::Tachometer;
-		break;
-	case hardware_interface::FeedbackDevice_PulseWidthEncodedPosition:
-		output_fd = ctre::phoenix::motorcontrol::PulseWidthEncodedPosition;
-		break;
-	case hardware_interface::FeedbackDevice_SensorSum:
-		output_fd = ctre::phoenix::motorcontrol::SensorSum;
-		break;
-	case hardware_interface::FeedbackDevice_SensorDifference:
-		output_fd = ctre::phoenix::motorcontrol::SensorDifference;
-		break;
-	case hardware_interface::FeedbackDevice_RemoteSensor0:
-		output_fd = ctre::phoenix::motorcontrol::RemoteSensor0;
-		break;
-	case hardware_interface::FeedbackDevice_RemoteSensor1:
-		output_fd = ctre::phoenix::motorcontrol::RemoteSensor1;
-		break;
-	case hardware_interface::FeedbackDevice_SoftwareEmulatedSensor:
-		output_fd = ctre::phoenix::motorcontrol::SoftwareEmulatedSensor;
-		break;
-	default:
-		ROS_WARN("Unknown feedback device seen in HW interface");
-		return false;
+		case hardware_interface::FeedbackDevice_QuadEncoder:
+			output_fd = ctre::phoenix::motorcontrol::QuadEncoder;
+			break;
+		case hardware_interface::FeedbackDevice_Analog:
+			output_fd = ctre::phoenix::motorcontrol::Analog;
+			break;
+		case hardware_interface::FeedbackDevice_Tachometer:
+			output_fd = ctre::phoenix::motorcontrol::Tachometer;
+			break;
+		case hardware_interface::FeedbackDevice_PulseWidthEncodedPosition:
+			output_fd = ctre::phoenix::motorcontrol::PulseWidthEncodedPosition;
+			break;
+		case hardware_interface::FeedbackDevice_SensorSum:
+			output_fd = ctre::phoenix::motorcontrol::SensorSum;
+			break;
+		case hardware_interface::FeedbackDevice_SensorDifference:
+			output_fd = ctre::phoenix::motorcontrol::SensorDifference;
+			break;
+		case hardware_interface::FeedbackDevice_RemoteSensor0:
+			output_fd = ctre::phoenix::motorcontrol::RemoteSensor0;
+			break;
+		case hardware_interface::FeedbackDevice_RemoteSensor1:
+			output_fd = ctre::phoenix::motorcontrol::RemoteSensor1;
+			break;
+		case hardware_interface::FeedbackDevice_SoftwareEmulatedSensor:
+			output_fd = ctre::phoenix::motorcontrol::SoftwareEmulatedSensor;
+			break;
+		default:
+			ROS_WARN("Unknown feedback device seen in HW interface");
+			return false;
 	}
 	return true;
 }
@@ -2367,21 +2367,21 @@ bool FRCRobotHWInterface::convertLimitSwitchSource(
 {
 	switch (input_ls)
 	{
-	case hardware_interface::LimitSwitchSource_FeedbackConnector:
-		output_ls = ctre::phoenix::motorcontrol::LimitSwitchSource_FeedbackConnector;
-		break;
-	case hardware_interface::LimitSwitchSource_RemoteTalonSRX:
-		output_ls = ctre::phoenix::motorcontrol::LimitSwitchSource_RemoteTalonSRX;
-		break;
-	case hardware_interface::LimitSwitchSource_RemoteCANifier:
-		output_ls = ctre::phoenix::motorcontrol::LimitSwitchSource_RemoteCANifier;
-		break;
-	case hardware_interface::LimitSwitchSource_Deactivated:
-		output_ls = ctre::phoenix::motorcontrol::LimitSwitchSource_Deactivated;
-		break;
-	default:
-		ROS_WARN("Unknown limit switch source seen in HW interface");
-		return false;
+		case hardware_interface::LimitSwitchSource_FeedbackConnector:
+			output_ls = ctre::phoenix::motorcontrol::LimitSwitchSource_FeedbackConnector;
+			break;
+		case hardware_interface::LimitSwitchSource_RemoteTalonSRX:
+			output_ls = ctre::phoenix::motorcontrol::LimitSwitchSource_RemoteTalonSRX;
+			break;
+		case hardware_interface::LimitSwitchSource_RemoteCANifier:
+			output_ls = ctre::phoenix::motorcontrol::LimitSwitchSource_RemoteCANifier;
+			break;
+		case hardware_interface::LimitSwitchSource_Deactivated:
+			output_ls = ctre::phoenix::motorcontrol::LimitSwitchSource_Deactivated;
+			break;
+		default:
+			ROS_WARN("Unknown limit switch source seen in HW interface");
+			return false;
 	}
 	return true;
 }
@@ -2392,18 +2392,18 @@ bool FRCRobotHWInterface::convertLimitSwitchNormal(
 {
 	switch (input_ls)
 	{
-	case hardware_interface::LimitSwitchNormal_NormallyOpen:
-		output_ls = ctre::phoenix::motorcontrol::LimitSwitchNormal_NormallyOpen;
-		break;
-	case hardware_interface::LimitSwitchNormal_NormallyClosed:
-		output_ls = ctre::phoenix::motorcontrol::LimitSwitchNormal_NormallyClosed;
-		break;
-	case hardware_interface::LimitSwitchNormal_Disabled:
-		output_ls = ctre::phoenix::motorcontrol::LimitSwitchNormal_Disabled;
-		break;
-	default:
-		ROS_WARN("Unknown limit switch normal seen in HW interface");
-		return false;
+		case hardware_interface::LimitSwitchNormal_NormallyOpen:
+			output_ls = ctre::phoenix::motorcontrol::LimitSwitchNormal_NormallyOpen;
+			break;
+		case hardware_interface::LimitSwitchNormal_NormallyClosed:
+			output_ls = ctre::phoenix::motorcontrol::LimitSwitchNormal_NormallyClosed;
+			break;
+		case hardware_interface::LimitSwitchNormal_Disabled:
+			output_ls = ctre::phoenix::motorcontrol::LimitSwitchNormal_Disabled;
+			break;
+		default:
+			ROS_WARN("Unknown limit switch normal seen in HW interface");
+			return false;
 	}
 	return true;
 
