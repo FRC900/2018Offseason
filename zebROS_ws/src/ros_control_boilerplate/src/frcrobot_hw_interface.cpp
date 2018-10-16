@@ -60,8 +60,9 @@
 	part of the process, this decouples hardware read speed from the
 	control loop update rate.
 
-	TODO - think about something similar for the PDP, since there's
-	some overhead there as well.
+	The PDP data also works in a similar way.  There is a thread running
+	at a constant rate polling PDP data, and read() picks up the latest
+	copy of that data each time through the read/update/write loop
 */
 
 #include <cmath>
@@ -69,15 +70,13 @@
 #include <math.h>
 #include <thread>
 
+#include <tf2/LinearMath/Matrix3x3.h>
+#include "ros_control_boilerplate/frcrobot_hw_interface.h"
+
 // ROS message types
 #include "ros_control_boilerplate/AutoMode.h"
-#include "ros_control_boilerplate/frcrobot_hw_interface.h"
 #include "ros_control_boilerplate/JoystickState.h"
 #include "ros_control_boilerplate/MatchSpecificData.h"
-#include "ros_control_boilerplate/PDPData.h"
-
-#include <geometry_msgs/Twist.h>
-#include <tf2/LinearMath/Matrix3x3.h>
 
 //HAL / wpilib includes
 #include "HAL/DriverStation.h"

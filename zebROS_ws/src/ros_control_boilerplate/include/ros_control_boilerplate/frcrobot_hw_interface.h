@@ -32,7 +32,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* Author: Dave Coleman
+/* Original Author: Dave Coleman
    Desc:   Example ros_control hardware interface blank template for the FRCRobot
            For a more detailed simulation example, see sim_hw_interface.h
 */
