@@ -86,6 +86,7 @@ class ROSIterativeRobot : public frc::IterativeRobotBase
 		{
 			RobotInit();
 			HAL_ObserveUserProgramStarting();
+			LiveWindow::GetInstance()->SetEnabled(false);
 		}
 
 		void OneIteration(void)
@@ -129,7 +130,7 @@ class ROSIterativeRobot : public frc::IterativeRobotBase
 						LiveWindow::GetInstance()->SetEnabled(false);
 					TeleopInit();
 					m_lastMode = Mode::kTeleop;
-					Scheduler::GetInstance()->SetEnabled(true);
+					//Scheduler::GetInstance()->SetEnabled(true);
 				}
 				HAL_ObserveUserProgramTeleop();
 				TeleopPeriodic();

@@ -825,6 +825,8 @@ void FRCRobotInterface::custom_profile_thread(int joint_id)
 {
 	//I wonder how inefficient it is to have all of these threads
 	//running at the specified hz just copying to the status
+	double time_sum = 0;
+	int iteration_count = 0;
 
 	double time_start = ros::Time::now().toSec();
 	hardware_interface::CustomProfileStatus status; //Status is also used to store info from last loop
@@ -840,6 +842,9 @@ void FRCRobotInterface::custom_profile_thread(int joint_id)
 
 	while (ros::ok())
 	{
+	    struct timespec start_time;
+	    clock_gettime(CLOCK_MONOTONIC, &start_time);
+
 		if (talon_command_[joint_id].getCustomProfileDisable())
 		{
 			ROS_INFO_STREAM("Exiting custom_profile_thread since CustomProfileDisable is set for joint id " << joint_id);
@@ -992,6 +997,15 @@ void FRCRobotInterface::custom_profile_thread(int joint_id)
 
 		status.running = run;
 		talon_state_[joint_id].setCustomProfileStatus(status);
+
+		struct timespec end_time;
+		clock_gettime(CLOCK_MONOTONIC, &end_time);
+		time_sum +=
+			((double)end_time.tv_sec -  (double)start_time.tv_sec) +
+			((double)end_time.tv_nsec - (double)start_time.tv_nsec) / 1000000000.;
+		iteration_count += 1;
+		ROS_INFO_STREAM_THROTTLE(2, "mp_thread " << joint_id << " = " << time_sum / iteration_count);
+
 		rate.sleep();
 	}
 }

@@ -162,6 +162,15 @@ void FRCRobotHWInterface::hal_keepalive_thread(void)
 	bool game_specific_message_seen = false;
 	bool last_received = false;
 
+	double time_sum_nt = 0.;
+	double time_sum_joystick = 0.;
+	double time_sum_match_data = 0.;
+	double time_sum_rc = 0.;
+	unsigned iteration_count_nt = 0;
+	unsigned iteration_count_joystick = 0;
+	unsigned iteration_count_match_data = 0;
+	unsigned iteration_count_rc = 0;
+
 	ros::Rate r(55);
 	while (ros::ok())
 	{
@@ -176,6 +185,9 @@ void FRCRobotHWInterface::hal_keepalive_thread(void)
 		// Network tables work!
 		//pubTable->PutString("String 9", "WORK");
 		//subTable->PutString("Auto Selector", "Select Auto");
+
+		struct timespec start_timespec;
+		clock_gettime(CLOCK_MONOTONIC, &start_timespec);
 
 		// Throttle NT updates since these are mainly for human
 		// UI and don't have to run at crazy speeds
@@ -250,6 +262,15 @@ void FRCRobotHWInterface::hal_keepalive_thread(void)
 
 			last_nt_publish_time += ros::Duration(1.0 / nt_publish_rate);
 		}
+
+		struct timespec end_time;
+		clock_gettime(CLOCK_MONOTONIC, &end_time);
+		time_sum_nt +=
+			((double)end_time.tv_sec -  (double)start_timespec.tv_sec) +
+			((double)end_time.tv_nsec - (double)start_timespec.tv_nsec) / 1000000000.;
+		iteration_count_nt += 1;
+
+		start_timespec = end_time;
 
 		// Update joystick state as often as possible
 		if (realtime_pub_joystick.trylock())
@@ -359,6 +380,13 @@ void FRCRobotHWInterface::hal_keepalive_thread(void)
 
 			realtime_pub_joystick.unlockAndPublish();
 		}
+		clock_gettime(CLOCK_MONOTONIC, &end_time);
+		time_sum_joystick +=
+			((double)end_time.tv_sec -  (double)start_timespec.tv_sec) +
+			((double)end_time.tv_nsec - (double)start_timespec.tv_nsec) / 1000000000.;
+		iteration_count_joystick += 1;
+
+		start_timespec = end_time;
 
 		// Run at full speed until we see the game specific message.
 		// This guaratees we react as quickly as possible to it.
@@ -399,6 +427,13 @@ void FRCRobotHWInterface::hal_keepalive_thread(void)
 				game_specific_message_seen = false;
 			}
 		}
+		clock_gettime(CLOCK_MONOTONIC, &end_time);
+		time_sum_match_data +=
+			((double)end_time.tv_sec -  (double)start_timespec.tv_sec) +
+			((double)end_time.tv_nsec - (double)start_timespec.tv_nsec) / 1000000000.;
+		iteration_count_match_data += 1;
+
+		start_timespec = end_time;
 
 		hardware_interface::RobotControllerState rcs;
 		int32_t status;
@@ -440,7 +475,16 @@ void FRCRobotHWInterface::hal_keepalive_thread(void)
 			std::lock_guard<std::mutex> l(robot_controller_state_mutex_);
 			shared_robot_controller_state_ = rcs;
 		}
+		time_sum_rc +=
+			((double)end_time.tv_sec -  (double)start_timespec.tv_sec) +
+			((double)end_time.tv_nsec - (double)start_timespec.tv_nsec) / 1000000000.;
+		iteration_count_rc += 1;
 
+
+		ROS_INFO_STREAM_THROTTLE(2, "hw_keepalive nt = " << time_sum_nt / iteration_count_nt
+				<< " joystick = " << time_sum_joystick / iteration_count_joystick
+				<< " match_data = " << time_sum_match_data / iteration_count_match_data
+				<< " robot_controller = " << time_sum_rc / iteration_count_rc);
 		r.sleep();
 	}
 }
@@ -777,7 +821,6 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 
 	double time_sum = 0.;
 	unsigned iteration_count = 0;
-	const unsigned slow_loop_mod = 8; // read some data only once every N times through loop
 
 	// This never changes so read it once when the thread is started
 	int can_id;
@@ -1160,7 +1203,7 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 		clock_gettime(CLOCK_MONOTONIC, &end_time);
 		time_sum +=
 			((double)end_time.tv_sec -  (double)start_time.tv_sec) +
-			((double)end_time.tv_nsec - (double)start_time.tv_nsec) /1000000000.;
+			((double)end_time.tv_nsec - (double)start_time.tv_nsec) / 1000000000.;
 		iteration_count += 1;
 		ROS_INFO_STREAM_THROTTLE(2, "Read thread " << can_id << " = " << time_sum / iteration_count);
 		rate.sleep();
@@ -1171,11 +1214,15 @@ void FRCRobotHWInterface::pdp_read_thread(void)
 {
 	ros::Rate r(40); // TODO : Tune me?
 	hardware_interface::PDPHWState pdp_state;
+	double time_sum = 0.;
+	unsigned iteration_count = 0;
 	while (ros::ok())
 	{
+		struct timespec start_time;
+		clock_gettime(CLOCK_MONOTONIC, &start_time);
 #ifdef USE_TALON_MOTION_PROFILE
 		if (!profile_is_live_.load(std::memory_order_relaxed) &&
-				!writing_points_.load(std::memory_order_relaxed))
+			!writing_points_.load(std::memory_order_relaxed))
 #endif
 		{
 			//read info from the PDP hardware
@@ -1191,12 +1238,24 @@ void FRCRobotHWInterface::pdp_read_thread(void)
 			std::lock_guard<std::mutex> l(pdp_read_thread_mutex_);
 			pdp_read_thread_state_ = pdp_state;
 		}
+		struct timespec end_time;
+		clock_gettime(CLOCK_MONOTONIC, &end_time);
+		time_sum +=
+			((double)end_time.tv_sec -  (double)start_time.tv_sec) +
+			((double)end_time.tv_nsec - (double)start_time.tv_nsec) / 1000000000.;
+		iteration_count += 1;
+		ROS_INFO_STREAM_THROTTLE(2, "pdp_read = " << time_sum / iteration_count);
 		r.sleep();
 	}
 }
 
 void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 {
+	static double time_sum = 0;
+	static int iteration_count = 0;
+
+	struct timespec start_time;
+	clock_gettime(CLOCK_MONOTONIC, &start_time);
 	for (std::size_t joint_id = 0; joint_id < num_can_talon_srxs_; ++joint_id)
 	{
 		std::lock_guard<std::mutex> l(*talon_read_state_mutexes_[joint_id]);
@@ -1352,6 +1411,14 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 		std::lock_guard<std::mutex> l(robot_controller_state_mutex_);
 		robot_controller_state_ = shared_robot_controller_state_;
 	}
+
+	struct timespec end_time;
+	clock_gettime(CLOCK_MONOTONIC, &end_time);
+	time_sum +=
+		((double)end_time.tv_sec -  (double)start_time.tv_sec) +
+		((double)end_time.tv_nsec - (double)start_time.tv_nsec) / 1000000000.;
+	iteration_count += 1;
+	ROS_INFO_STREAM_THROTTLE(2, "read() = " << time_sum / iteration_count);
 }
 
 double FRCRobotHWInterface::getConversionFactor(int encoder_ticks_per_rotation,
@@ -1565,6 +1632,12 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 
 	// Is match data reporting the robot enabled now?
 	const bool robot_enabled = match_data_enabled_.load(std::memory_order_relaxed);
+
+	static double time_sum = 0;
+	static int iteration_count = 0;
+
+	struct timespec start_time;
+	clock_gettime(CLOCK_MONOTONIC, &start_time);
 
 	for (std::size_t joint_id = 0; joint_id < num_can_talon_srxs_; ++joint_id)
 	{
@@ -2253,6 +2326,13 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 #endif
 		}
 	}
+	struct timespec end_time;
+	clock_gettime(CLOCK_MONOTONIC, &end_time);
+	time_sum +=
+		((double)end_time.tv_sec -  (double)start_time.tv_sec) +
+		((double)end_time.tv_nsec - (double)start_time.tv_nsec) / 1000000000.;
+	iteration_count += 1;
+	ROS_INFO_STREAM_THROTTLE(2, "read() = " << time_sum / iteration_count);
 }
 
 // Convert from internal version of hardware mode ID
