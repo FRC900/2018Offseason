@@ -81,7 +81,7 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 			throw std::runtime_error("A joint name was not specified");
 		XmlRpc::XmlRpcValue &xml_joint_name = joint_params["name"];
 		if (!xml_joint_name.valid() ||
-				xml_joint_name.getType() != XmlRpc::XmlRpcValue::TypeString)
+			xml_joint_name.getType() != XmlRpc::XmlRpcValue::TypeString)
 			throw std::runtime_error("An invalid joint name was specified (expecting a string)");
 		const std::string joint_name = xml_joint_name;
 
@@ -89,9 +89,19 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 			throw std::runtime_error("A joint type was not specified");
 		XmlRpc::XmlRpcValue &xml_joint_type = joint_params["type"];
 		if (!xml_joint_type.valid() ||
-				xml_joint_type.getType() != XmlRpc::XmlRpcValue::TypeString)
+			xml_joint_type.getType() != XmlRpc::XmlRpcValue::TypeString)
 			throw std::runtime_error("An invalid joint type was specified (expecting a string).");
 		const std::string joint_type = xml_joint_type;
+
+		bool local = true;
+		if (joint_params.hasMember("local"))
+		{
+			XmlRpc::XmlRpcValue &xml_joint_local = joint_params["local"];
+			if (!xml_joint_local.valid() ||
+				xml_joint_local.getType() != XmlRpc::XmlRpcValue::TypeString)
+				throw std::runtime_error("An invalid joint local was specified (expecting a string).");
+			local = xml_joint_local;
+		}
 
 		if (joint_type == "can_talon_srx")
 		{
@@ -99,12 +109,13 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 				throw std::runtime_error("A CAN Talon SRX can_id was not specified");
 			XmlRpc::XmlRpcValue &xml_can_id = joint_params["can_id"];
 			if (!xml_can_id.valid() ||
-					xml_can_id.getType() != XmlRpc::XmlRpcValue::TypeInt)
+				xml_can_id.getType() != XmlRpc::XmlRpcValue::TypeInt)
 				throw std::runtime_error("An invalid joint can_id was specified (expecting an int).");
 			const int can_id = xml_can_id;
 
 			can_talon_srx_names_.push_back(joint_name);
 			can_talon_srx_can_ids_.push_back(can_id);
+			can_talon_srx_locals_.push_back(local);
 		}
 		else if (joint_type == "nidec_brushless")
 		{
@@ -112,7 +123,7 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 				throw std::runtime_error("A Nidec Brushless pwm_channel was not specified");
 			XmlRpc::XmlRpcValue &xml_pwm_channel = joint_params["pwm_channel"];
 			if (!xml_pwm_channel.valid() ||
-					xml_pwm_channel.getType() != XmlRpc::XmlRpcValue::TypeInt)
+				xml_pwm_channel.getType() != XmlRpc::XmlRpcValue::TypeInt)
 				throw std::runtime_error("An invalid joint pwm_channel was specified (expecting an int).");
 			const int pwm_channel = xml_pwm_channel;
 
@@ -120,7 +131,7 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 				throw std::runtime_error("A Nidec Brushless dio_channel was not specified");
 			XmlRpc::XmlRpcValue &xml_dio_channel = joint_params["dio_channel"];
 			if (!xml_dio_channel.valid() ||
-					xml_dio_channel.getType() != XmlRpc::XmlRpcValue::TypeInt)
+				xml_dio_channel.getType() != XmlRpc::XmlRpcValue::TypeInt)
 				throw std::runtime_error("An invalid joint dio_channel was specified (expecting an int).");
 			const int dio_channel = xml_dio_channel;
 
@@ -129,7 +140,7 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 			{
 				XmlRpc::XmlRpcValue &xml_invert = joint_params["invert"];
 				if (!xml_invert.valid() ||
-						xml_invert.getType() != XmlRpc::XmlRpcValue::TypeBoolean)
+					xml_invert.getType() != XmlRpc::XmlRpcValue::TypeBoolean)
 					throw std::runtime_error("An invalid Nidec brushless joint invert was specified (expecting a boolean).");
 				invert = xml_invert;
 			}
@@ -138,6 +149,7 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 			nidec_brushless_pwm_channels_.push_back(pwm_channel);
 			nidec_brushless_dio_channels_.push_back(dio_channel);
 			nidec_brushless_inverts_.push_back(invert);
+			nidec_brushless_locals_.push_back(local);
 		}
 		else if (joint_type == "digital_input")
 		{
@@ -145,7 +157,7 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 				throw std::runtime_error("A Digital Input dio_channel was not specified");
 			XmlRpc::XmlRpcValue &xml_digital_input_dio_channel = joint_params["dio_channel"];
 			if (!xml_digital_input_dio_channel.valid() ||
-					xml_digital_input_dio_channel.getType() != XmlRpc::XmlRpcValue::TypeInt)
+				xml_digital_input_dio_channel.getType() != XmlRpc::XmlRpcValue::TypeInt)
 				throw std::runtime_error("An invalid joint dio_channel was specified (expecting an int).");
 
 			const int digital_input_dio_channel = xml_digital_input_dio_channel;
@@ -155,7 +167,7 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 			{
 				XmlRpc::XmlRpcValue &xml_invert = joint_params["invert"];
 				if (!xml_invert.valid() ||
-						xml_invert.getType() != XmlRpc::XmlRpcValue::TypeBoolean)
+					xml_invert.getType() != XmlRpc::XmlRpcValue::TypeBoolean)
 					throw std::runtime_error("An invalid digital input joint invert was specified (expecting a boolean).");
 				invert = xml_invert;
 			}
@@ -163,6 +175,7 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 			digital_input_names_.push_back(joint_name);
 			digital_input_dio_channels_.push_back(digital_input_dio_channel);
 			digital_input_inverts_.push_back(invert);
+			digital_input_locals_.push_back(local);
 		}
 		else if (joint_type == "digital_output")
 		{
@@ -170,7 +183,7 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 				throw std::runtime_error("A Digital Output dio_channel was not specified");
 			XmlRpc::XmlRpcValue &xml_digital_output_dio_channel = joint_params["dio_channel"];
 			if (!xml_digital_output_dio_channel.valid() ||
-					xml_digital_output_dio_channel.getType() != XmlRpc::XmlRpcValue::TypeInt)
+				xml_digital_output_dio_channel.getType() != XmlRpc::XmlRpcValue::TypeInt)
 				throw std::runtime_error("An invalid joint dio_channel was specified (expecting an int).");
 
 			const int digital_output_dio_channel = xml_digital_output_dio_channel;
@@ -180,7 +193,7 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 			{
 				XmlRpc::XmlRpcValue &xml_invert = joint_params["invert"];
 				if (!xml_invert.valid() ||
-						xml_invert.getType() != XmlRpc::XmlRpcValue::TypeBoolean)
+					xml_invert.getType() != XmlRpc::XmlRpcValue::TypeBoolean)
 					throw std::runtime_error("An invalid digital output joint invert was specified (expecting a boolean).");
 				invert = xml_invert;
 			}
@@ -188,6 +201,7 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 			digital_output_names_.push_back(joint_name);
 			digital_output_dio_channels_.push_back(digital_output_dio_channel);
 			digital_output_inverts_.push_back(invert);
+			digital_output_locals_.push_back(local);
 		}
 		else if (joint_type == "pwm")
 		{
@@ -195,7 +209,7 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 				throw std::runtime_error("A PWM pwm_channel was not specified");
 			XmlRpc::XmlRpcValue &xml_pwm_pwm_channel = joint_params["pwm_channel"];
 			if (!xml_pwm_pwm_channel.valid() ||
-					xml_pwm_pwm_channel.getType() != XmlRpc::XmlRpcValue::TypeInt)
+				xml_pwm_pwm_channel.getType() != XmlRpc::XmlRpcValue::TypeInt)
 				throw std::runtime_error("An invalid joint pwm_channel was specified (expecting an int).");
 
 			const int pwm_pwm_channel = xml_pwm_pwm_channel;
@@ -205,7 +219,7 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 			{
 				XmlRpc::XmlRpcValue &xml_invert = joint_params["invert"];
 				if (!xml_invert.valid() ||
-						xml_invert.getType() != XmlRpc::XmlRpcValue::TypeBoolean)
+					xml_invert.getType() != XmlRpc::XmlRpcValue::TypeBoolean)
 					throw std::runtime_error("An invalid pwm joint invert was specified (expecting a boolean).");
 				invert = xml_invert;
 			}
@@ -213,6 +227,7 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 			pwm_names_.push_back(joint_name);
 			pwm_pwm_channels_.push_back(pwm_pwm_channel);
 			pwm_inverts_.push_back(invert);
+			pwm_locals_.push_back(local);
 		}
 		else if (joint_type == "solenoid")
 		{
@@ -220,7 +235,7 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 				throw std::runtime_error("A solenoid id was not specified");
 			XmlRpc::XmlRpcValue &xml_solenoid_id = joint_params["id"];
 			if (!xml_solenoid_id.valid() ||
-					xml_solenoid_id.getType() != XmlRpc::XmlRpcValue::TypeInt)
+				xml_solenoid_id.getType() != XmlRpc::XmlRpcValue::TypeInt)
 				throw std::runtime_error("An invalid joint solenoid id was specified (expecting an int).");
 
 			const int solenoid_id = xml_solenoid_id;
@@ -229,7 +244,7 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 				throw std::runtime_error("A pcm was not specified");
 			XmlRpc::XmlRpcValue &xml_solenoid_pcm = joint_params["pcm"];
 			if (!xml_solenoid_pcm.valid() ||
-					xml_solenoid_pcm.getType() != XmlRpc::XmlRpcValue::TypeInt)
+				xml_solenoid_pcm.getType() != XmlRpc::XmlRpcValue::TypeInt)
 				throw std::runtime_error("An invalid joint solenoid pcm was specified (expecting an int).");
 
 			const int solenoid_pcm = xml_solenoid_pcm;
@@ -237,6 +252,7 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 			solenoid_names_.push_back(joint_name);
 			solenoid_ids_.push_back(solenoid_id);
 			solenoid_pcms_.push_back(solenoid_pcm);
+			solenoid_locals_.push_back(local);
 		}
 		else if (joint_type == "double_solenoid")
 		{
@@ -244,7 +260,7 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 				throw std::runtime_error("A double_solenoid forward_id was not specified");
 			XmlRpc::XmlRpcValue &xml_double_solenoid_forward_id = joint_params["forward_id"];
 			if (!xml_double_solenoid_forward_id.valid() ||
-					xml_double_solenoid_forward_id.getType() != XmlRpc::XmlRpcValue::TypeInt)
+				xml_double_solenoid_forward_id.getType() != XmlRpc::XmlRpcValue::TypeInt)
 				throw std::runtime_error("An invalid joint double solenoid forward_id was specified (expecting an int).");
 
 			const int double_solenoid_forward_id = xml_double_solenoid_forward_id;
@@ -253,7 +269,7 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 				throw std::runtime_error("A double_solenoid reverse_id was not specified");
 			XmlRpc::XmlRpcValue &xml_double_solenoid_reverse_id = joint_params["reverse_id"];
 			if (!xml_double_solenoid_reverse_id.valid() ||
-					xml_double_solenoid_reverse_id.getType() != XmlRpc::XmlRpcValue::TypeInt)
+				xml_double_solenoid_reverse_id.getType() != XmlRpc::XmlRpcValue::TypeInt)
 				throw std::runtime_error("An invalid joint double solenoid reverse_id was specified (expecting an int).");
 
 			const int double_solenoid_reverse_id = xml_double_solenoid_reverse_id;
@@ -262,7 +278,7 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 				throw std::runtime_error("A pcm was not specified");
 			XmlRpc::XmlRpcValue &xml_double_solenoid_pcm = joint_params["pcm"];
 			if (!xml_double_solenoid_pcm.valid() ||
-					xml_double_solenoid_pcm.getType() != XmlRpc::XmlRpcValue::TypeInt)
+				xml_double_solenoid_pcm.getType() != XmlRpc::XmlRpcValue::TypeInt)
 				throw std::runtime_error("An invalid joint double solenoid pcm was specified (expecting an int).");
 
 			const int double_solenoid_pcm = xml_double_solenoid_pcm;
@@ -271,6 +287,7 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 			double_solenoid_forward_ids_.push_back(double_solenoid_forward_id);
 			double_solenoid_reverse_ids_.push_back(double_solenoid_reverse_id);
 			double_solenoid_pcms_.push_back(double_solenoid_pcm);
+			double_solenoid_locals_.push_back(local);
 
 		}
 		else if (joint_type == "rumble")
@@ -279,13 +296,14 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 				throw std::runtime_error("A rumble_port was not specified");
 			XmlRpc::XmlRpcValue &xml_rumble_port = joint_params["rumble_port"];
 			if (!xml_rumble_port.valid() ||
-					xml_rumble_port.getType() != XmlRpc::XmlRpcValue::TypeInt)
+				xml_rumble_port.getType() != XmlRpc::XmlRpcValue::TypeInt)
 				throw std::runtime_error("An invalid joint rumble_port was specified (expecting an int).");
 
 			const int rumble_port = xml_rumble_port;
 
 			rumble_names_.push_back(joint_name);
 			rumble_ports_.push_back(rumble_port);
+			rumble_locals_.push_back(local);
 		}
 		else if (joint_type == "navX")
 		{
@@ -295,7 +313,7 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 				throw std::runtime_error("A navX id was not specified");
 			XmlRpc::XmlRpcValue &xml_navX_id = joint_params["id"];
 			if (!xml_navX_id.valid() ||
-					xml_navX_id.getType() != XmlRpc::XmlRpcValue::TypeInt)
+				xml_navX_id.getType() != XmlRpc::XmlRpcValue::TypeInt)
 				throw std::runtime_error("An invalid joint id was specified (expecting an int).");
 
 			const int navX_id = xml_navX_id;
@@ -304,13 +322,14 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 				throw std::runtime_error("A navX frame ID was not specified");
 			XmlRpc::XmlRpcValue &xml_joint_frame_id= joint_params["frame_id"];
 			if (!xml_joint_frame_id.valid() ||
-					xml_joint_frame_id.getType() != XmlRpc::XmlRpcValue::TypeString)
+				xml_joint_frame_id.getType() != XmlRpc::XmlRpcValue::TypeString)
 				throw std::runtime_error("An invalid navX frame_id was specified (expecting a string).");
 			const std::string frame_id = xml_joint_frame_id;
 
 			navX_names_.push_back(joint_name);
 			navX_frame_ids_.push_back(frame_id);
 			navX_ids_.push_back(navX_id);
+			navX_locals_.push_back(local);
 		}
 		else if (joint_type == "analog_input")
 		{
@@ -318,7 +337,7 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 				throw std::runtime_error("A Analog input analog_channel was not specified");
 			XmlRpc::XmlRpcValue &xml_analog_input_analog_channel = joint_params["analog_channel"];
 			if (!xml_analog_input_analog_channel.valid() ||
-					xml_analog_input_analog_channel.getType() != XmlRpc::XmlRpcValue::TypeInt)
+				xml_analog_input_analog_channel.getType() != XmlRpc::XmlRpcValue::TypeInt)
 				throw std::runtime_error("An invalid joint analog_channel was specified (expecting an int).");
 
 			const int analog_input_analog_channel = xml_analog_input_analog_channel;
@@ -336,7 +355,6 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 				analog_input_a = xml_analog_input_a;
 			}
 
-
 			double analog_input_b;
 			if (!joint_params.hasMember("analog_b"))
 				analog_input_b = 0;
@@ -353,6 +371,7 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 			analog_input_b_.push_back(analog_input_b);
 			analog_input_names_.push_back(joint_name);
 			analog_input_analog_channels_.push_back(analog_input_analog_channel);
+			analog_input_locals_.push_back(local);
 		}
 		else if (joint_type == "compressor")
 		{
@@ -360,17 +379,24 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 				throw std::runtime_error("A compressor pcm id was not specified");
 			XmlRpc::XmlRpcValue &xml_compressor_pcm_id = joint_params["pcm_id"];
 			if (!xml_compressor_pcm_id.valid() ||
-					xml_compressor_pcm_id.getType() != XmlRpc::XmlRpcValue::TypeInt)
+				xml_compressor_pcm_id.getType() != XmlRpc::XmlRpcValue::TypeInt)
 				throw std::runtime_error("An invalid compressor joint pcm id was specified (expecting an int).");
 
 			const int compressor_pcm_id = xml_compressor_pcm_id;
 
 			compressor_names_.push_back(joint_name);
 			compressor_pcm_ids_.push_back(compressor_pcm_id);
+			compressor_locals_.push_back(local);
+		}
+		else if (joint_type == "pdp")
+		{
+			pdp_names_.push_back(joint_name);
+			pdp_locals_.push_back(local);
 		}
 		else if (joint_type == "dummy")
 		{
 			dummy_joint_names_.push_back(joint_name);
+			dummy_joint_locals_.push_back(local);
 		}
 		else
 		{
@@ -621,6 +647,18 @@ void FRCRobotInterface::init()
 		hardware_interface::JointHandle cch(csh, &compressor_command_[i]);
 		joint_position_interface_.registerHandle(cch);
 	}
+		ROS_INFO_STREAM_NAMED(name_, "FRCRobotHWInterface: Compressor Done");
+
+		ROS_INFO_STREAM_NAMED(name_, "FRCRobotHWInterface: Done");
+	num_pdps_ = pdp_names_.size();
+	pdp_state_.resize(num_pdps_);
+	for (size_t i = 0; i < num_pdps_; i++)
+	{
+		ROS_INFO_STREAM_NAMED(name_, "FRCRobotHWInterface: Registering interface for : " << pdp_names_[i]);
+
+		hardware_interface::PDPStateHandle csh(pdp_names_[i], &pdp_state_[i]);
+		pdp_state_interface_.registerHandle(csh);
+	}
 
 	num_dummy_joints_ = dummy_joint_names_.size();
 	dummy_joint_position_.resize(num_dummy_joints_);
@@ -644,12 +682,6 @@ void FRCRobotInterface::init()
 		joint_position_interface_.registerHandle(dch);
 		joint_velocity_interface_.registerHandle(dch);
 	}
-
-	hardware_interface::PDPStateHandle psh("pdp_name", &pdp_state_);
-	pdp_state_interface_.registerHandle(psh);
-
-	hardware_interface::RobotControllerStateHandle rcsh("robot_controller_name", &robot_controller_state_);
-	robot_controller_state_interface_.registerHandle(rcsh);
 
 	// Add a flag which indicates we should signal
 	// the driver station that robot code is initialized
