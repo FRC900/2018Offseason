@@ -477,6 +477,8 @@ void FRCRobotInterface::init()
 		// the same brushless motor
 		hardware_interface::JointHandle jh(jsh, &brushless_command_[i]);
 		joint_velocity_interface_.registerHandle(jh);
+		if (!nidec_brushless_locals_[i])
+			joint_remote_interface_.registerHandle(jh);
 	}
 
 	num_digital_inputs_ = digital_input_names_.size();
@@ -489,6 +491,11 @@ void FRCRobotInterface::init()
 		// corresponding brushless_state array entry
 		hardware_interface::JointStateHandle dish(digital_input_names_[i], &digital_input_state_[i], &digital_input_state_[i], &digital_input_state_[i]);
 		joint_state_interface_.registerHandle(dish);
+		if (!digital_input_locals_[i])
+		{
+			hardware_interface::JointHandle dih(dish, &digital_input_state_[i]); /// writing directly to state?
+			joint_remote_interface_.registerHandle(dih);
+		}
 	}
 
 	num_digital_outputs_ = digital_output_names_.size();
@@ -508,6 +515,8 @@ void FRCRobotInterface::init()
 		// the digital output
 		hardware_interface::JointHandle doh(dosh, &digital_output_command_[i]);
 		joint_position_interface_.registerHandle(doh);
+		if (!digital_output_locals_[i])
+			joint_remote_interface_.registerHandle(doh);
 	}
 
 	num_pwm_ = pwm_names_.size();
@@ -524,6 +533,8 @@ void FRCRobotInterface::init()
 
 		hardware_interface::JointHandle ph(psh, &pwm_command_[i]);
 		joint_velocity_interface_.registerHandle(ph);
+		if (!pwm_locals_[i])
+			joint_remote_interface_.registerHandle(ph);
 	}
 	num_solenoids_ = solenoid_names_.size();
 	solenoid_state_.resize(num_solenoids_);
@@ -540,6 +551,8 @@ void FRCRobotInterface::init()
 
 		hardware_interface::JointHandle soh(ssh, &solenoid_command_[i]);
 		joint_position_interface_.registerHandle(soh);
+		if (!solenoid_locals_[i])
+			joint_remote_interface_.registerHandle(soh);
 	}
 
 	num_double_solenoids_ = double_solenoid_names_.size();
@@ -557,6 +570,8 @@ void FRCRobotInterface::init()
 
 		hardware_interface::JointHandle dsoh(dssh, &double_solenoid_command_[i]);
 		joint_position_interface_.registerHandle(dsoh);
+		if (!double_solenoid_locals_[i])
+			joint_remote_interface_.registerHandle(dsoh);
 	}
 	num_rumble_ = rumble_names_.size();
 	rumble_state_.resize(num_rumble_);
@@ -572,6 +587,8 @@ void FRCRobotInterface::init()
 
 		hardware_interface::JointHandle rh(rsh, &rumble_command_[i]);
 		joint_position_interface_.registerHandle(rh);
+		if (!rumble_locals_[i])
+			joint_remote_interface_.registerHandle(rh);
 	}
 
 	// Differentiate between navX and IMU here
@@ -634,6 +651,11 @@ void FRCRobotInterface::init()
 		// corresponding brushless_state array entry
 		hardware_interface::JointStateHandle aish(analog_input_names_[i], &analog_input_state_[i], &analog_input_state_[i], &analog_input_state_[i]);
 		joint_state_interface_.registerHandle(aish);
+		if (!analog_input_locals_[i])
+		{
+			hardware_interface::JointHandle aih(aish, &analog_input_state_[i]); /// writing directly to state?
+			joint_remote_interface_.registerHandle(aih);
+		}
 	}
 	num_compressors_ = compressor_names_.size();
 	compressor_state_.resize(num_compressors_);
@@ -652,10 +674,10 @@ void FRCRobotInterface::init()
 
 		hardware_interface::JointHandle cch(csh, &compressor_command_[i]);
 		joint_position_interface_.registerHandle(cch);
+		if (!compressor_locals_[i])
+			joint_remote_interface_.registerHandle(cch);
 	}
-		ROS_INFO_STREAM_NAMED(name_, "FRCRobotInterface: Compressor Done");
 
-		ROS_INFO_STREAM_NAMED(name_, "FRCRobotInterface: Done");
 	num_pdps_ = pdp_names_.size();
 	pdp_state_.resize(num_pdps_);
 	for (size_t i = 0; i < num_pdps_; i++)
@@ -687,6 +709,8 @@ void FRCRobotInterface::init()
 		joint_command_interface_.registerHandle(dch);
 		joint_position_interface_.registerHandle(dch);
 		joint_velocity_interface_.registerHandle(dch);
+		if (!dummy_joint_locals_[i])
+			joint_remote_interface_.registerHandle(dch);
 	}
 
 	num_ready_signals_ = ready_signal_names_.size();
@@ -703,6 +727,8 @@ void FRCRobotInterface::init()
 		joint_command_interface_.registerHandle(ch);
 		joint_position_interface_.registerHandle(ch);
 		joint_velocity_interface_.registerHandle(ch);
+		if (!ready_signal_locals_[i])
+			joint_remote_interface_.registerHandle(ch);
 	}
 
 	// Publish various FRC-specific data using generic joint state for now
@@ -717,6 +743,7 @@ void FRCRobotInterface::init()
 	registerInterface(&joint_position_interface_);
 	registerInterface(&joint_velocity_interface_);
 	registerInterface(&joint_effort_interface_); // empty for now
+	registerInterface(&joint_remote_interface_); // list of Joints defined as remote
 	registerInterface(&imu_interface_);
 	registerInterface(&pdp_state_interface_);
 	registerInterface(&robot_controller_state_interface_);

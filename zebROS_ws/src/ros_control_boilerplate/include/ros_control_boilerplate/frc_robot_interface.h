@@ -53,6 +53,15 @@
 #include "pdp_state_controller/pdp_state_interface.h"
 #include "robot_controller_interface/robot_controller_interface.hpp"
 
+// Create a separate type of joint interface for joints which
+// are read from hardware on another controller_manager.  This
+// is just an easy way for a controller to get a full list of
+// joints which aren't local.
+namespace hardware_interface
+{
+	class RemoteJointInterface : public JointCommandInterface {};
+}
+
 namespace ros_control_boilerplate
 {
 /// \brief Hardware interface for a robot
@@ -129,6 +138,7 @@ class FRCRobotInterface : public hardware_interface::RobotHW
 		hardware_interface::PositionJointInterface joint_position_interface_;
 		hardware_interface::VelocityJointInterface joint_velocity_interface_;
 		hardware_interface::EffortJointInterface   joint_effort_interface_;
+		hardware_interface::RemoteJointInterface   joint_remote_interface_;
 		hardware_interface::TalonCommandInterface  talon_command_interface_;
 
 		hardware_interface::ImuSensorInterface imu_interface_;
