@@ -545,7 +545,7 @@ void FRCRobotSimInterface::init(void)
 	{
 		ROS_INFO_STREAM_NAMED("frcrobot_sim_interface",
 							  "Loading joint " << i << "=" << can_talon_srx_names_[i] <<
-							  "local = " << can_talon_srx_locals_[i] <<
+							  " local = " << can_talon_srx_locals_[i] <<
 							  " as CAN id " << can_talon_srx_can_ids_[i]);
 
 		ROS_WARN_STREAM("fails here? 56789: " << i);
@@ -586,6 +586,7 @@ void FRCRobotSimInterface::init(void)
 							  " local = " << pwm_locals_[i] <<
 							  " invert " << pwm_inverts_[i]);
 
+	ROS_WARN("fails here?5");
 	for (size_t i = 0; i < num_solenoids_; i++)
 		ROS_INFO_STREAM_NAMED("frcrobot_sim_interface",
 							  "Loading joint " << i << "=" << solenoid_names_[i] <<
@@ -618,8 +619,8 @@ void FRCRobotSimInterface::init(void)
 
 	for (size_t i = 0; i < num_pdps_; i++)
 		ROS_INFO_STREAM_NAMED("frcrobot_sim_interface",
-							  "Loading joint " << i << "=" << compressor_names_[i] <<
-							  "local = " << compressor_locals_[i] <<
+							  "Loading joint " << i << "=" << pdp_names_[i] <<
+							  " local = " << pdp_locals_[i] <<
 							  " as PDP");
 	for(size_t i = 0; i < num_dummy_joints_; i++)
 		ROS_INFO_STREAM_NAMED("frcrobot_sim_interface",
@@ -665,10 +666,16 @@ void FRCRobotSimInterface::read(ros::Duration &/*elapsed_time*/)
 
 	//printState();
 	static bool printed_robot_code_ready;
-	if (!printed_robot_code_ready && (robot_code_ready_ != 0.0))
+	if (!robot_code_ready_)
 	{
-		ROS_WARN("ROBOT CODE READY!");
-		printed_robot_code_ready = true;
+		bool ready = true;
+		for (auto r : robot_ready_signals_)
+			ready &= (r != 0);
+		if (ready)
+		{
+			ROS_WARN("ROBOT CODE READY!");
+			robot_code_ready_ = true;
+		}
 	}
     ros::spinOnce();
 }

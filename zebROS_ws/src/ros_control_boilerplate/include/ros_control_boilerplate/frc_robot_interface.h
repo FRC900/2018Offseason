@@ -244,6 +244,11 @@ class FRCRobotInterface : public hardware_interface::RobotHW
 		std::vector<bool>        dummy_joint_locals_; // Not sure if this is needed?
 		std::size_t              num_dummy_joints_;
 
+		std::vector<std::string> ready_signal_names_;
+		std::vector<bool>        ready_signal_locals_;
+		std::size_t              num_ready_signals_;
+
+
 		urdf::Model *urdf_model_;
 
 		// Array holding master cached state of hardware
@@ -290,7 +295,9 @@ class FRCRobotInterface : public hardware_interface::RobotHW
 		std::vector<double> dummy_joint_effort_;
 		std::vector<double> dummy_joint_command_;
 
-		double robot_code_ready_;
+		std::vector<double> robot_ready_signals_;
+		bool                robot_code_ready_;
+
 };  // class
 
 }  // namespace

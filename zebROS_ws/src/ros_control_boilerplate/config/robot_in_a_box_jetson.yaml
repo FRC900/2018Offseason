@@ -9,6 +9,8 @@ hardware_interface:
        - {name: talon3, type: can_talon_srx, can_id: 3}
        - {name: talon9, type: can_talon_srx, can_id: 9}
        - {name: pdp, local: false, type: pdp}
+       - {name: robot_code_ready_jetson, local: true, type: ready}
+       - {name: robot_code_ready_rio, local: false, type: ready} # Probably not really needed?
        
 joint_state_controller:
    type:         joint_state_controller/JointStateController

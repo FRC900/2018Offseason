@@ -128,9 +128,18 @@ void FRCRobotHWInterface::hal_keepalive_thread(void)
 	// spawned - waiting here prevents the robot from
 	// reporting robot code ready to the field until
 	// all other controllers are started
+	ros::Rate rate(20);
+	while (ros::ok() && !robot_code_ready_)
 	{
-		ros::Rate rate(20);
-		while (robot_code_ready_ == 0.0)
+		bool ready = true;
+		for (auto r : robot_ready_signals_)
+			ready &= (r != 0);
+		if (ready)
+		{
+			robot_.StartCompetition();
+			robot_code_ready_ = true;
+		}
+		else
 			rate.sleep();
 	}
 
@@ -139,7 +148,7 @@ void FRCRobotHWInterface::hal_keepalive_thread(void)
 	bool joystick_left_last = false;
 	bool joystick_right_last = false;
 
-	robot_.StartCompetition();
+	// Make configurable
 	Joystick joystick(0);
 	realtime_tools::RealtimePublisher<ros_control_boilerplate::JoystickState> realtime_pub_joystick(nh_, "joystick_states", 1);
 	realtime_tools::RealtimePublisher<ros_control_boilerplate::MatchSpecificData> realtime_pub_match_data(nh_, "match_data", 1);
