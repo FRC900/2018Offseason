@@ -45,7 +45,7 @@
 #include <ros_control_boilerplate/frc_robot_interface.h>
 #include <realtime_tools/realtime_publisher.h>
 
-#include <ctre/phoenix/MotorControl/CAN/TalonSRX.h>
+#include <ctre/phoenix/motorcontrol/can/TalonSRX.h>
 #include <IterativeRobotBase.h>
 #include <DriverStation.h>
 #include <NidecBrushless.h>

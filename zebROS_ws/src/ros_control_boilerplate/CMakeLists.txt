@@ -107,66 +107,90 @@ install(TARGETS
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-if (DEFINED CMAKE_TOOLCHAIN_FILE)
-    # FRCRobot Hardware Interface only
-    # should be built for the RoboRIO since
-    # it direcly interfaces with the RIO
-    # hardware & attached devices
+# Main control executable
+set (FRCROBOT_HW_MAIN_SRCS 
+	src/frcrobot_hw_main.cpp
+	src/frcrobot_hw_interface.cpp
+	src/frc_robot_interface.cpp
+	src/generic_hw_control_loop.cpp
+)
 
-    # Main control executable
-	add_executable(frcrobot_hw_main 
-		src/frcrobot_hw_main.cpp
-		src/frcrobot_hw_interface.cpp
-		src/frc_robot_interface.cpp
-		src/generic_hw_control_loop.cpp
-	)
+include_directories(
+  $ENV{HOME}/wpilib/user/cpp/include
+  $ENV{HOME}/wpilib/cpp/current/include
+)
 
-    include_directories(
-		${catkin_INCLUDE_DIRS}
-      $ENV{HOME}/wpilib/user/cpp/include
-      $ENV{HOME}/wpilib/cpp/current/include
-    )
-    
-    set (WPI_LIB_DIR        $ENV{HOME}/wpilib/cpp/current/reflib/linux/athena/shared)
-    set (WPI_COMMON_LIB_DIR $ENV{HOME}/wpilib/common/current/lib/linux/athena/shared)
-    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L ${WPI_LIB_DIR}")
-    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L ${WPI_COMMON_LIB_DIR}")
-  
-    set (WPI_USER_LIB_DIR $ENV{HOME}/wpilib/user/cpp/lib)
-    set (WPI_USER_LIBS
-        ${WPI_USER_LIB_DIR}/libCTRE_PhoenixCCI.a
-        ${WPI_USER_LIB_DIR}/libCTRE_Phoenix.a
-        ${WPI_USER_LIB_DIR}/libnavx_frc_cpp.a
-    )
+# Base regardless of OS type
+set(LIB_BASE $ENV{HOME}/wpilib/user/cpp/lib/linux)
+if ("${ARM_PREFIX}" STREQUAL "arm-frc-linux-gnueabi")
+	set (CTRE_LIB_DIR ${LIB_BASE}/athena/static)
 
-        # Link against wpi user libraries for CAN talon and navX-MXP code and
-        # wpilib for HAL, driver station, and so on
-	target_link_libraries(frcrobot_hw_main
-		${catkin_LIBRARIES}
+	# Rio only
+	set (WPI_LIB_DIR        $ENV{HOME}/wpilib/cpp/current/reflib/linux/athena/shared)
+	set (WPI_COMMON_LIB_DIR $ENV{HOME}/wpilib/common/current/lib/linux/athena/shared)
+	set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L ${WPI_LIB_DIR}")
+	set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L ${WPI_COMMON_LIB_DIR}")
+
+	# Only need WPI libs for the Rio
+	set (PLATFORM_SPECIFIC_LIBS
+		${LIB_BASE}/../libnavx_frc_cpp.a
 		${WPI_LIB_DIR}/libwpi.so
 		${WPI_LIB_DIR}/libFRC_NetworkCommunication.so.18.0.0
-		${WPI_LIB_DIR}/libRoboRIO_FRC_ChipObject.so.18.0.0
-		${WPI_USER_LIBS}
-	)
-
-    ## Add cmake target dependencies of the executable
-    ## same as for the library above. This is needed to force
-    ## talon controller messages to be built before the
-    ## talon controller code tries to use them
-	add_dependencies(frcrobot_hw_main
-	  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-	  ${catkin_EXPORTED_TARGETS}
-	)
-    ## Install ------------------------------------------------------------
-
-    # Install executables
-	install(TARGETS
-	  frcrobot_hw_main
-	  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-	  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-	)
+		${WPI_LIB_DIR}/libRoboRIO_FRC_ChipObject.so.18.0.0 )
+else()
+	if ("${CMAKE_LIBRARY_ARCHITECTURE}" STREQUAL "arm-linux-gnueabihf") # Jetson TK1
+		set (CTRE_LIB_DIR ${LIB_BASE}/armhf/static)
+	elseif ("${CMAKE_LIBRARY_ARCHITECTURE}" STREQUAL "aarch64-linux-gnu") # Jetson TX1/TX2
+		set (CTRE_LIB_DIR ${LIB_BASE}/aarch64/static)
+	else() # x86-64, hopefully
+		set (CTRE_LIB_DIR ${LIB_BASE}/x86-64/static)
+	endif()
 endif()
 
+# All platforms need these, they just live
+# in different dirs for different architectures
+set (CTRE_USER_LIBS
+	${CTRE_LIB_DIR}/libCTRE_Phoenix.a
+	${CTRE_LIB_DIR}/libCTRE_PhoenixCCI.a
+)
+
+if (NOT "${ARM_PREFIX}" STREQUAL "arm-frc-linux-gnueabi")
+	set (CTRE_USER_LIBS 
+		${CTRE_USER_LIBS}
+		${CTRE_LIB_DIR}/libCTRE_PhoenixPlatform_socketcan.a
+		${CTRE_LIB_DIR}/libCTRE_PhoenixCanutils.a
+		)
+	set (FRCROBOT_HW_MAIN_SRCS ${FRCROBOT_HW_MAIN_SRCS} src/dummy_wpilib.cpp)
+endif()
+
+add_executable(frcrobot_hw_main ${FRCROBOT_HW_MAIN_SRCS})
+
+# Link against wpi user libraries for CAN talon and navX-MXP code and
+# wpilib for HAL, driver station, and so on
+target_link_libraries(frcrobot_hw_main
+	${catkin_LIBRARIES}
+	${PLATFORM_SPECIFIC_LIBS}
+	${CTRE_USER_LIBS}
+)
+
+## Add cmake target dependencies of the executable
+## same as for the library above. This is needed to force
+## talon controller messages to be built before the
+## talon controller code tries to use them
+add_dependencies(frcrobot_hw_main
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS}
+)
+## Install ------------------------------------------------------------
+
+# Install executables
+install(TARGETS
+  frcrobot_hw_main
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+if (0)
 # Test trajectory generator node
 add_executable(${PROJECT_NAME}_test_trajectory src/tools/test_trajectory.cpp)
 set_target_properties(${PROJECT_NAME}_test_trajectory PROPERTIES OUTPUT_NAME test_trajectory PREFIX "")
@@ -205,15 +229,22 @@ add_executable(${PROJECT_NAME}_keyboard_teleop src/tools/keyboard_teleop.cpp)
 set_target_properties(${PROJECT_NAME}_keyboard_teleop PROPERTIES OUTPUT_NAME keyboard_teleop PREFIX "")
 target_link_libraries(${PROJECT_NAME}_keyboard_teleop
   ${catkin_LIBRARIES}
-)
 
-## Install ------------------------------------------------------------
 install(TARGETS
-  frcrobot_sim_main
     ${PROJECT_NAME}_test_trajectory
     ${PROJECT_NAME}_controller_to_csv_main
     ${PROJECT_NAME}_csv_to_controller_main
     ${PROJECT_NAME}_keyboard_teleop
+    
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+)
+endif()
+
+## Install ------------------------------------------------------------
+install(TARGETS
+  frcrobot_sim_main
     
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

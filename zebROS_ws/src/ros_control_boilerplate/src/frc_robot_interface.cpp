@@ -855,6 +855,18 @@ void FRCRobotInterface::custom_profile_set_talon(hardware_interface::TalonMode m
 // get?
 void FRCRobotInterface::custom_profile_thread(int joint_id)
 {
+	if (talon_state_[joint_id].getCANID() == 51)
+	{
+		ROS_INFO("Exiting custom_profile_thread since id == 51");
+		return;
+	}
+
+	if (!can_talon_srx_locals_[joint_id])
+	{
+		ROS_INFO_STREAM("Exiting custom_profile_thread since joint id " << joint_id << "is not local");
+		return;
+	}
+
 	//I wonder how inefficient it is to have all of these threads
 	//running at the specified hz just copying to the status
 	double time_sum = 0;
@@ -880,11 +892,6 @@ void FRCRobotInterface::custom_profile_thread(int joint_id)
 		if (talon_command_[joint_id].getCustomProfileDisable())
 		{
 			ROS_INFO_STREAM("Exiting custom_profile_thread since CustomProfileDisable is set for joint id " << joint_id);
-			return;
-		}
-		if (talon_state_[joint_id].getCANID() == 51)
-		{
-			ROS_INFO("Exiting custom_profile_thread since id == 51");
 			return;
 		}
 

@@ -88,7 +88,7 @@
 #include <networktables/NetworkTable.h>
 #include <SmartDashboard/SmartDashboard.h>
 
-#include <ctre/phoenix/MotorControl/SensorCollection.h>
+#include <ctre/phoenix/motorcontrol/SensorCollection.h>
 
 namespace frcrobot_control
 {
