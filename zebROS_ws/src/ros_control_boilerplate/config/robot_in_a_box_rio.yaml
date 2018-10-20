@@ -1,0 +1,19 @@
+# ros_control_boilerplate Settings -----------------------
+# Settings for ros_control control loop
+generic_hw_control_loop:
+  loop_hz: 300
+  cycle_time_error_threshold: 0.01
+
+hardware_interface:
+   joints:
+       - {name: talon3, local: false, type: can_talon_srx, can_id: 3}
+       - {name: talon9, local: false, type: can_talon_srx, can_id: 9}
+       - {name: pdp, local: true, type: pdp }
+       
+joint_state_controller:
+   type:         joint_state_controller/JointStateController
+   publish_rate: 100
+# Settings for ros_control hardware interface
+# Map a name for each valid joint to a CAN id
+# For future expansion, change hw_id to specify one
+# of several types of HW interface : CAN_id, PWM_id, DIO_id, AIO_id, etc.
