@@ -1,4 +1,4 @@
-<library path="lib/libjoint_state_listener">
+<library path="lib/libstate_listener">
 
   <class name="joint_state_listener_controller/JointStateListenerController" type="joint_state_listener_controller::JointStateListenerController" base_class_type="controller_interface::ControllerBase">
     <description>

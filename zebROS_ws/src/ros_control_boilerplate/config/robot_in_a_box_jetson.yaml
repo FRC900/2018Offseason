@@ -61,3 +61,8 @@ talon9_controller:
     type: talon_controllers/TalonPercentOutputController
     joint: talon9
     feedback_type: CTRE_MagEncoder_Absolute
+
+joint_state_listener_controller:
+    type:      joint_state_listener_controller/JointStateListenerController
+    topic:     /frcrobot_rio/joint_states
+

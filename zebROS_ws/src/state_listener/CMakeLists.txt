@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(joint_state_listener)
+project(state_listener)
 
 include("../cmake_modules/CMakeOpt.cmake")
 
@@ -104,8 +104,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES joint_state_listener
-#  CATKIN_DEPENDS controller_interface realtime_tools remote_joint_interface roscpp
+  LIBRARIES state_listener
+#  CATKIN_DEPENDS controller_interface realtime_tools remote_interface roscpp
 #  DEPENDS system_lib
 )
 
@@ -122,7 +122,7 @@ include_directories(
 
 ## Declare a C++ library
  add_library(${PROJECT_NAME}
-   src/joint_state_listener_controller.cpp
+   src/state_listener_controller.cpp
  )
 
 ## Add cmake target dependencies of the library
@@ -133,7 +133,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/joint_state_listener_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/state_listener_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -177,9 +177,9 @@ include_directories(
    FILES_MATCHING PATTERN "*.h"
    PATTERN ".svn" EXCLUDE
  )
-install(FILES joint_state_listener_plugins.xml
-	#joint_state_listener_controller.yaml
-	#joint_state_listener_controller.launch
+install(FILES state_listener_plugins.xml
+	#state_listener_controller.yaml
+	#state_listener_controller.launch
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
@@ -194,7 +194,7 @@ install(FILES joint_state_listener_plugins.xml
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_joint_state_listener.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_state_listener.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
