@@ -21,6 +21,7 @@ find_package(catkin REQUIRED COMPONENTS
   pdp_state_controller
   elevator_controller
   robot_controller_interface
+  remote_hardware_interface
 )
 
 add_message_files (
