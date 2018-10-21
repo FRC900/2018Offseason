@@ -20,4 +20,11 @@ joint_state_controller:
 # For future expansion, change hw_id to specify one
 # of several types of HW interface : CAN_id, PWM_id, DIO_id, AIO_id, etc.
 #
+pdp_state_controller:
+   type:         pdp_state_controller/PDPStateController
+   publish_rate: 20
 
+
+joint_state_listener_controller:
+    type:      joint_state_listener_controller/JointStateListenerController
+    topic:     /frcrobot_jetson/joint_states

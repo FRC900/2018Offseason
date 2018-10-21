@@ -1,0 +1,9 @@
+<library path="lib/libjoint_state_listener">
+
+  <class name="joint_state_listener_controller/JointStateListenerController" type="joint_state_listener_controller::JointStateListenerController" base_class_type="controller_interface::ControllerBase">
+    <description>
+      Listens to joint_state messages for joints marked as remote, writes their value to the local controller
+    </description>
+  </class>
+
+</library>

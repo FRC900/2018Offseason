@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(remote_hardware_interface)
+project(joint_state_listener)
 
 include("../cmake_modules/CMakeOpt.cmake")
 
@@ -7,9 +7,10 @@ include("../cmake_modules/CMakeOpt.cmake")
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  hardware_interface
+  controller_interface
+  realtime_tools
+  remote_hardware_interface
   roscpp
-  sensor_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -69,7 +70,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   sensor_msgs
+#   std_msgs  # Or other packages containing msgs
 # )
 
 ################################################
@@ -102,9 +103,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
- INCLUDE_DIRS include
-#  LIBRARIES remote_hardware_interface
-#  CATKIN_DEPENDS hardware_interface roscpp sensor_msgs
+  INCLUDE_DIRS include
+  LIBRARIES joint_state_listener
+#  CATKIN_DEPENDS controller_interface realtime_tools remote_joint_interface roscpp
 #  DEPENDS system_lib
 )
 
@@ -115,14 +116,14 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
-  ${catkin_INCLUDE_DIRS}
+	include
+	${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/remote_hardware_interface.cpp
-# )
+ add_library(${PROJECT_NAME}
+   src/joint_state_listener_controller.cpp
+ )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -132,7 +133,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/remote_hardware_interface_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/joint_state_listener_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -163,19 +164,23 @@ include_directories(
 #   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 # )
 
-## Mark executables and/or libraries for installation
-# install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_node
-#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
+# Mark executables and/or libraries for installation
+ install(TARGETS ${PROJECT_NAME}
+   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+ )
 
-## Mark cpp header files for installation
+# Mark cpp header files for installation
  install(DIRECTORY include/${PROJECT_NAME}/
    DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
    FILES_MATCHING PATTERN "*.h"
    PATTERN ".svn" EXCLUDE
  )
+install(FILES joint_state_listener_plugins.xml
+	#joint_state_listener_controller.yaml
+	#joint_state_listener_controller.launch
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 # install(FILES
@@ -189,7 +194,7 @@ include_directories(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_remote_hardware_interface.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_joint_state_listener.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
