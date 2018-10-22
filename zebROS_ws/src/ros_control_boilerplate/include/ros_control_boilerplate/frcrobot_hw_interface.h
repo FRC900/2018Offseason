@@ -51,6 +51,7 @@
 #include <NidecBrushless.h>
 #include <DigitalInput.h>
 #include <DigitalOutput.h>
+#include <Joystick.h>
 #include <SafePWM.h>
 #include <Solenoid.h>
 #include <DoubleSolenoid.h>
@@ -59,6 +60,11 @@
 #include <LiveWindow/LiveWindow.h>
 #include <SmartDashboard/SmartDashboard.h>
 #include <std_msgs/Float64.h>
+// custom ROS message types
+#include "ros_control_boilerplate/AutoMode.h"
+#include "ros_control_boilerplate/JoystickState.h"
+#include "ros_control_boilerplate/MatchSpecificData.h"
+
 
 #include <robot_controller_interface/robot_controller_interface.hpp>
 
@@ -178,8 +184,6 @@ class FRCRobotHWInterface : public ros_control_boilerplate::FRCRobotInterface
 		virtual void write(ros::Duration &elapsed_time) override;
 
 	private:
-		void hal_keepalive_thread(void);
-
 		void process_motion_profile_buffer_thread(double hz);
 		void customProfileSetMode(int joint_id,
 								  hardware_interface::TalonMode mode,
@@ -225,6 +229,7 @@ class FRCRobotHWInterface : public ros_control_boilerplate::FRCRobotInterface
 		bool safeTalonCall(ctre::phoenix::ErrorCode error_code,
 				const std::string &talon_method_name);
 
+		// TODO :: make these dummy joints instead
 		std::atomic<bool> stop_arm_;
 		std::atomic<bool> override_arm_limits_;
 		std::atomic<bool> cube_state_;
@@ -273,7 +278,31 @@ class FRCRobotHWInterface : public ros_control_boilerplate::FRCRobotInterface
 		hardware_interface::RobotControllerState shared_robot_controller_state_;
 		std::mutex robot_controller_state_mutex_;
 
-		ROSIterativeRobot robot_;
+		std::vector<std::shared_ptr<Joystick>> joysticks_;
+		std::vector<bool> joystick_up_last_;
+		std::vector<bool> joystick_down_last_;
+		std::vector<bool> joystick_left_last_;
+		std::vector<bool> joystick_right_last_;
+		std::shared_ptr<realtime_tools::RealtimePublisher<ros_control_boilerplate::JoystickState>> realtime_pub_joystick_;
+
+		std::unique_ptr<ROSIterativeRobot> robot_;
+		std::shared_ptr<realtime_tools::RealtimePublisher<ros_control_boilerplate::MatchSpecificData>> realtime_pub_match_data_;
+		std::shared_ptr<realtime_tools::RealtimePublisher<ros_control_boilerplate::AutoMode>> realtime_pub_nt_;
+		std::shared_ptr<realtime_tools::RealtimePublisher<std_msgs::Float64>> realtime_pub_error_;
+
+		// Used to throttle match data publishing time to something
+		// reasonable rather than 50Hz. Given that match data only
+		// updates once a second (after game-specific data is published)
+		// there's no reason to repeat it at a really high rate.
+		ros::Time last_match_data_publish_time_;
+		bool game_specific_message_seen_;
+		bool error_msg_last_received_;
+
+		// Same thing for network tables - they only need to update
+		// at human-usable scales
+		ros::Time last_nt_publish_time_;
+
+		double error_pub_start_time_;
 };  // class
 
 }  // namespace

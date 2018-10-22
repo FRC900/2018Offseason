@@ -250,6 +250,12 @@ class FRCRobotInterface : public hardware_interface::RobotHW
 		std::vector<bool>        ready_signal_locals_;
 		std::size_t              num_ready_signals_;
 
+		std::vector<std::string> joystick_names_;
+		std::vector<int>         joystick_ids_; // pretty sure this is montonic increasing by default?
+		std::vector<bool>        joystick_locals_;
+		std::size_t              num_joysticks_;
+
+		bool run_hal_robot_;
 
 		urdf::Model *urdf_model_;
 

@@ -404,6 +404,19 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 			ready_signal_names_.push_back(joint_name);
 			ready_signal_locals_.push_back(local);
 		}
+		else if (joint_type == "joystick")
+		{
+			if (!joint_params.hasMember("id"))
+				throw std::runtime_error("A joystick ID was not specified");
+			XmlRpc::XmlRpcValue &xml_id = joint_params["id"];
+			if (!xml_id.valid() ||
+				xml_id.getType() != XmlRpc::XmlRpcValue::TypeInt)
+				throw std::runtime_error("An invalid joystick id was specified (expecting an int).");
+			const int id = xml_id;
+			joystick_names_.push_back(joint_name);
+			joystick_ids_.push_back(id);
+			joystick_locals_.push_back(local);
+		}
 		else
 		{
 			std::stringstream s;
@@ -411,6 +424,7 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 			throw std::runtime_error(s.str());
 		}
 	}
+	nh.param<bool>("run_hal_robot", run_hal_robot_);
 }
 
 void FRCRobotInterface::init()
