@@ -41,6 +41,7 @@
 
 namespace ros_control_boilerplate
 {
+
 FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_model) :
 	  name_("generic_hw_interface")
 	, nh_(nh)

@@ -87,6 +87,20 @@
 
 namespace frcrobot_control
 {
+#define Dumify(name) DummyVar(#name, &name)
+class DummyVar
+{
+	public :
+		DummyVar(const std::string &name, double *address) :
+			name_(name), address_(address)
+		{
+		if (name_.rfind('_') == (name_.size() - 1))
+			name_.erase(name_.size() - 1, 1);
+		}
+		std::string name_;
+		double *address_;
+};
+
 const int pidIdx = 0; //0 for primary closed-loop, 1 for cascaded closed-loop
 const int timeoutMs = 0; //If nonzero, function will wait for config success and report an error if it times out. If zero, no blocking or checking is performed
 
@@ -267,6 +281,43 @@ void FRCRobotHWInterface::init(void)
 	// Do base class init. This loads common interface info
 	// used by both the real and sim interfaces
 	FRCRobotInterface::init();
+
+	std::vector<DummyVar> dummy_vars;
+	dummy_vars.push_back(Dumify(cube_state_));
+	dummy_vars.push_back(Dumify(auto_state_0_));
+	dummy_vars.push_back(Dumify(auto_state_1_));
+	dummy_vars.push_back(Dumify(auto_state_2_));
+	dummy_vars.push_back(Dumify(auto_state_3_));
+	dummy_vars.push_back(Dumify(stop_arm_));
+	dummy_vars.push_back(Dumify(override_arm_limits_));
+	dummy_vars.push_back(Dumify(disable_compressor_));
+	dummy_vars.push_back(Dumify(starting_config_));
+	dummy_vars.push_back(Dumify(navX_zero_));
+	for (auto d : dummy_vars)
+	{
+		ROS_INFO_STREAM_NAMED(name_, "FRCRobotInterface: Registering interface for DummyVar: " << d.name_);
+
+		*d.address_ = 0;
+
+		hardware_interface::JointStateHandle dsh(d.name_, d.address_, d.address_, d.address_);
+		hwi_joint_state_interface_.registerHandle(dsh);
+
+		hardware_interface::JointHandle dch(dsh, d.address_);
+		hwi_joint_command_interface_.registerHandle(dch);
+		hwi_joint_position_interface_.registerHandle(dch);
+		hwi_joint_velocity_interface_.registerHandle(dch);
+		//if (!dummy_joint_locals_[i])
+			//joint_remote_interface_.registerHandle(dch);
+	}
+	navX_zero_ = -10000;
+
+	registerInterface(&hwi_joint_state_interface_);
+	registerInterface(&hwi_joint_command_interface_);
+	registerInterface(&hwi_joint_position_interface_);
+	registerInterface(&hwi_joint_velocity_interface_);
+	registerInterface(&hwi_joint_effort_interface_); // empty for now
+	registerInterface(&hwi_joint_remote_interface_); // list of Joints defined as remote
+
 
 	// Make sure to initialize WPIlib code before creating
 	// a CAN Talon object to avoid NIFPGA: Resource not initialized
@@ -501,13 +552,6 @@ void FRCRobotHWInterface::init(void)
 		joystick_left_last_.push_back(false);
 	}
 
-
-	stop_arm_ = false;
-	override_arm_limits_ = false;
-	cube_state_ = false;
-	disable_compressor_ = false;
-    starting_config_ = false;
-	navX_zero_ = -10000;
 	navX_angle_ = 0;
 	pressure_ = 0;
 	match_data_enabled_ = false;
@@ -1042,13 +1086,13 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 		if ((last_nt_publish_time_ + ros::Duration(1.0 / nt_publish_rate)) < time_now_t)
 		{
 			// SmartDashboard works!
-			frc::SmartDashboard::PutNumber("navX_angle", navX_angle_.load(std::memory_order_relaxed));
+			frc::SmartDashboard::PutNumber("navX_angle", navX_angle_);
 			frc::SmartDashboard::PutNumber("Pressure", pressure_);
-			frc::SmartDashboard::PutBoolean("cube_state", cube_state_.load(std::memory_order_relaxed));
-			frc::SmartDashboard::PutBoolean("death_0", auto_state_0_.load(std::memory_order_relaxed));
-			frc::SmartDashboard::PutBoolean("death_1", auto_state_1_.load(std::memory_order_relaxed));
-			frc::SmartDashboard::PutBoolean("death_2", auto_state_2_.load(std::memory_order_relaxed));
-			frc::SmartDashboard::PutBoolean("death_3", auto_state_3_.load(std::memory_order_relaxed));
+			frc::SmartDashboard::PutBoolean("cube_state", cube_state_ != 0);
+			frc::SmartDashboard::PutBoolean("death_0", auto_state_0_ != 0);
+			frc::SmartDashboard::PutBoolean("death_1", auto_state_1_ != 0);
+			frc::SmartDashboard::PutBoolean("death_2", auto_state_2_ != 0);
+			frc::SmartDashboard::PutBoolean("death_3", auto_state_3_ != 0);
 
 			std::shared_ptr<nt::NetworkTable> driveTable = NetworkTable::GetTable("SmartDashboard");  //Access Smart Dashboard Variables
 			if (driveTable && realtime_pub_nt_->trylock())
@@ -1079,21 +1123,19 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 			}
 			if (driveTable)
 			{
-				disable_compressor_.store((bool)driveTable->GetBoolean("disable_reg", 0), std::memory_order_relaxed);
-				starting_config_.store((bool)driveTable->GetBoolean("starting_config", 0), std::memory_order_relaxed);
-				frc::SmartDashboard::PutBoolean("disable_reg_ret", disable_compressor_.load(std::memory_order_relaxed));
+				disable_compressor_ = driveTable->GetBoolean("disable_reg", 0);
+				frc::SmartDashboard::PutBoolean("disable_reg_ret", disable_compressor_ != 0);
+				starting_config_ = driveTable->GetBoolean("starting_config", 0);
 
-				override_arm_limits_.store((bool)driveTable->GetBoolean("disable_arm_limits", 0), std::memory_order_relaxed);
-				frc::SmartDashboard::PutBoolean("disable_arm_limits_ret", override_arm_limits_.load(std::memory_order_relaxed));
+				override_arm_limits_ = driveTable->GetBoolean("disable_arm_limits", 0);
+				frc::SmartDashboard::PutBoolean("disable_arm_limits_ret", override_arm_limits_ != 0);
 
-				stop_arm_.store((bool)driveTable->GetBoolean("stop_arm", 0), std::memory_order_relaxed);
+				stop_arm_ = driveTable->GetBoolean("stop_arm", 0);
 
-				double zero_angle;
 				if(driveTable->GetBoolean("zero_navX", 0) != 0)
-					zero_angle = (double)driveTable->GetNumber("zero_angle", 0);
+					navX_zero_ = (double)driveTable->GetNumber("zero_angle", 0);
 				else
-					zero_angle = -10000;
-				navX_zero_.store(zero_angle, std::memory_order_relaxed);
+					navX_zero_ = -10000;
 
 				if(driveTable->GetBoolean("record_time", 0) != 0 )
 				{
@@ -1418,11 +1460,11 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 			tf2::Quaternion tempQ;
 			if(i == 0)
 			{
-				const double navX_zero = navX_zero_.load(std::memory_order_relaxed);
-				if(navX_zero != -10000)
-					offset_navX_[i] = navX_zero - navXs_[i]->GetFusedHeading() / 360. * 2. * M_PI;
+				if(navX_zero_ != -10000)
+					offset_navX_[i] = navX_zero_ - navXs_[i]->GetFusedHeading() / 360. * 2. * M_PI;
 
-				navX_angle_.store(navXs_[i]->GetFusedHeading() / 360. * 2. * M_PI + offset_navX_[i], std::memory_order_relaxed);
+				// For display on the smartdash
+				navX_angle_ = navXs_[i]->GetFusedHeading() / 360. * 2. * M_PI + offset_navX_[i];
 			}
 			tempQ.setRPY(navXs_[i]->GetRoll() / -360 * 2 * M_PI, navXs_[i]->GetPitch() / -360 * 2 * M_PI, navXs_[i]->GetFusedHeading() / 360 * 2 * M_PI + offset_navX_[i]  );
 
@@ -2490,40 +2532,6 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 		{
 			// Use dummy joints to communicate info between
 			// various controllers and driver station smartdash vars
-			if (dummy_joint_names_[i] == "cube_state")
-			{
-				dummy_joint_position_[i] = dummy_joint_command_[i];
-				cube_state_.store(dummy_joint_position_[i] != 0, std::memory_order_relaxed);
-			}
-			else if (dummy_joint_names_[i] == "auto_state_0")
-			{
-				dummy_joint_position_[i] = dummy_joint_command_[i];
-				auto_state_0_.store(dummy_joint_position_[i] != 0, std::memory_order_relaxed);
-			}
-			else if (dummy_joint_names_[i] == "auto_state_1")
-			{
-				dummy_joint_position_[i] = dummy_joint_command_[i];
-				auto_state_1_.store(dummy_joint_position_[i] != 0, std::memory_order_relaxed);
-			}
-			else if (dummy_joint_names_[i] == "auto_state_2")
-			{
-				dummy_joint_position_[i] = dummy_joint_command_[i];
-				auto_state_2_.store(dummy_joint_position_[i] != 0, std::memory_order_relaxed);
-			}
-			else if (dummy_joint_names_[i] == "auto_state_3")
-			{
-				dummy_joint_position_[i] = dummy_joint_command_[i];
-				auto_state_3_.store(dummy_joint_position_[i] != 0, std::memory_order_relaxed);
-			}
-			else if (dummy_joint_names_[i] == "stop_arm")
-				dummy_joint_position_[i] = stop_arm_.load(std::memory_order_relaxed) ? 1 : 0;
-			else if (dummy_joint_names_[i] == "override_arm_limits")
-				dummy_joint_position_[i] = override_arm_limits_.load(std::memory_order_relaxed) ? 1 : 0;
-			else if (dummy_joint_names_[i] == "disable_compressor")
-				dummy_joint_position_[i] = disable_compressor_.load(std::memory_order_relaxed) ? 1 : 0;
-			else if (dummy_joint_names_[i] == "starting_config")
-				dummy_joint_position_[i] = starting_config_.load(std::memory_order_relaxed) ? 1 : 0;
-			else
 			{
 				dummy_joint_effort_[i] = 0;
 				//if (dummy_joint_names_[i].substr(2, std::string::npos) == "_angle")

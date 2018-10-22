@@ -229,19 +229,26 @@ class FRCRobotHWInterface : public ros_control_boilerplate::FRCRobotInterface
 		bool safeTalonCall(ctre::phoenix::ErrorCode error_code,
 				const std::string &talon_method_name);
 
-		// TODO :: make these dummy joints instead
-		std::atomic<bool> stop_arm_;
-		std::atomic<bool> override_arm_limits_;
-		std::atomic<bool> cube_state_;
-		std::atomic<bool> auto_state_0_;
-		std::atomic<bool> auto_state_1_;
-		std::atomic<bool> auto_state_2_;
-		std::atomic<bool> auto_state_3_;
-		std::atomic<bool> disable_compressor_;
-		std::atomic<bool> starting_config_;
-		std::atomic<double> navX_zero_;
-		std::atomic<double> navX_angle_;
-		std::atomic<double> pressure_;
+		double cube_state_;
+		double auto_state_0_;
+		double auto_state_1_;
+		double auto_state_2_;
+		double auto_state_3_;
+		double stop_arm_;
+		double override_arm_limits_;
+		double disable_compressor_;
+		double starting_config_;
+		double navX_zero_;
+		double navX_angle_;
+		double pressure_;
+
+		hardware_interface::JointStateInterface    hwi_joint_state_interface_;
+		hardware_interface::JointCommandInterface  hwi_joint_command_interface_;
+		hardware_interface::PositionJointInterface hwi_joint_position_interface_;
+		hardware_interface::VelocityJointInterface hwi_joint_velocity_interface_;
+		hardware_interface::EffortJointInterface   hwi_joint_effort_interface_;
+		hardware_interface::RemoteJointInterface   hwi_joint_remote_interface_;
+
 		std::atomic<bool> match_data_enabled_;
 
 		std::vector<std::shared_ptr<ctre::phoenix::motorcontrol::can::TalonSRX>> can_talons_;
