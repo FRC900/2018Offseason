@@ -12,6 +12,8 @@ hardware_interface:
        - {name: pdp, local: false, type: pdp}
        - {name: robot_code_ready_jetson, local: true, type: ready}
        - {name: robot_code_ready_rio, local: false, type: ready} # Probably not really needed?
+       - {name: do1, local: false, type: digital_output, dio_channel: 1}
+       - {name: do2, local_update: true, local_hardware: false, type: digital_output, dio_channel: 2}
        
 joint_state_controller:
    type:         joint_state_controller/JointStateController
@@ -67,3 +69,6 @@ joint_state_listener_controller:
     type:      joint_state_listener_controller/JointStateListenerController
     topic:     /frcrobot_rio/joint_states
 
+do2_controller:
+    type: position_controllers/JointPositionController
+    joint: do2

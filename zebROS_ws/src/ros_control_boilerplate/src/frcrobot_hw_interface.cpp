@@ -85,8 +85,49 @@
 
 #include <ctre/phoenix/motorcontrol/SensorCollection.h>
 
+
+//
+// digital output, PWM, Pneumatics, compressor, nidec, talons
+//    controller on jetson  (local update = true, local hardware = false
+//        don't do anything in read
+//        random controller updates command in controller
+//        set output state var from command in write() on jetson - this will be reflected in joint_states
+//        do not call Set since hardware doesn't exist (local write)
+//
+//      on rio (local update = false, local hardware = true
+//         don't do anything in read
+//         update loop needs to read joint_states (based on local read)
+//         write needs to set value as - is, no don't apply invert (based on local read)
+//
+//
+//	local_update = true, local hardware = true -> no listener
+//
+//		This would be for hardware on the Rio which is also modified by controllers running on the Rio
+//
+//	local_update = false, local hardware = true -> listener to transfer cmd from remote to local
+//
+//		E.g. state on the Rio if a controller on the Jetson wanted to update hardware on the Rio
+//
+//	local_update = true, local_hardare = false -> no listener, update local state but don't write to hw
+//
+//		e.g. state on the Jetson if a controller on the Jetson wanted to update hardware on the rio
+//
+//	local_update = false, local_hardare = false -> listener to mirror updated state from local?
+//
+//		nothing is happening on the controller wrt the hardware.  Maybe try to update local copy of state?
+//
+//	So !local_update implies add to remote Interface to run a listener
+//
+// For analog & digital input and state like PDP, match, joystick, etc, there's only 1 local flag.
+// The only cases which make sense are local_update = local_hardware, since the value can only be
+// updated by reading the hardware itself.  There, just use a "local" flag.
+//
+
 namespace frcrobot_control
 {
+// Dummy vars are used to create joints which are accessed via variable name
+// in the low level control code. So far this is only used for sending data
+// to the driver station and back via network tables.
 #define Dumify(name) DummyVar(#name, &name)
 class DummyVar
 {
@@ -94,8 +135,7 @@ class DummyVar
 		DummyVar(const std::string &name, double *address) :
 			name_(name), address_(address)
 		{
-		if (name_.rfind('_') == (name_.size() - 1))
-			name_.erase(name_.size() - 1, 1);
+			name_.erase(name.find_last_not_of('_') + 1);
 		}
 		std::string name_;
 		double *address_;
@@ -117,7 +157,7 @@ FRCRobotHWInterface::~FRCRobotHWInterface()
 
 	for (size_t i = 0; i < num_can_talon_srxs_; i++)
 	{
-		if (can_talon_srx_locals_[i])
+		if (can_talon_srx_local_hardwares_[i])
 		{
 			custom_profile_threads_[i].join();
 			talon_read_threads_[i].join();
@@ -346,9 +386,11 @@ void FRCRobotHWInterface::init(void)
 	{
 		ROS_INFO_STREAM_NAMED("frcrobot_hw_interface",
 							  "Loading joint " << i << "=" << can_talon_srx_names_[i] <<
-							  "local = " << can_talon_srx_locals_[i] <<
+							  (can_talon_srx_local_updates_[i] ? " local" : " remote") << " update, " <<
+							  (can_talon_srx_local_hardwares_[i] ? "local" : "remote") << " hardware " <<
 							  " as CAN id " << can_talon_srx_can_ids_[i]);
-		if (can_talon_srx_locals_[i])
+
+		if (can_talon_srx_local_hardwares_[i])
 		{
 			can_talons_.push_back(std::make_shared<ctre::phoenix::motorcontrol::can::TalonSRX>(can_talon_srx_can_ids_[i]));
 			can_talons_[i]->Set(ctre::phoenix::motorcontrol::ControlMode::Disabled, 0);
@@ -380,12 +422,13 @@ void FRCRobotHWInterface::init(void)
 	{
 		ROS_INFO_STREAM_NAMED("frcrobot_hw_interface",
 							  "Loading joint " << i << "=" << nidec_brushless_names_[i] <<
-							  "local = " << nidec_brushless_locals_[i] <<
+							  (nidec_brushless_local_updates_[i] ? " local" : " remote") << " update, " <<
+							  (nidec_brushless_local_hardwares_[i] ? "local" : "remote") << " hardware " <<
 							  " as PWM channel " << nidec_brushless_pwm_channels_[i] <<
 							  " / DIO channel " << nidec_brushless_dio_channels_[i] <<
 							  " invert " << nidec_brushless_inverts_[i]);
 
-		if (nidec_brushless_locals_[i])
+		if (nidec_brushless_local_hardwares_[i])
 		{
 			nidec_brushlesses_.push_back(std::make_shared<frc::NidecBrushless>(nidec_brushless_pwm_channels_[i], nidec_brushless_dio_channels_[i]));
 			nidec_brushlesses_[i]->SetInverted(nidec_brushless_inverts_[i]);
@@ -395,7 +438,7 @@ void FRCRobotHWInterface::init(void)
 	{
 		ROS_INFO_STREAM_NAMED("frcrobot_hw_interface",
 							  "Loading joint " << i << "=" << digital_input_names_[i] <<
-							  "local = " << digital_input_locals_[i] <<
+							  " local = " << digital_input_locals_[i] <<
 							  " as Digital Input " << digital_input_dio_channels_[i] <<
 							  " invert " << digital_input_inverts_[i]);
 
@@ -408,11 +451,12 @@ void FRCRobotHWInterface::init(void)
 	{
 		ROS_INFO_STREAM_NAMED("frcrobot_hw_interface",
 							  "Loading joint " << i << "=" << digital_output_names_[i] <<
-							  "local = " << digital_output_locals_[i] <<
+							  (digital_output_local_updates_[i] ? " local" : " remote") << " update, " <<
+							  (digital_output_local_hardwares_[i] ? "local" : "remote") << " hardware " <<
 							  " as Digital Output " << digital_output_dio_channels_[i] <<
 							  " invert " << digital_output_inverts_[i]);
 
-		if (digital_output_locals_[i])
+		if (digital_output_local_hardwares_[i])
 			digital_outputs_.push_back(std::make_shared<frc::DigitalOutput>(digital_output_dio_channels_[i]));
 		else
 			digital_outputs_.push_back(nullptr);
@@ -421,11 +465,12 @@ void FRCRobotHWInterface::init(void)
 	{
 		ROS_INFO_STREAM_NAMED("frcrobot_hw_interface",
 							  "Loading joint " << i << "=" << pwm_names_[i] <<
-							  "local = " << pwm_locals_[i] <<
+							  (pwm_local_updates_[i] ? " local" : " remote") << " update, " <<
+							  (pwm_local_hardwares_[i] ? "local" : "remote") << " hardware " <<
 							  " as Digitial Output " << pwm_pwm_channels_[i] <<
 							  " invert " << pwm_inverts_[i]);
 
-		if (pwm_locals_[i])
+		if (pwm_local_hardwares_[i])
 		{
 			PWMs_.push_back(std::make_shared<frc::SafePWM>(pwm_pwm_channels_[i]));
 			PWMs_[i]->SetSafetyEnabled(true);
@@ -437,11 +482,12 @@ void FRCRobotHWInterface::init(void)
 	{
 		ROS_INFO_STREAM_NAMED("frcrobot_hw_interface",
 							  "Loading joint " << i << "=" << solenoid_names_[i] <<
-							  "local = " << solenoid_locals_[i] <<
+							  (solenoid_local_updates_[i] ? " local" : " remote") << " update, " <<
+							  (solenoid_local_hardwares_[i] ? "local" : "remote") << " hardware " <<
 							  " as Solenoid " << solenoid_ids_[i]
 							  << " with pcm " << solenoid_pcms_[i]);
 
-		if (solenoid_locals_[i])
+		if (solenoid_local_hardwares_[i])
 			solenoids_.push_back(std::make_shared<frc::Solenoid>(solenoid_pcms_[i], solenoid_ids_[i]));
 		else
 			solenoids_.push_back(nullptr);
@@ -450,12 +496,13 @@ void FRCRobotHWInterface::init(void)
 	{
 		ROS_INFO_STREAM_NAMED("frcrobot_hw_interface",
 							  "Loading joint " << i << "=" << double_solenoid_names_[i] <<
-							  "local = " << double_solenoid_locals_[i] <<
+							  (double_solenoid_local_updates_[i] ? " local" : " remote") << " update, " <<
+							  (double_solenoid_local_hardwares_[i] ? "local" : "remote") << " hardware " <<
 							  " as Double Solenoid forward " << double_solenoid_forward_ids_[i] <<
 							  " reverse " << double_solenoid_reverse_ids_[i]
 							  << " with pcm " << double_solenoid_pcms_[i]);
 
-		if (double_solenoid_locals_[i])
+		if (double_solenoid_local_hardwares_[i])
 			double_solenoids_.push_back(std::make_shared<frc::DoubleSolenoid>(double_solenoid_pcms_[i], double_solenoid_forward_ids_[i], double_solenoid_reverse_ids_[i]));
 		else
 			double_solenoids_.push_back(nullptr);
@@ -486,7 +533,7 @@ void FRCRobotHWInterface::init(void)
 	{
 		ROS_INFO_STREAM_NAMED("frcrobot_hw_interface",
 							  "Loading joint " << i << "=" << analog_input_names_[i] <<
-							  "local = " << analog_input_locals_[i] <<
+							  " local = " << analog_input_locals_[i] <<
 							  " as Analog Input " << analog_input_analog_channels_[i]);
 		if (analog_input_locals_[i])
 			analog_inputs_.push_back(std::make_shared<frc::AnalogInput>(analog_input_analog_channels_[i]));
@@ -497,20 +544,27 @@ void FRCRobotHWInterface::init(void)
 	{
 		ROS_INFO_STREAM_NAMED("frcrobot_hw_interface",
 							  "Loading joint " << i << "=" << compressor_names_[i] <<
-							  "local = " << compressor_locals_[i] <<
+							  (compressor_local_updates_[i] ? " local" : " remote") << " update, " <<
+							  (compressor_local_hardwares_[i] ? "local" : "remote") << " hardware " <<
 							  " as Compressor with pcm " << compressor_pcm_ids_[i]);
 
-		if (compressor_locals_[i])
+		if (compressor_local_hardwares_[i])
 			compressors_.push_back(std::make_shared<frc::Compressor>(compressor_pcm_ids_[i]));
 		else
 			compressors_.push_back(nullptr);
 	}
+	for (size_t i = 0; i < num_rumbles_; i++)
+		ROS_INFO_STREAM_NAMED("frcrobot_hw_interface",
+							  "Loading joint " << i << "=" << rumble_names_[i] <<
+							  (rumble_local_updates_[i] ? " local" : " remote") << " update, " <<
+							  (rumble_local_hardwares_[i] ? "local" : "remote") << " hardware " <<
+							  " as Rumble with port" << rumble_ports_[i]);
 
 	for (size_t i = 0; i < num_pdps_; i++)
 	{
 		ROS_INFO_STREAM_NAMED("frcrobot_hw_interface",
-							  "Loading joint " << i << "=" << compressor_names_[i] <<
-							  "local = " << compressor_locals_[i] <<
+							  "Loading joint " << i << "=" << pdp_names_[i] <<
+							  " local = " << pdp_locals_[i] <<
 							  " as PDP");
 
 		if (pdp_locals_[i])
@@ -532,7 +586,7 @@ void FRCRobotHWInterface::init(void)
 	{
 		ROS_INFO_STREAM_NAMED("frcrobot_hw_interface",
 							  "Loading joint " << i << "=" << joystick_names_[i] <<
-							  "local = " << joystick_locals_[i] <<
+							  " local = " << joystick_locals_[i] <<
 							  " as joystick with ID " << joystick_ids_[i]);
 		if (joystick_locals_[i])
 		{
@@ -1333,7 +1387,7 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 
 	for (std::size_t joint_id = 0; joint_id < num_can_talon_srxs_; ++joint_id)
 	{
-		if (can_talon_srx_locals_[joint_id])
+		if (can_talon_srx_local_hardwares_[joint_id])
 		{
 			std::lock_guard<std::mutex> l(*talon_read_state_mutexes_[joint_id]);
 			auto &ts   = talon_state_[joint_id];
@@ -1377,7 +1431,7 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 
 	for (size_t i = 0; i < num_nidec_brushlesses_; i++)
 	{
-		if (nidec_brushless_locals_[i])
+		if (nidec_brushless_local_updates_[i])
 			brushless_vel_[i] = nidec_brushlesses_[i]->Get();
 	}
 	for (size_t i = 0; i < num_digital_inputs_; i++)
@@ -1391,44 +1445,33 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 #if 0
 	for (size_t i = 0; i < num_digital_outputs_; i++)
 	{
-		if (digital_output_locals_[i])
-			digital_output_state_[i] = (digital_outputs_[i]->Get()^digital_output_inverts_[i]) ? 1 : 0;
-		//State should really be a bool
-		//This isn't strictly neccesary, it just reads what the DIO is currently set to
+		if (!digital_output_local_updates_[i])
+			digital_output_state_[i] = digital_output_command_[i];
 	}
-#endif
-#if 0
 	for (size_t i = 0; i < num_pwm_; i++)
 	{
 		// Just reflect state of output in status
-		if (pwm_locals_[i])
-			pwm_state_[i] = PWMs_[i]->GetSpeed();
+		if (!pwm_local_updates_[i])
+			pwm_state_[i] = pwm_command_[i];
 	}
-#endif
-#if 0
 	for (size_t i = 0; i < num_solenoids_; i++)
 	{
-		if (solenoid_locals_[i])
-			solenoid_state_[i] = solenoids_[i]->Get();
+		if (!solenoid_local_updates_[i])
+			solenoid_state_[i] = solenoid_command_[i];
 	}
-#endif
-#if 0
 	for (size_t i = 0; i < num_double_solenoids_; i++)
 	{
-		if (double_solenoid_locals_[i])
-			double_solenoid_state_[i] = double_solenoids_[i]->Get();
+		if (!double_solenoid_local_updates_[i])
+			double_solenoid_state_[i] = double_solenoid_command_[i];
 	}
 #endif
 	for (size_t i = 0; i < num_analog_inputs_; i++)
 	{
 		if (analog_input_locals_[i])
-		{
 			analog_input_state_[i] = analog_inputs_[i]->GetValue() *analog_input_a_[i] + analog_input_b_[i];
-			if(analog_input_names_[i] == "analog_pressure_sensor")
-			{
-				pressure_ = analog_input_state_[i];
-			}
-		}
+
+		if (analog_input_names_[i] == "analog_pressure_sensor")
+			pressure_ = analog_input_state_[i];
 	}
 	//navX read here
 	for (size_t i = 0; i < num_navX_; i++)
@@ -1740,7 +1783,7 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 
 	for (std::size_t joint_id = 0; joint_id < num_can_talon_srxs_; ++joint_id)
 	{
-		if (!can_talon_srx_locals_[joint_id])
+		if (!can_talon_srx_local_hardwares_[joint_id])
 			continue;
 		//TODO : skip over most or all of this if the talon is in follower mode
 		//       Only do the Set() call and then never do anything else?
@@ -2433,96 +2476,100 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 
 	for (size_t i = 0; i < num_nidec_brushlesses_; i++)
 	{
-		if (nidec_brushless_locals_[i])
+		if (nidec_brushless_local_hardwares_[i])
 			nidec_brushlesses_[i]->Set(brushless_command_[i]);
 	}
 
 	for (size_t i = 0; i < num_digital_outputs_; i++)
 	{
-		if (digital_output_locals_[i])
+		// Only invert the desired output once, on the controller
+		// where the update originated
+		const bool converted_command = (digital_output_command_[i] > 0) ^ (digital_output_inverts_[i] && digital_output_local_updates_[i]);
+		if (converted_command != digital_output_state_[i])
 		{
-			const bool converted_command = (digital_output_command_[i] > 0) ^ digital_output_inverts_[i];
-			if (converted_command != digital_output_state_[i])
-			{
+			if (digital_output_local_hardwares_[i])
 				digital_outputs_[i]->Set(converted_command);
-				digital_output_state_[i] = converted_command;
-				ROS_INFO_STREAM("Wrote digital output " << i << "=" << converted_command);
-			}
+			digital_output_state_[i] = converted_command;
+			ROS_INFO_STREAM("Wrote digital output " << i << "=" << converted_command);
 		}
 	}
 
 	for (size_t i = 0; i < num_pwm_; i++)
 	{
-		if (pwm_locals_[i])
+		const int setpoint = pwm_command_[i] * ((pwm_inverts_[i] & pwm_local_updates_[i]) ? -1 : 1);
+		if (pwm_state_[i] != setpoint)
 		{
-			const int inverter = (pwm_inverts_[i]) ? -1 : 1;
-			PWMs_[i]->SetSpeed(pwm_command_[i]*inverter);
-			ROS_INFO_STREAM("Wrote PWM " << i << "=" << pwm_command_[i] * inverter);
+			if (pwm_local_hardwares_[i])
+				PWMs_[i]->SetSpeed(setpoint);
+			pwm_state_[i] = setpoint;
+			ROS_INFO_STREAM("PWM " << pwm_names_[i] <<
+					" at channel" <<  pwm_pwm_channels_[i] <<
+					" set to " << pwm_state_[i]);
 		}
 	}
 
 	for (size_t i = 0; i < num_solenoids_; i++)
 	{
-		if (solenoid_locals_[i])
+		const bool setpoint = solenoid_command_[i] > 0;
+		if (solenoid_state_[i] != setpoint)
 		{
-			const bool setpoint = solenoid_command_[i] > 0;
-			if (solenoid_state_[i] != setpoint)
-			{
+			if (solenoid_local_hardwares_[i])
 				solenoids_[i]->Set(setpoint);
-				solenoid_state_[i] = setpoint;
-				ROS_INFO_STREAM("Wrote solenoid " << i << "=" << setpoint);
-			}
+			solenoid_state_[i] = setpoint;
+			ROS_INFO_STREAM("Solenoid " << solenoid_names_[i] <<
+							" at id " << solenoid_ids_[i] <<
+							" / pcm " << solenoid_pcms_[i] <<
+							" = " << setpoint);
+
 		}
 	}
 
 	for (size_t i = 0; i < num_double_solenoids_; i++)
 	{
-		if (double_solenoid_locals_[i])
-		{
-			DoubleSolenoid::Value setpoint = DoubleSolenoid::Value::kOff;
-			if (double_solenoid_command_[i] >= 1.0)
-				setpoint = DoubleSolenoid::Value::kForward;
-			else if (double_solenoid_command_[i] <= -1.0)
-				setpoint = DoubleSolenoid::Value::kReverse;
+		DoubleSolenoid::Value setpoint = DoubleSolenoid::Value::kOff;
+		if (double_solenoid_command_[i] >= 1.0)
+			setpoint = DoubleSolenoid::Value::kForward;
+		else if (double_solenoid_command_[i] <= -1.0)
+			setpoint = DoubleSolenoid::Value::kReverse;
 
-			// Not sure if it makes sense to store command values
-			// in state or wpilib enum values
-			if (double_solenoid_state_[i] != double_solenoid_command_[i])
-			{
+		// Not sure if it makes sense to store command values
+		// in state or wpilib enum values
+		if (double_solenoid_state_[i] != double_solenoid_command_[i])
+		{
+			if (double_solenoid_local_hardwares_[i])
 				double_solenoids_[i]->Set(setpoint);
-				double_solenoid_state_[i] = double_solenoid_command_[i];
-				ROS_INFO_STREAM("Wrote double solenoid " << i << "=" << setpoint);
-			}
+			double_solenoid_state_[i] = double_solenoid_command_[i];
+			ROS_INFO_STREAM("Double solenoid " << double_solenoid_names_[i] <<
+					" at forward id " << double_solenoid_forward_ids_[i] <<
+					"/ reverse id " << double_solenoid_reverse_ids_[i] <<
+					" / pcm " << double_solenoid_pcms_[i] <<
+					" = " << setpoint);
 		}
 	}
 
-	for (size_t i = 0; i < num_rumble_; i++)
+	for (size_t i = 0; i < num_rumbles_; i++)
 	{
-		if (rumble_locals_[i])
+		if (rumble_state_[i] != rumble_command_[i])
 		{
-			if (rumble_state_[i] != rumble_command_[i])
-			{
-				const unsigned int rumbles = *((unsigned int*)(&rumble_command_[i]));
-				const unsigned int left_rumble  = (rumbles >> 16) & 0xFFFF;
-				const unsigned int right_rumble = (rumbles      ) & 0xFFFF;
+			const unsigned int rumbles = *((unsigned int*)(&rumble_command_[i]));
+			const unsigned int left_rumble  = (rumbles >> 16) & 0xFFFF;
+			const unsigned int right_rumble = (rumbles      ) & 0xFFFF;
+			if (rumble_local_hardwares_[i])
 				HAL_SetJoystickOutputs(rumble_ports_[i], 0, left_rumble, right_rumble);
-				rumble_state_[i] = rumble_command_[i];
-				ROS_INFO_STREAM("Wrote rumble " << i << "=" << rumble_command_[i]);
-			}
+			rumble_state_[i] = rumble_command_[i];
+			ROS_INFO_STREAM("Wrote rumble " << i << "=" << rumble_command_[i]);
 		}
 	}
 
 	for (size_t i = 0; i< num_compressors_; i++)
 	{
-		if (compressor_locals_[i])
+		if (last_compressor_command_[i] != compressor_command_[i])
 		{
-			if (last_compressor_command_[i] != compressor_command_[i])
-			{
-				const bool setpoint = compressor_command_[i] > 0;
+			const bool setpoint = compressor_command_[i] > 0;
+			if (compressor_local_hardwares_[i])
 				compressors_[i]->SetClosedLoopControl(setpoint);
-				last_compressor_command_[i] = compressor_command_[i];
-				ROS_INFO_STREAM("Wrote compressor " << i << "=" << setpoint);
-			}
+			last_compressor_command_[i] = compressor_command_[i];
+			ROS_INFO_STREAM("Wrote compressor " << i << "=" << setpoint);
 		}
 	}
 

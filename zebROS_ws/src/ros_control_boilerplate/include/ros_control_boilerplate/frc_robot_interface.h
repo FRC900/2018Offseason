@@ -165,6 +165,11 @@ class FRCRobotInterface : public hardware_interface::RobotHW
 										  int    /*closed_loop_period*/)
 		{
 		}
+		void readJointLocalParams(XmlRpc::XmlRpcValue joint_params,
+								  const bool local,
+								  const bool saw_local_keyword,
+								  bool &local_update,
+								  bool &local_hardware);
 
 		std::vector<std::thread> custom_profile_threads_;
 
@@ -172,14 +177,16 @@ class FRCRobotInterface : public hardware_interface::RobotHW
 		std::vector<std::string> can_talon_srx_names_;
 		std::vector<int>         can_talon_srx_can_ids_;
 		std::vector<double>      can_talon_srx_run_profile_stop_time_;
-		std::vector<bool>        can_talon_srx_locals_;
+		std::vector<bool>        can_talon_srx_local_updates_;
+		std::vector<bool>        can_talon_srx_local_hardwares_;
 		std::size_t              num_can_talon_srxs_;
 
 		std::vector<std::string> nidec_brushless_names_;
 		std::vector<int>         nidec_brushless_pwm_channels_;
 		std::vector<int>         nidec_brushless_dio_channels_;
 		std::vector<bool>        nidec_brushless_inverts_;
-		std::vector<bool>        nidec_brushless_locals_;
+		std::vector<bool>        nidec_brushless_local_updates_;
+		std::vector<bool>        nidec_brushless_local_hardwares_;
 		std::size_t              num_nidec_brushlesses_;
 
 		//I think inverts are worth having on below 3
@@ -192,31 +199,36 @@ class FRCRobotInterface : public hardware_interface::RobotHW
 		std::vector<std::string> digital_output_names_;
 		std::vector<int>         digital_output_dio_channels_;
 		std::vector<bool>        digital_output_inverts_;
-		std::vector<bool>        digital_output_locals_;
+		std::vector<bool>        digital_output_local_updates_;
+		std::vector<bool>        digital_output_local_hardwares_;
 		std::size_t              num_digital_outputs_;
 
 		std::vector<std::string> pwm_names_;
 		std::vector<int>         pwm_pwm_channels_;
 		std::vector<bool>        pwm_inverts_;
-		std::vector<bool>        pwm_locals_;
+		std::vector<bool>        pwm_local_updates_;
+		std::vector<bool>        pwm_local_hardwares_;
 		std::size_t              num_pwm_;
 
 		std::vector<std::string> solenoid_names_;
 		std::vector<int>         solenoid_ids_;
 		std::vector<int>         solenoid_pcms_;
-		std::vector<bool>        solenoid_locals_;
+		std::vector<bool>        solenoid_local_updates_;
+		std::vector<bool>        solenoid_local_hardwares_;
 		std::size_t              num_solenoids_;
 
 		std::vector<std::string> double_solenoid_names_;
 		std::vector<int>         double_solenoid_forward_ids_;
 		std::vector<int>         double_solenoid_reverse_ids_;
 		std::vector<int>         double_solenoid_pcms_;
-		std::vector<bool>        double_solenoid_locals_;
+		std::vector<bool>        double_solenoid_local_updates_;
+		std::vector<bool>        double_solenoid_local_hardwares_;
 		std::size_t              num_double_solenoids_;
 
 		std::vector<std::string> compressor_names_;
 		std::vector<int>         compressor_pcm_ids_;
-		std::vector<bool>        compressor_locals_;
+		std::vector<bool>        compressor_local_updates_;
+		std::vector<bool>        compressor_local_hardwares_;
 		std::size_t              num_compressors_;
 
 		std::vector<std::string> pdp_names_;
@@ -225,8 +237,9 @@ class FRCRobotInterface : public hardware_interface::RobotHW
 
 		std::vector<std::string> rumble_names_;
 		std::vector<int>         rumble_ports_;
-		std::vector<int>         rumble_locals_;
-		std::size_t              num_rumble_;
+		std::vector<int>         rumble_local_updates_;
+		std::vector<int>         rumble_local_hardwares_;
+		std::size_t              num_rumbles_;
 
 		std::vector<std::string> navX_names_;
 		std::vector<std::string> navX_frame_ids_;

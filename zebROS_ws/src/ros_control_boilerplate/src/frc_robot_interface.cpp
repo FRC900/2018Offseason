@@ -42,6 +42,36 @@
 namespace ros_control_boilerplate
 {
 
+void FRCRobotInterface::readJointLocalParams(XmlRpc::XmlRpcValue joint_params,
+											 const bool local,
+											 const bool saw_local_keyword,
+											 bool &local_update,
+											 bool &local_hardware)
+{
+	local_update = local;
+	if (joint_params.hasMember("local_update"))
+	{
+		if (saw_local_keyword)
+			throw std::runtime_error("local can't be combined with local_update");
+		XmlRpc::XmlRpcValue &xml_joint_local_update = joint_params["local_update"];
+		if (!xml_joint_local_update.valid() ||
+			xml_joint_local_update.getType() != XmlRpc::XmlRpcValue::TypeBoolean)
+			throw std::runtime_error("An invalid joint local_update was specified (expecting a boolean).");
+		local_update = xml_joint_local_update;
+	}
+	local_hardware = local;
+	if (joint_params.hasMember("local_hardware"))
+	{
+		if (saw_local_keyword)
+			throw std::runtime_error("local can't be combined with local_hardware");
+		XmlRpc::XmlRpcValue &xml_joint_local_hardware = joint_params["local_hardware"];
+		if (!xml_joint_local_hardware.valid() ||
+			xml_joint_local_hardware.getType() != XmlRpc::XmlRpcValue::TypeBoolean)
+			throw std::runtime_error("An invalid joint local_hardware was specified (expecting a boolean).");
+		local_hardware = xml_joint_local_hardware;
+	}
+}
+
 FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_model) :
 	  name_("generic_hw_interface")
 	, nh_(nh)
@@ -53,7 +83,7 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 	, num_solenoids_(0)
 	, num_double_solenoids_(0)
 	, num_compressors_(0)
-	, num_rumble_(0)
+	, num_rumbles_(0)
 	, num_navX_(0)
 	, num_analog_inputs_(0)
 	, num_dummy_joints_(0)
@@ -95,7 +125,10 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 			throw std::runtime_error("An invalid joint type was specified (expecting a string).");
 		const std::string joint_type = xml_joint_type;
 
+		bool saw_local_keyword = false;
 		bool local = true;
+		bool local_update;
+		bool local_hardware;
 		if (joint_params.hasMember("local"))
 		{
 			XmlRpc::XmlRpcValue &xml_joint_local = joint_params["local"];
@@ -103,6 +136,7 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 				xml_joint_local.getType() != XmlRpc::XmlRpcValue::TypeBoolean)
 				throw std::runtime_error("An invalid joint local was specified (expecting a boolean).");
 			local = xml_joint_local;
+			saw_local_keyword = true;
 		}
 
 		if (joint_type == "can_talon_srx")
@@ -115,9 +149,12 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 				throw std::runtime_error("An invalid joint can_id was specified (expecting an int).");
 			const int can_id = xml_can_id;
 
+			readJointLocalParams(joint_params, local, saw_local_keyword, local_update, local_hardware);
+
 			can_talon_srx_names_.push_back(joint_name);
 			can_talon_srx_can_ids_.push_back(can_id);
-			can_talon_srx_locals_.push_back(local);
+			can_talon_srx_local_updates_.push_back(local_update);
+			can_talon_srx_local_hardwares_.push_back(local_hardware);
 		}
 		else if (joint_type == "nidec_brushless")
 		{
@@ -147,11 +184,14 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 				invert = xml_invert;
 			}
 
+			readJointLocalParams(joint_params, local, saw_local_keyword, local_update, local_hardware);
+
 			nidec_brushless_names_.push_back(joint_name);
 			nidec_brushless_pwm_channels_.push_back(pwm_channel);
 			nidec_brushless_dio_channels_.push_back(dio_channel);
 			nidec_brushless_inverts_.push_back(invert);
-			nidec_brushless_locals_.push_back(local);
+			nidec_brushless_local_updates_.push_back(local_update);
+			nidec_brushless_local_hardwares_.push_back(local_hardware);
 		}
 		else if (joint_type == "digital_input")
 		{
@@ -200,10 +240,13 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 				invert = xml_invert;
 			}
 
+			readJointLocalParams(joint_params, local, saw_local_keyword, local_update, local_hardware);
+
 			digital_output_names_.push_back(joint_name);
 			digital_output_dio_channels_.push_back(digital_output_dio_channel);
 			digital_output_inverts_.push_back(invert);
-			digital_output_locals_.push_back(local);
+			digital_output_local_updates_.push_back(local_update);
+			digital_output_local_hardwares_.push_back(local_hardware);
 		}
 		else if (joint_type == "pwm")
 		{
@@ -226,10 +269,13 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 				invert = xml_invert;
 			}
 
+			readJointLocalParams(joint_params, local, saw_local_keyword, local_update, local_hardware);
+
 			pwm_names_.push_back(joint_name);
 			pwm_pwm_channels_.push_back(pwm_pwm_channel);
 			pwm_inverts_.push_back(invert);
-			pwm_locals_.push_back(local);
+			pwm_local_updates_.push_back(local_update);
+			pwm_local_hardwares_.push_back(local_hardware);
 		}
 		else if (joint_type == "solenoid")
 		{
@@ -239,7 +285,6 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 			if (!xml_solenoid_id.valid() ||
 				xml_solenoid_id.getType() != XmlRpc::XmlRpcValue::TypeInt)
 				throw std::runtime_error("An invalid joint solenoid id was specified (expecting an int).");
-
 			const int solenoid_id = xml_solenoid_id;
 
 			if (!joint_params.hasMember("pcm"))
@@ -248,13 +293,15 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 			if (!xml_solenoid_pcm.valid() ||
 				xml_solenoid_pcm.getType() != XmlRpc::XmlRpcValue::TypeInt)
 				throw std::runtime_error("An invalid joint solenoid pcm was specified (expecting an int).");
-
 			const int solenoid_pcm = xml_solenoid_pcm;
+
+			readJointLocalParams(joint_params, local, saw_local_keyword, local_update, local_hardware);
 
 			solenoid_names_.push_back(joint_name);
 			solenoid_ids_.push_back(solenoid_id);
 			solenoid_pcms_.push_back(solenoid_pcm);
-			solenoid_locals_.push_back(local);
+			solenoid_local_updates_.push_back(local_update);
+			solenoid_local_hardwares_.push_back(local_hardware);
 		}
 		else if (joint_type == "double_solenoid")
 		{
@@ -285,11 +332,14 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 
 			const int double_solenoid_pcm = xml_double_solenoid_pcm;
 
+			readJointLocalParams(joint_params, local, saw_local_keyword, local_update, local_hardware);
+
 			double_solenoid_names_.push_back(joint_name);
 			double_solenoid_forward_ids_.push_back(double_solenoid_forward_id);
 			double_solenoid_reverse_ids_.push_back(double_solenoid_reverse_id);
 			double_solenoid_pcms_.push_back(double_solenoid_pcm);
-			double_solenoid_locals_.push_back(local);
+			double_solenoid_local_updates_.push_back(local_update);
+			double_solenoid_local_hardwares_.push_back(local_hardware);
 
 		}
 		else if (joint_type == "rumble")
@@ -303,9 +353,12 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 
 			const int rumble_port = xml_rumble_port;
 
+			readJointLocalParams(joint_params, local, saw_local_keyword, local_update, local_hardware);
+
 			rumble_names_.push_back(joint_name);
 			rumble_ports_.push_back(rumble_port);
-			rumble_locals_.push_back(local);
+			rumble_local_updates_.push_back(local_update);
+			rumble_local_hardwares_.push_back(local_hardware);
 		}
 		else if (joint_type == "navX")
 		{
@@ -386,9 +439,12 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 
 			const int compressor_pcm_id = xml_compressor_pcm_id;
 
+			readJointLocalParams(joint_params, local, saw_local_keyword, local_update, local_hardware);
+
 			compressor_names_.push_back(joint_name);
 			compressor_pcm_ids_.push_back(compressor_pcm_id);
-			compressor_locals_.push_back(local);
+			compressor_local_updates_.push_back(local_update);
+			compressor_local_hardwares_.push_back(local_hardware);
 		}
 		else if (joint_type == "pdp")
 		{
@@ -492,7 +548,7 @@ void FRCRobotInterface::init()
 		// the same brushless motor
 		hardware_interface::JointHandle jh(jsh, &brushless_command_[i]);
 		joint_velocity_interface_.registerHandle(jh);
-		if (!nidec_brushless_locals_[i])
+		if (!nidec_brushless_local_updates_[i])
 			joint_remote_interface_.registerHandle(jh);
 	}
 
@@ -530,7 +586,7 @@ void FRCRobotInterface::init()
 		// the digital output
 		hardware_interface::JointHandle doh(dosh, &digital_output_command_[i]);
 		joint_position_interface_.registerHandle(doh);
-		if (!digital_output_locals_[i])
+		if (!digital_output_local_updates_[i])
 			joint_remote_interface_.registerHandle(doh);
 	}
 
@@ -548,7 +604,7 @@ void FRCRobotInterface::init()
 
 		hardware_interface::JointHandle ph(psh, &pwm_command_[i]);
 		joint_velocity_interface_.registerHandle(ph);
-		if (!pwm_locals_[i])
+		if (!pwm_local_updates_[i])
 			joint_remote_interface_.registerHandle(ph);
 	}
 	num_solenoids_ = solenoid_names_.size();
@@ -566,7 +622,7 @@ void FRCRobotInterface::init()
 
 		hardware_interface::JointHandle soh(ssh, &solenoid_command_[i]);
 		joint_position_interface_.registerHandle(soh);
-		if (!solenoid_locals_[i])
+		if (!solenoid_local_updates_[i])
 			joint_remote_interface_.registerHandle(soh);
 	}
 
@@ -585,13 +641,13 @@ void FRCRobotInterface::init()
 
 		hardware_interface::JointHandle dsoh(dssh, &double_solenoid_command_[i]);
 		joint_position_interface_.registerHandle(dsoh);
-		if (!double_solenoid_locals_[i])
+		if (!double_solenoid_local_updates_[i])
 			joint_remote_interface_.registerHandle(dsoh);
 	}
-	num_rumble_ = rumble_names_.size();
-	rumble_state_.resize(num_rumble_);
-	rumble_command_.resize(num_rumble_);
-	for (size_t i = 0; i < num_rumble_; i++)
+	num_rumbles_ = rumble_names_.size();
+	rumble_state_.resize(num_rumbles_);
+	rumble_command_.resize(num_rumbles_);
+	for (size_t i = 0; i < num_rumbles_; i++)
 	{
 		ROS_INFO_STREAM_NAMED(name_, "FRCRobotInterface: Registering interface for : " << rumble_names_[i] << " at port " << rumble_ports_[i]);
 
@@ -602,7 +658,7 @@ void FRCRobotInterface::init()
 
 		hardware_interface::JointHandle rh(rsh, &rumble_command_[i]);
 		joint_position_interface_.registerHandle(rh);
-		if (!rumble_locals_[i])
+		if (!rumble_local_updates_[i])
 			joint_remote_interface_.registerHandle(rh);
 	}
 
@@ -689,7 +745,7 @@ void FRCRobotInterface::init()
 
 		hardware_interface::JointHandle cch(csh, &compressor_command_[i]);
 		joint_position_interface_.registerHandle(cch);
-		if (!compressor_locals_[i])
+		if (!compressor_local_updates_[i])
 			joint_remote_interface_.registerHandle(cch);
 	}
 
@@ -914,9 +970,9 @@ void FRCRobotInterface::custom_profile_thread(int joint_id)
 		return;
 	}
 
-	if (!can_talon_srx_locals_[joint_id])
+	if (!can_talon_srx_local_hardwares_[joint_id])
 	{
-		ROS_INFO_STREAM("Exiting custom_profile_thread since joint id " << joint_id << "is not local");
+		ROS_INFO_STREAM("Exiting custom_profile_thread since joint id " << joint_id << "is not local hardware");
 		return;
 	}
 

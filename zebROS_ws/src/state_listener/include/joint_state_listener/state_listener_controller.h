@@ -55,7 +55,7 @@ class StateListenerController :
 			joint_names_ = hw->getNames();
 			for (auto j : joint_names_)
 			{
-				ROS_INFO_STREAM("Got joint " << j);
+				ROS_INFO_STREAM("State listener got joint " << j);
 				handles_.push_back(hw->getHandle(j));
 			}
 
