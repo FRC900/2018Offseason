@@ -1245,4 +1245,54 @@ class TalonStateHandle
 // hardware resources on the robot.  Since state is
 // read-only, allow multiple controllers to register it.
 class TalonStateInterface : public HardwareResourceManager<TalonStateHandle> {};
+
+class TalonWriteableStateHandle
+{
+	public:
+		TalonWriteableStateHandle(void) :
+			state_(0)
+		{}
+
+		// Initialize the base JointStateHandle with pointers
+		// from the state data object.  Since the standard ROS
+		// code uses JointStateHandles in some places to display
+		// robot state support that code as much as possible.  We'll
+		// have to figure out what effort maps to in the Talon
+		// Anything above and beyond the 3 standard ROS state
+		// vars (position, velocity, effort) will require support
+		// in the controller as well as the HWState object pointed
+		// to by a given handle.
+		TalonWriteableStateHandle(const std::string &name, TalonHWState *state) :
+			name_(name),
+			state_(state)
+		{
+			if (!state)
+				throw HardwareInterfaceException("Cannot create Talon writeable state handle '" + name + "'. state pointer is null.");
+		}
+		std::string getName(void) const
+		{
+			return name_;
+		}
+
+		// Operator which allows access to methods from
+		// the TalonHWState member var associated with this
+		// handle
+		// Note that we could create separate methods in
+		// the handle class for every method in the HWState
+		// class, e.g.
+		//     double getFoo(void) const {assert(_state); return state_->getFoo();}
+		// but if each of them just pass things unchanged between
+		// the calling code and the HWState method there's no
+		// harm in making a single method to do so rather than
+		// dozens of getFoo() one-line methods
+		TalonHWState *operator->() const
+		{
+			assert(state_);
+			return state_;
+		}
+
+	private:
+		std::string   name_;
+		TalonHWState *state_;
+};
 }

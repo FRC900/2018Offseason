@@ -112,5 +112,4 @@ class PDPWritableStateHandle
 };
 
 class PDPStateInterface: public HardwareResourceManager<PDPStateHandle> {};
-class PDPWritableStateInterface: public HardwareResourceManager<PDPWritableStateHandle, ClaimResources> {};
 }

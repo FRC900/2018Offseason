@@ -524,6 +524,11 @@ void FRCRobotInterface::init()
 		// the same talon
 		hardware_interface::TalonCommandHandle tch(tsh, &talon_command_[i]);
 		talon_command_interface_.registerHandle(tch);
+		if (!can_talon_srx_local_updates_[i])
+		{
+			hardware_interface::TalonWriteableStateHandle twsh(can_talon_srx_names_[i], &talon_state_[i]); /// writing directly to state?
+			talon_remote_state_interface_.registerHandle(twsh);
+		}
 	}
 
 	// Set vectors to correct size to hold data
@@ -819,6 +824,7 @@ void FRCRobotInterface::init()
 	// RealtimePublisher() for the data coming in from
 	// the DS
 	registerInterface(&talon_state_interface_);
+	registerInterface(&talon_remote_state_interface_);
 	registerInterface(&joint_state_interface_);
 	registerInterface(&talon_command_interface_);
 	registerInterface(&joint_command_interface_);

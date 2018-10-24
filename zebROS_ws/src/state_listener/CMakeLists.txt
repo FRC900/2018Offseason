@@ -10,6 +10,8 @@ find_package(catkin REQUIRED COMPONENTS
   controller_interface
   realtime_tools
   remote_hardware_interface
+  pdp_state_controller
+  talon_interface
   roscpp
 )
 

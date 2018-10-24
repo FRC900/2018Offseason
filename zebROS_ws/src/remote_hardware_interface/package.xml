@@ -53,6 +53,7 @@
   <build_depend>roscpp</build_depend>
   <build_depend>sensor_msgs</build_depend>
   <build_depend>pdp_state_controller</build_depend>
+  <build_depend>talon_interface</build_depend>
   <build_export_depend>hardware_interface</build_export_depend>
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>sensor_msgs</build_export_depend>

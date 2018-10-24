@@ -11,6 +11,8 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
   pdp_state_controller
+  pdp_state_controller
+  talon_interface
 )
 
 ## System dependencies are found with CMake's conventions

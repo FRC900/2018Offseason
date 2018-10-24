@@ -7,6 +7,7 @@
 #include <sensor_msgs/Imu.h>
 #include "remote_hardware_interface/remote_joint_interface.h"
 #include "pdp_state_controller/PDPData.h"
+#include "talon_state_controller/TalonState.h"
 
 namespace state_listener_controller
 {
@@ -299,6 +300,78 @@ class IMUStateListenerController :
 			data_linear_acceleration_[2] = msg->linear_acceleration.z;
 			std::copy(msg->linear_acceleration_covariance.cbegin(), msg->linear_acceleration_covariance.cend(), data_linear_acceleration_covariance_.begin());
 
+			command_buffer_.writeFromNonRT(data);
+		}
+};
+
+class TalonStateListenerController :
+	public controller_interface::Controller<hardware_interface::RemoteTalonStateInterface>
+{
+	public:
+		TalonStateListenerController() {}
+		~TalonStateListenerController()
+		{
+			sub_command_.shutdown();
+		}
+
+		virtual bool init(hardware_interface::RemoteTalonStateInterface *hw, ros::NodeHandle &n) override
+		{
+			// Read list of hw, make a list, grab handles for them, plus allocate storage space
+			joint_names_ = hw->getNames();
+			for (auto j : joint_names_)
+			{
+				ROS_INFO_STREAM("Joint State Listener Controller got joint " << j);
+				handles_.push_back(hw->getHandle(j));
+			}
+
+			std::string topic;
+
+			// get topic to subscribe to
+			if (!n.getParam("topic", topic))
+			{
+				ROS_ERROR("Parameter 'topic' not set");
+				return false;
+			}
+
+			sub_command_ = n.subscribe<talon_state_controller::TalonState>(topic, 1, &TalonStateListenerController::commandCB, this);
+			return true;
+		}
+
+		virtual void starting(const ros::Time & /*time*/) override
+		{
+		}
+		virtual void stopping(const ros::Time & /*time*/) override
+		{
+			//handles_.release();
+		}
+
+		virtual void update(const ros::Time & /*time*/, const ros::Duration & /*period*/) override
+		{
+			const auto data = *command_buffer_.readFromRT();
+
+		}
+
+	private:
+		ros::Subscriber sub_command_;
+		std::vector<std::string> joint_names_;
+		std::vector<hardware_interface::TalonWriteableStateHandle> handles_;
+
+		// Real-time buffer holds the last command value read from the
+		// "command" topic.
+		realtime_tools::RealtimeBuffer<std::vector<hardware_interface::TalonHWState>> command_buffer_;
+
+		virtual void commandCB(const talon_state_controller::TalonStateConstPtr &msg)
+		{
+			std::vector<hardware_interface::TalonHWState> data;
+			for (size_t i = 0; i < joint_names_.size(); i++)
+			{
+				auto it = std::find(msg->name.cbegin(), msg->name.cend(), joint_names_[i]);
+				if (it != msg->name.cend())
+				{
+					const size_t loc = it - msg->name.cbegin();
+					data.push_back(hardware_interface::TalonHWState(msg->can_id[loc]));
+				}
+			}
 			command_buffer_.writeFromNonRT(data);
 		}
 };

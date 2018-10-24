@@ -5,6 +5,7 @@
 #include <hardware_interface/imu_sensor_interface.h>
 #undef private
 #include <pdp_state_controller/pdp_state_interface.h>
+#include <talon_interface/talon_state_interface.h>
 
 // Create a separate type of joint interface for joints which
 // are read from hardware on another controller_manager.  This
@@ -53,7 +54,8 @@ namespace hardware_interface
 			std::copy(lac, lac + 9, dst);
 		}
 	};
-	class RemoteImuSensorInterface : public HardwareResourceManager<ImuWriteableSensorHandle, ClaimResources> {};
-	class RemotePDPStateInterface : public PDPWritableStateInterface {};
+	class RemoteImuSensorInterface  : public HardwareResourceManager<ImuWriteableSensorHandle,  ClaimResources> {};
+	class RemotePDPStateInterface   : public HardwareResourceManager<PDPWritableStateHandle,    ClaimResources> {};
+	class RemoteTalonStateInterface : public HardwareResourceManager<TalonWriteableStateHandle, ClaimResources> {};
 }
 
