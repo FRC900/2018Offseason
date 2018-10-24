@@ -85,20 +85,21 @@
 
 #include <ctre/phoenix/motorcontrol/SensorCollection.h>
 
-
 //
 // digital output, PWM, Pneumatics, compressor, nidec, talons
 //    controller on jetson  (local update = true, local hardware = false
 //        don't do anything in read
 //        random controller updates command in controller
 //        set output state var from command in write() on jetson - this will be reflected in joint_states
-//        do not call Set since hardware doesn't exist (local write)
+//          but do not call Set since hardware doesn't exist (local write)
 //
 //      on rio (local update = false, local hardware = true
 //         don't do anything in read
-//         update loop needs to read joint_states (based on local read)
-//         write needs to set value as - is, no don't apply invert (based on local read)
-//
+//         update loop needs to read joint_states using joint state listener
+//             this writes values from the jetson to each local joint command on the Rio
+//         write() sets hardware from those joint commands, and also sets state
+//            write needs to set value as - is, don't apply invert,
+//            since it was already applied on the remote side
 //
 //	local_update = true, local hardware = true -> no listener
 //
@@ -106,15 +107,17 @@
 //
 //	local_update = false, local hardware = true -> listener to transfer cmd from remote to local
 //
-//		E.g. state on the Rio if a controller on the Jetson wanted to update hardware on the Rio
+//		E.g. config on the Rio if a controller on the Jetson wanted to update hardware on the Rio
 //
 //	local_update = true, local_hardare = false -> no listener, update local state but don't write to hw
 //
-//		e.g. state on the Jetson if a controller on the Jetson wanted to update hardware on the rio
+//		e.g. config on the Jetson if a controller on the Jetson wanted to update hardware on the rio
 //
 //	local_update = false, local_hardare = false -> listener to mirror updated state from local?
 //
-//		nothing is happening on the controller wrt the hardware.  Maybe try to update local copy of state?
+//		nothing is happening on the controller wrt the hardware other than wanting to keep current on status
+//		not sure how useful this might be, excpet in cases like digital in where update==hardware
+//		by definition
 //
 //	So !local_update implies add to remote Interface to run a listener
 //
@@ -346,6 +349,7 @@ void FRCRobotHWInterface::init(void)
 		hwi_joint_command_interface_.registerHandle(dch);
 		hwi_joint_position_interface_.registerHandle(dch);
 		hwi_joint_velocity_interface_.registerHandle(dch);
+		//TODO not sure what needs to happen here
 		//if (!dummy_joint_locals_[i])
 			//joint_remote_interface_.registerHandle(dch);
 	}
@@ -357,7 +361,6 @@ void FRCRobotHWInterface::init(void)
 	registerInterface(&hwi_joint_velocity_interface_);
 	registerInterface(&hwi_joint_effort_interface_); // empty for now
 	registerInterface(&hwi_joint_remote_interface_); // list of Joints defined as remote
-
 
 	// Make sure to initialize WPIlib code before creating
 	// a CAN Talon object to avoid NIFPGA: Resource not initialized

@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   hardware_interface
   roscpp
   sensor_msgs
+  pdp_state_controller
 )
 
 ## System dependencies are found with CMake's conventions
@@ -104,7 +105,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
  INCLUDE_DIRS include
 #  LIBRARIES remote_hardware_interface
-#  CATKIN_DEPENDS hardware_interface roscpp sensor_msgs
+ CATKIN_DEPENDS hardware_interface roscpp sensor_msgs pdp_state_controller hardware_interface
 #  DEPENDS system_lib
 )
 
@@ -115,7 +116,7 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  include
   ${catkin_INCLUDE_DIRS}
 )
 

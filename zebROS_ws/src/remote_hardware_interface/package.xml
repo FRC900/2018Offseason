@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>remote_hardware_interface</name>
-  <version>0.0.0</version>
+  <version>0.0.1</version>
   <description>The remote_hardware_interface package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
@@ -52,9 +52,11 @@
   <build_depend>hardware_interface</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>sensor_msgs</build_depend>
+  <build_depend>pdp_state_controller</build_depend>
   <build_export_depend>hardware_interface</build_export_depend>
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>sensor_msgs</build_export_depend>
+  <build_export_depend>pdp_state_controller</build_export_depend>
   <exec_depend>hardware_interface</exec_depend>
   <exec_depend>roscpp</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>

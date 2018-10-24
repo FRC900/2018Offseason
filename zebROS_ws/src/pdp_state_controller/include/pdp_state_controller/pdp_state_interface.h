@@ -86,5 +86,31 @@ class PDPStateHandle
 		const PDPHWState *state_;
 };
 
+class PDPWritableStateHandle
+{
+	public:
+		PDPWritableStateHandle(void) : state_(0) {}
+
+		PDPWritableStateHandle(const std::string &name, PDPHWState *state) :
+			name_(name),
+			state_(state)
+		{
+			if (!state)
+				throw HardwareInterfaceException("Cannot create writable PDP state handle '" + name + "'. State pointer is null.");
+		}
+		std::string getName(void) const {return name_;}
+
+		PDPHWState *operator->()
+		{
+			assert(state_);
+			return state_;
+		}
+
+	private:
+		std::string	name_;
+		PDPHWState *state_;
+};
+
 class PDPStateInterface: public HardwareResourceManager<PDPStateHandle> {};
+class PDPWritableStateInterface: public HardwareResourceManager<PDPWritableStateHandle, ClaimResources> {};
 }

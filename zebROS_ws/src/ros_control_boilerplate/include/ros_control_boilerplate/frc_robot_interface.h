@@ -125,6 +125,7 @@ class FRCRobotInterface : public hardware_interface::RobotHW
 		hardware_interface::JointStateInterface joint_state_interface_;
 		hardware_interface::TalonStateInterface talon_state_interface_;
 		hardware_interface::PDPStateInterface	pdp_state_interface_;
+		hardware_interface::RemotePDPStateInterface	pdp_remote_state_interface_;
 
 		hardware_interface::JointCommandInterface  joint_command_interface_;
 		hardware_interface::PositionJointInterface joint_position_interface_;

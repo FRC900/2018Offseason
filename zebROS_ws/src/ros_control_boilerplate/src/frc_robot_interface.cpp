@@ -757,6 +757,11 @@ void FRCRobotInterface::init()
 
 		hardware_interface::PDPStateHandle csh(pdp_names_[i], &pdp_state_[i]);
 		pdp_state_interface_.registerHandle(csh);
+		if (!pdp_locals_[i])
+		{
+			hardware_interface::PDPWritableStateHandle psh(pdp_names_[i], &pdp_state_[i]);
+			pdp_remote_state_interface_.registerHandle(psh);
+		}
 	}
 
 	num_dummy_joints_ = dummy_joint_names_.size();
@@ -815,6 +820,7 @@ void FRCRobotInterface::init()
 	registerInterface(&joint_velocity_interface_);
 	registerInterface(&joint_effort_interface_); // empty for now
 	registerInterface(&joint_remote_interface_); // list of Joints defined as remote
+	registerInterface(&pdp_remote_state_interface_); // list of Joints defined as remote
 	registerInterface(&imu_interface_);
 	registerInterface(&pdp_state_interface_);
 	registerInterface(&robot_controller_state_interface_);

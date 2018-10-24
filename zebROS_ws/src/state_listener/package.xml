@@ -51,11 +51,11 @@
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>controller_interface</build_depend>
   <build_depend>realtime_tools</build_depend>
-  <build_depend>remote_joint_interface</build_depend>
+  <build_depend>remote_hardware_interface</build_depend>
   <build_depend>roscpp</build_depend>
   <build_export_depend>controller_interface</build_export_depend>
   <build_export_depend>realtime_tools</build_export_depend>
-  <build_export_depend>remote_joint_interface</build_export_depend>
+  <build_export_depend>remote_hardware_interface</build_export_depend>
   <build_export_depend>roscpp</build_export_depend>
   <exec_depend>controller_interface</exec_depend>
   <exec_depend>realtime_tools</exec_depend>
