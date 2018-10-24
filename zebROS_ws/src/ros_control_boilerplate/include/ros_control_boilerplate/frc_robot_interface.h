@@ -47,7 +47,6 @@
 // ROS Controls
 #include <controller_manager/controller_manager.h>
 #include <hardware_interface/joint_command_interface.h>
-#include <hardware_interface/imu_sensor_interface.h>
 #include <hardware_interface/robot_hw.h>
 #include <talon_interface/talon_command_interface.h>
 #include "pdp_state_controller/pdp_state_interface.h"
@@ -135,6 +134,8 @@ class FRCRobotInterface : public hardware_interface::RobotHW
 		hardware_interface::TalonCommandInterface  talon_command_interface_;
 
 		hardware_interface::ImuSensorInterface imu_interface_;
+		hardware_interface::RemoteImuSensorInterface imu_remote_interface_;
+
 		hardware_interface::RobotControllerStateInterface robot_controller_state_interface_;
 
 		void custom_profile_thread(int joint_id);

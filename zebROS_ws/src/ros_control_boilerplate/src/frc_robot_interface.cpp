@@ -704,6 +704,12 @@ void FRCRobotInterface::init()
 		hardware_interface::ImuSensorHandle imuh(imu_data);
 		imu_interface_.registerHandle(imuh);
 
+		if (!navX_locals_[i])
+		{
+			hardware_interface::ImuWriteableSensorHandle ish(imu_data);
+			imu_remote_interface_.registerHandle(ish);
+		}
+
 		// Set up a command interface to set an
 		// offset for reported heading
 		hardware_interface::JointStateHandle nxsh(navX_names_[i], &navX_state_[i], &navX_state_[i], &navX_state_[i]);
@@ -822,6 +828,7 @@ void FRCRobotInterface::init()
 	registerInterface(&joint_remote_interface_); // list of Joints defined as remote
 	registerInterface(&pdp_remote_state_interface_); // list of Joints defined as remote
 	registerInterface(&imu_interface_);
+	registerInterface(&imu_remote_interface_);
 	registerInterface(&pdp_state_interface_);
 	registerInterface(&robot_controller_state_interface_);
 
