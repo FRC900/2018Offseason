@@ -1068,6 +1068,9 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 		{
 			pdp_state_.setCurrent(pdp_joint_.GetCurrent(channel), channel);
 		}
+
+		match_state_.setEventName(DriverStation::GetInstance().matchTimeRemaining());
+		match_state_.set
 	}
 
 }
