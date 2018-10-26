@@ -513,8 +513,23 @@ void FRCRobotSimInterface::cube_state_callback(const elevator_controller::CubeSt
     has_cube = cube.has_cube;
 }
 
-void FRCRobotSimInterface::match_data_callback(const ros_control_boilerplate::MatchSpecificData &match_data) {
-	match_data_enabled_.store(match_data.isEnabled, std::memory_order_relaxed);
+void FRCRobotSimInterface::match_data_callback(const match_state_controller::MatchSpecificData &match_data) {
+	std::lock_guard<std::mutex> l(match_data_mutex_);
+	match_data_.setMatchTimeRemaining(match_data.matchTimeRemaining);
+	match_data_.setAllianceData(match_data.allianceData);
+	match_data_.setEventName(match_data.eventName);
+	match_data_.setAllianceColor(match_data.allianceColor);
+	match_data_.setMatchType(match_data.matchType);
+	match_data_.setDriverStationLocation(match_data.driverStationLocation);
+	match_data_.setMatchNumber(match_data.matchNumber);
+	match_data_.setReplayNumber(match_data.replayNumber);
+	match_data_.setEnabled(match_data.Enabled);
+	match_data_.setDisabled(match_data.Disabled);
+	match_data_.setAutonomous(match_data.Autonomous);
+	match_data_.setFMSAttached(match_data.FMSAttatched);
+	match_data_.setOperatorControl(match_data.OperatorControl);
+	match_data_.setTest(match_data.Test);
+	match_data_.setBatteryVoltage(match_data.BatteryVoltage);
 }
 
 void FRCRobotSimInterface::init(void)
@@ -709,7 +724,11 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 	static bool last_robot_enabled = false;
 
 	// Is match data reporting the robot enabled now?
-	const bool robot_enabled = match_data_enabled_.load(std::memory_order_relaxed);
+	bool robot_enabled = false;
+	{
+		std::lock_guard<std::mutex> l(match_data_mutex_);
+		robot_enabled = match_data_.isEnabled();
+	}
 
 	for (std::size_t joint_id = 0; joint_id < num_can_talon_srxs_; ++joint_id)
 	{

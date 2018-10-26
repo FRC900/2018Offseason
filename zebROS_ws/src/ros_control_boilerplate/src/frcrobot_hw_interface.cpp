@@ -326,7 +326,6 @@ std::vector<ros_control_boilerplate::DummyJoint> FRCRobotHWInterface::getDummyJo
 	dummy_joints.push_back(Dumify(disable_compressor_));
 	dummy_joints.push_back(Dumify(starting_config_));
 	dummy_joints.push_back(Dumify(navX_zero_));
-	dummy_joints.push_back(Dumify(match_data_enabled_));
 	return dummy_joints;
 }
 
@@ -342,17 +341,13 @@ void FRCRobotHWInterface::init(void)
 		// a CAN Talon object to avoid NIFPGA: Resource not initialized
 		// errors? See https://www.chiefdelphi.com/forums/showpost.php?p=1640943&postcount=3
 		robot_.reset(new ROSIterativeRobot());
-		realtime_pub_match_data_.reset(new realtime_tools::RealtimePublisher<ros_control_boilerplate::MatchSpecificData>(nh_, "match_data", 1));
 		realtime_pub_nt_.reset(new realtime_tools::RealtimePublisher<ros_control_boilerplate::AutoMode>(nh_, "autonomous_mode", 1));
 		realtime_pub_nt_->msg_.mode.resize(4);
 		realtime_pub_nt_->msg_.delays.resize(4);
 		realtime_pub_error_.reset(new realtime_tools::RealtimePublisher<std_msgs::Float64>(nh_, "error_times", 4));
 		last_nt_publish_time_ = ros::Time::now();
-		last_match_data_publish_time_ = last_nt_publish_time_;
 
-		game_specific_message_seen_ = false;
 		error_msg_last_received_ = false;
-
 		error_pub_start_time_ = last_nt_publish_time_.toSec();
 	}
 	else
@@ -691,7 +686,6 @@ void FRCRobotHWInterface::init(void)
 	navX_angle_ = 0;
 	pressure_ = 0;
 	navX_zero_ = -10000;
-	match_data_enabled_ = false;
 
 	for (size_t i = 0; i < num_can_talon_srxs_; i++)
 		motion_profile_mutexes_.push_back(std::make_shared<std::mutex>());
@@ -1295,7 +1289,6 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 		static unsigned iteration_count_match_data = 0;
 
 		const ros::Time time_now_t = ros::Time::now();
-		const double match_data_publish_rate = 1.1;
 		const double nt_publish_rate = 10;
 
 		struct timespec start_timespec;
@@ -1499,45 +1492,24 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 
 		start_timespec = end_time;
 
-		// Run at full speed until we see the game specific message.
-		// This guaratees we react as quickly as possible to it.
-		// After that is seen, slow down processing since there's nothing
-		// that changes that quickly in the data.
-		if ((!game_specific_message_seen_ || (last_match_data_publish_time_ + ros::Duration(1.0 / match_data_publish_rate) < time_now_t)) &&
-			realtime_pub_match_data_->trylock())
-		{
-			auto &m = realtime_pub_match_data_->msg_;
+		match_data_.setMatchTimeRemaining(DriverStation::GetInstance().GetMatchTime());
+		match_data_.setAllianceData(DriverStation::GetInstance().GetGameSpecificMessage());
+		match_data_.setEventName(DriverStation::GetInstance().GetEventName());
 
-			m.matchTimeRemaining = DriverStation::GetInstance().GetMatchTime();
+		match_data_.setAllianceColor(DriverStation::GetInstance().GetAlliance());
+		match_data_.setMatchType(DriverStation::GetInstance().GetMatchType());
+		match_data_.setDriverStationLocation(DriverStation::GetInstance().GetLocation());
+		match_data_.setMatchNumber(DriverStation::GetInstance().GetMatchNumber());
+		match_data_.setReplayNumber(DriverStation::GetInstance().GetReplayNumber());
 
-			const std::string game_specific_message = DriverStation::GetInstance().GetGameSpecificMessage();
-			m.allianceData = game_specific_message;
-			m.allianceColor = DriverStation::GetInstance().GetAlliance(); //returns int that corresponds to a DriverStation Alliance enum
-			m.driverStationLocation = DriverStation::GetInstance().GetLocation();
-			m.matchNumber = DriverStation::GetInstance().GetMatchNumber();
-			m.matchType = DriverStation::GetInstance().GetMatchType(); //returns int that corresponds to a DriverStation matchType enum
+		match_data_.setEnabled(DriverStation::GetInstance().IsEnabled());
+		match_data_.setDisabled(DriverStation::GetInstance().IsDisabled());
+		match_data_.setAutonomous(DriverStation::GetInstance().IsAutonomous());
+		match_data_.setFMSAttached(DriverStation::GetInstance().IsFMSAttached());
+		match_data_.setOperatorControl(DriverStation::GetInstance().IsOperatorControl());
+		match_data_.setTest(DriverStation::GetInstance().IsTest());
+		match_data_.setBatteryVoltage(DriverStation::GetInstance().GetBatteryVoltage());
 
-			const bool isEnabled = DriverStation::GetInstance().IsEnabled();
-			m.isEnabled = isEnabled;
-			match_data_enabled_ = isEnabled;
-
-			m.isDisabled = DriverStation::GetInstance().IsDisabled();
-			m.isAutonomous = DriverStation::GetInstance().IsAutonomous();
-
-			m.header.stamp = time_now_t;
-			realtime_pub_match_data_->unlockAndPublish();
-
-			if (m.isEnabled && (game_specific_message.length() > 0))
-			{
-				game_specific_message_seen_ = true;
-				last_match_data_publish_time_ += ros::Duration(1.0 / match_data_publish_rate);
-			}
-			else
-			{
-				last_match_data_publish_time_ = time_now_t;
-				game_specific_message_seen_ = false;
-			}
-		}
 		clock_gettime(CLOCK_MONOTONIC, &end_time);
 		time_sum_match_data +=
 			((double)end_time.tv_sec -  (double)start_timespec.tv_sec) +
@@ -2534,7 +2506,7 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 
 		// Set new motor setpoint if either the mode or
 		// the setpoint has been changed
-		if (match_data_enabled_)
+		if (match_data_.isEnabled())
 		{
 			double command;
 			hardware_interface::TalonMode in_mode;
@@ -2682,7 +2654,7 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 	time_idx += 1;
 	start_time = end_time;
 	}
-	last_robot_enabled = match_data_enabled_ != 0;
+	last_robot_enabled = match_data_.isEnabled();
 
 #ifdef USE_TALON_MOTION_PROFILE
 	profile_is_live_.store(profile_is_live, std::memory_order_relaxed);

@@ -54,6 +54,7 @@
 #include "pcm_state_interface/pcm_state_interface.h"
 #include "remote_hardware_interface/remote_joint_interface.h"
 #include "robot_controller_interface/robot_controller_interface.hpp"
+#include "match_state_controller/match_data_interface.h"
 
 namespace ros_control_boilerplate
 {
@@ -149,6 +150,8 @@ class FRCRobotInterface : public hardware_interface::RobotHW
 		hardware_interface::RemotePDPStateInterface	  pdp_remote_state_interface_;
 		hardware_interface::PCMStateInterface	      pcm_state_interface_;
 		hardware_interface::RemotePCMStateInterface	  pcm_remote_state_interface_;
+
+		hardware_interface::MatchStateInterface       match_state_interface_;
 
 		hardware_interface::JointCommandInterface  joint_command_interface_;
 		hardware_interface::PositionJointInterface joint_position_interface_;
@@ -316,6 +319,7 @@ class FRCRobotInterface : public hardware_interface::RobotHW
 		std::vector<hardware_interface::PDPHWState> pdp_state_;
 		std::vector<hardware_interface::PCMState> pcm_state_;
 		hardware_interface::RobotControllerState robot_controller_state_;
+		hardware_interface::MatchHWState match_data_;
 
 		// Each entry in the vector is an array. That array holds
 		// the data returned from one particular imu

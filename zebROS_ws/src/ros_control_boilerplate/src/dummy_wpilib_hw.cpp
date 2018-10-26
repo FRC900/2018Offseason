@@ -277,6 +277,31 @@ bool frc::DriverStation::IsTest() const
 	return false;
 }
 
+std::string frc::DriverStation::GetEventName() const
+{
+	ROS_ERROR("Called frc::DriverStation::GetEventName() const on unsupported platform");
+	return std::string("");
+}
+
+int frc::DriverStation::GetReplayNumber() const
+{
+	ROS_ERROR("Called frc::DriverStation::GetReplayNumber() const on unsupported platform");
+	return -900;
+}
+
+bool frc::DriverStation::IsFMSAttached() const
+{
+	ROS_ERROR("Called frc::DriverStation::IsFMSAttached() const on unsupported platform");
+	return false;
+}
+
+double frc::DriverStation::GetBatteryVoltage() const
+{
+	ROS_ERROR("Called frc::DriverStation::GetBatteryVoltage() const on unsupported platform");
+	return -900;
+}
+
+
 #include <frc/ErrorBase.h>
 frc::ErrorBase::ErrorBase()
 {

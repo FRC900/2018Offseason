@@ -48,7 +48,7 @@
 #include <robot_controller_interface/robot_controller_interface.hpp>
 #include "ros_control_boilerplate/AutoMode.h"
 #include "ros_control_boilerplate/JoystickState.h"
-#include "ros_control_boilerplate/MatchSpecificData.h"
+#include "match_state_controller/MatchSpecificData.h"
 #include <std_msgs/Float64.h>
 
 #include <ctre/phoenix/motorcontrol/can/TalonSRX.h>
@@ -265,8 +265,6 @@ class FRCRobotHWInterface : public ros_control_boilerplate::FRCRobotInterface
 		double navX_angle_;
 		double pressure_;
 
-		double match_data_enabled_;
-
 		std::vector<std::shared_ptr<ctre::phoenix::motorcontrol::can::TalonSRX>> can_talons_;
 
 		// Maintain a separate read thread for each talon SRX
@@ -311,16 +309,9 @@ class FRCRobotHWInterface : public ros_control_boilerplate::FRCRobotInterface
 		std::shared_ptr<realtime_tools::RealtimePublisher<ros_control_boilerplate::JoystickState>> realtime_pub_joystick_;
 
 		std::unique_ptr<ROSIterativeRobot> robot_;
-		std::shared_ptr<realtime_tools::RealtimePublisher<ros_control_boilerplate::MatchSpecificData>> realtime_pub_match_data_;
 		std::shared_ptr<realtime_tools::RealtimePublisher<ros_control_boilerplate::AutoMode>> realtime_pub_nt_;
 		std::shared_ptr<realtime_tools::RealtimePublisher<std_msgs::Float64>> realtime_pub_error_;
 
-		// Used to throttle match data publishing time to something
-		// reasonable rather than 50Hz. Given that match data only
-		// updates once a second (after game-specific data is published)
-		// there's no reason to repeat it at a really high rate.
-		ros::Time last_match_data_publish_time_;
-		bool game_specific_message_seen_;
 		bool error_msg_last_received_;
 
 		// Same thing for network tables - they only need to update

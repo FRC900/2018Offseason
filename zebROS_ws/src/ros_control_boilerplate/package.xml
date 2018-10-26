@@ -36,6 +36,7 @@
   <depend>robot_controller_interface</depend>
   <depend>remote_joint_interface</depend>
   <depend>pcm_state_interface</depend>
+  <depend>match_state_controller</depend>
 
   <export>
   </export>

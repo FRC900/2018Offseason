@@ -857,6 +857,8 @@ void FRCRobotInterface::init()
 		if (!run_hal_robot_)
 			joint_remote_interface_.registerHandle(dch);
 	}
+	hardware_interface::MatchStateHandle msh("match_name", &match_data_);
+	match_state_interface_.registerHandle(msh);
 
 	// TODO : add joint interface for joysticks
 	num_joysticks_ = joystick_names_.size();
@@ -885,6 +887,7 @@ void FRCRobotInterface::init()
 	registerInterface(&pdp_state_interface_);
 	registerInterface(&pcm_state_interface_);
 	registerInterface(&robot_controller_state_interface_);
+	registerInterface(&match_state_interface_);
 	registerInterface(&pdp_remote_state_interface_); // list of Joints defined as remote
 	registerInterface(&pcm_remote_state_interface_); // list of Joints defined as remote
 	registerInterface(&imu_remote_interface_);
