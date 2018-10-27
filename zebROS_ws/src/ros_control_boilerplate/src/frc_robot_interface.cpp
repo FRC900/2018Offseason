@@ -481,7 +481,10 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 			throw std::runtime_error(s.str());
 		}
 	}
-	nh.param<bool>("run_hal_robot", run_hal_robot_);
+	ROS_WARN_STREAM("run_hal_robot = " << run_hal_robot_);
+	run_hal_robot_ = rpnh.param<bool>("run_hal_robot", true);
+	can_interface_ = rpnh.param<std::string>("can_interface", "can0");
+	ROS_WARN_STREAM("run_hal_robot = " << run_hal_robot_);
 }
 
 void FRCRobotInterface::init()

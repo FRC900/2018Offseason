@@ -4,7 +4,7 @@
 #define private protected
 #include <hardware_interface/imu_sensor_interface.h>
 #undef private
-#include <pdp_state_controller/pdp_state_interface.h>
+#include <pdp_state_interface/pdp_state_interface.h>
 #include <talon_interface/talon_state_interface.h>
 
 // Create a separate type of joint interface for joints which

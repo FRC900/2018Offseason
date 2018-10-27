@@ -84,6 +84,7 @@
 #include <SmartDashboard/SmartDashboard.h>
 
 #include <ctre/phoenix/motorcontrol/SensorCollection.h>
+#include <ctre/phoenix/platform/Platform.h>
 
 //
 // digital output, PWM, Pneumatics, compressor, nidec, talons
@@ -336,6 +337,7 @@ void FRCRobotHWInterface::init(void)
 	dummy_vars.push_back(Dumify(disable_compressor_));
 	dummy_vars.push_back(Dumify(starting_config_));
 	dummy_vars.push_back(Dumify(navX_zero_));
+	dummy_vars.push_back(Dumify(match_data_enabled_));
 	for (auto d : dummy_vars)
 	{
 		ROS_INFO_STREAM_NAMED(name_, "FRCRobotInterface: Registering interface for DummyVar: " << d.name_);
@@ -380,6 +382,11 @@ void FRCRobotHWInterface::init(void)
 		error_msg_last_received_ = false;
 
 		error_pub_start_time_ = last_nt_publish_time_.toSec();
+	}
+	else
+	{
+		// TODO : make me a param
+		ctre::phoenix::platform::can::SetCANInterface("can0");
 	}
 
 	custom_profile_threads_.resize(num_can_talon_srxs_);
@@ -1356,7 +1363,7 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 
 			const bool isEnabled = DriverStation::GetInstance().IsEnabled();
 			m.isEnabled = isEnabled;
-			match_data_enabled_.store(isEnabled, std::memory_order_relaxed);
+			match_data_enabled_ = isEnabled;
 
 			m.isDisabled = DriverStation::GetInstance().IsDisabled();
 			m.isAutonomous = DriverStation::GetInstance().IsAutonomous();
@@ -1772,9 +1779,6 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 	static bool last_robot_enabled = false;
 
 	bool profile_is_live = false;
-
-	// Is match data reporting the robot enabled now?
-	const bool robot_enabled = match_data_enabled_.load(std::memory_order_relaxed);
 
 	static std::array<double, 250> time_sum{};
 	static std::array<int, 250> iteration_count{};
@@ -2307,9 +2311,9 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 	time_idx += 1;
 	start_time = end_time;
 
-		// Set new motor setpoint if either the mode, setpoint or
-		// the demand type changed
-		if (robot_enabled)
+		// Set new motor setpoint if either the mode or
+		// the setpoint has been changed
+		if (match_data_enabled_)
 		{
 			double command;
 			hardware_interface::TalonMode in_mode;
@@ -2470,7 +2474,7 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 	time_idx += 1;
 	start_time = end_time;
 	}
-	last_robot_enabled = robot_enabled;
+	last_robot_enabled = match_data_enabled_ != 0;
 
 
 #ifdef USE_TALON_MOTION_PROFILE

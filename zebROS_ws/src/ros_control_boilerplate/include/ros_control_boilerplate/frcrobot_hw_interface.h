@@ -65,7 +65,6 @@
 #include "ros_control_boilerplate/JoystickState.h"
 #include "ros_control_boilerplate/MatchSpecificData.h"
 
-
 #include <robot_controller_interface/robot_controller_interface.hpp>
 
 namespace frcrobot_control
@@ -249,7 +248,7 @@ class FRCRobotHWInterface : public ros_control_boilerplate::FRCRobotInterface
 		hardware_interface::EffortJointInterface   hwi_joint_effort_interface_;
 		hardware_interface::RemoteJointInterface   hwi_joint_remote_interface_;
 
-		std::atomic<bool> match_data_enabled_;
+		double match_data_enabled_;
 
 		std::vector<std::shared_ptr<ctre::phoenix::motorcontrol::can::TalonSRX>> can_talons_;
 

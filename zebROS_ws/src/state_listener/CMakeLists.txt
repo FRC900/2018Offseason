@@ -9,16 +9,17 @@ include("../cmake_modules/CMakeOpt.cmake")
 find_package(catkin REQUIRED COMPONENTS
   controller_interface
   realtime_tools
+  hardware_interface
   remote_hardware_interface
   pdp_state_controller
   talon_interface
   talon_state_controller
   roscpp
+  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
-
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed

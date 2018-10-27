@@ -18,9 +18,9 @@ find_package(catkin REQUIRED COMPONENTS
   rosparam_shortcuts
   talon_interface
   message_generation
-  pdp_state_controller
   elevator_controller
   robot_controller_interface
+  pdp_state_interface
   remote_hardware_interface
 )
 
@@ -30,7 +30,6 @@ add_message_files (
   JoystickState.msg
   AutoMode.msg
   AutoModeStatus.msg
-  PDPData.msg
 )
 generate_messages(
   DEPENDENCIES
@@ -59,7 +58,7 @@ catkin_package(
 	sensor_msgs
 	rosparam_shortcuts
 	talon_interface
-	pdp_state_controller
+	pdp_state_interface
 	elevator_controller
 	message_runtime
   LIBRARIES

@@ -49,8 +49,8 @@
 #include <hardware_interface/joint_command_interface.h>
 #include <hardware_interface/robot_hw.h>
 #include <talon_interface/talon_command_interface.h>
-#include "pdp_state_controller/pdp_state_interface.h"
 #include "robot_controller_interface/robot_controller_interface.hpp"
+#include "pdp_state_interface/pdp_state_interface.h"
 #include "remote_hardware_interface/remote_joint_interface.h"
 
 namespace ros_control_boilerplate
@@ -272,6 +272,7 @@ class FRCRobotInterface : public hardware_interface::RobotHW
 		std::size_t              num_joysticks_;
 
 		bool run_hal_robot_;
+		std::string can_interface_;
 
 		urdf::Model *urdf_model_;
 
