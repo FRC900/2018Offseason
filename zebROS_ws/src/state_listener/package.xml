@@ -70,6 +70,7 @@
   <exec_depend>pdp_state_controller</exec_depend>
   <exec_depend>talon_interface</exec_depend>
   <exec_depend>talon_state_controller</exec_depend>
+  <exec_depend>message_runtime</exec_depend>
   <exec_depend>roscpp</exec_depend>
 
 
