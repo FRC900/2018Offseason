@@ -182,6 +182,9 @@ class FRCRobotHWInterface : public ros_control_boilerplate::FRCRobotInterface
 		/** \brief Write the command to the robot hardware. */
 		virtual void write(ros::Duration &elapsed_time) override;
 
+	protected:
+		virtual std::vector<ros_control_boilerplate::DummyJoint> getDummyJoints(void) override;
+
 	private:
 		void process_motion_profile_buffer_thread(double hz);
 		void customProfileSetMode(int joint_id,
@@ -240,13 +243,6 @@ class FRCRobotHWInterface : public ros_control_boilerplate::FRCRobotInterface
 		double navX_zero_;
 		double navX_angle_;
 		double pressure_;
-
-		hardware_interface::JointStateInterface    hwi_joint_state_interface_;
-		hardware_interface::JointCommandInterface  hwi_joint_command_interface_;
-		hardware_interface::PositionJointInterface hwi_joint_position_interface_;
-		hardware_interface::VelocityJointInterface hwi_joint_velocity_interface_;
-		hardware_interface::EffortJointInterface   hwi_joint_effort_interface_;
-		hardware_interface::RemoteJointInterface   hwi_joint_remote_interface_;
 
 		double match_data_enabled_;
 

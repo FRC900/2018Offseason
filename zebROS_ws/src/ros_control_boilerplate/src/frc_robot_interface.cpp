@@ -481,10 +481,8 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 			throw std::runtime_error(s.str());
 		}
 	}
-	ROS_WARN_STREAM("run_hal_robot = " << run_hal_robot_);
 	run_hal_robot_ = rpnh.param<bool>("run_hal_robot", true);
 	can_interface_ = rpnh.param<std::string>("can_interface", "can0");
-	ROS_WARN_STREAM("run_hal_robot = " << run_hal_robot_);
 }
 
 void FRCRobotInterface::init()
@@ -819,6 +817,24 @@ void FRCRobotInterface::init()
 		joint_velocity_interface_.registerHandle(ch);
 		if (!ready_signal_locals_[i])
 			joint_remote_interface_.registerHandle(ch);
+	}
+
+	auto dummy_joints = getDummyJoints();
+	for (auto d : dummy_joints)
+	{
+		ROS_INFO_STREAM_NAMED(name_, "FRCRobotInterface: Registering interface for DummyVar: " << d.name_);
+
+		*d.address_ = 0;
+
+		hardware_interface::JointStateHandle dsh(d.name_, d.address_, d.address_, d.address_);
+		joint_state_interface_.registerHandle(dsh);
+
+		hardware_interface::JointHandle dch(dsh, d.address_);
+		joint_command_interface_.registerHandle(dch);
+		joint_position_interface_.registerHandle(dch);
+		joint_velocity_interface_.registerHandle(dch);
+		if (!run_hal_robot_)
+			joint_remote_interface_.registerHandle(dch);
 	}
 
 	// Publish various FRC-specific data using generic joint state for now

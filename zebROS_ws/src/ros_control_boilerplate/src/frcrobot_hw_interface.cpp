@@ -132,18 +132,6 @@ namespace frcrobot_control
 // Dummy vars are used to create joints which are accessed via variable name
 // in the low level control code. So far this is only used for sending data
 // to the driver station and back via network tables.
-#define Dumify(name) DummyVar(#name, &name)
-class DummyVar
-{
-	public :
-		DummyVar(const std::string &name, double *address) :
-			name_(name), address_(address)
-		{
-			name_.erase(name.find_last_not_of('_') + 1);
-		}
-		std::string name_;
-		double *address_;
-};
 
 const int pidIdx = 0; //0 for primary closed-loop, 1 for cascaded closed-loop
 const int timeoutMs = 0; //If nonzero, function will wait for config success and report an error if it times out. If zero, no blocking or checking is performed
@@ -320,49 +308,28 @@ void FRCRobotHWInterface::customProfileSetPIDF(int    joint_id,
 	can_talons_[joint_id]->SelectProfileSlot(pid_slot, pidIdx);
 }
 
+std::vector<ros_control_boilerplate::DummyJoint> FRCRobotHWInterface::getDummyJoints(void)
+{
+	std::vector<ros_control_boilerplate::DummyJoint> dummy_joints;
+	dummy_joints.push_back(Dumify(cube_state_));
+	dummy_joints.push_back(Dumify(auto_state_0_));
+	dummy_joints.push_back(Dumify(auto_state_1_));
+	dummy_joints.push_back(Dumify(auto_state_2_));
+	dummy_joints.push_back(Dumify(auto_state_3_));
+	dummy_joints.push_back(Dumify(stop_arm_));
+	dummy_joints.push_back(Dumify(override_arm_limits_));
+	dummy_joints.push_back(Dumify(disable_compressor_));
+	dummy_joints.push_back(Dumify(starting_config_));
+	dummy_joints.push_back(Dumify(navX_zero_));
+	dummy_joints.push_back(Dumify(match_data_enabled_));
+	return dummy_joints;
+}
+
 void FRCRobotHWInterface::init(void)
 {
 	// Do base class init. This loads common interface info
 	// used by both the real and sim interfaces
 	FRCRobotInterface::init();
-
-	std::vector<DummyVar> dummy_vars;
-	dummy_vars.push_back(Dumify(cube_state_));
-	dummy_vars.push_back(Dumify(auto_state_0_));
-	dummy_vars.push_back(Dumify(auto_state_1_));
-	dummy_vars.push_back(Dumify(auto_state_2_));
-	dummy_vars.push_back(Dumify(auto_state_3_));
-	dummy_vars.push_back(Dumify(stop_arm_));
-	dummy_vars.push_back(Dumify(override_arm_limits_));
-	dummy_vars.push_back(Dumify(disable_compressor_));
-	dummy_vars.push_back(Dumify(starting_config_));
-	dummy_vars.push_back(Dumify(navX_zero_));
-	dummy_vars.push_back(Dumify(match_data_enabled_));
-	for (auto d : dummy_vars)
-	{
-		ROS_INFO_STREAM_NAMED(name_, "FRCRobotInterface: Registering interface for DummyVar: " << d.name_);
-
-		*d.address_ = 0;
-
-		hardware_interface::JointStateHandle dsh(d.name_, d.address_, d.address_, d.address_);
-		hwi_joint_state_interface_.registerHandle(dsh);
-
-		hardware_interface::JointHandle dch(dsh, d.address_);
-		hwi_joint_command_interface_.registerHandle(dch);
-		hwi_joint_position_interface_.registerHandle(dch);
-		hwi_joint_velocity_interface_.registerHandle(dch);
-		//TODO not sure what needs to happen here
-		//if (!dummy_joint_locals_[i])
-			//joint_remote_interface_.registerHandle(dch);
-	}
-	navX_zero_ = -10000;
-
-	registerInterface(&hwi_joint_state_interface_);
-	registerInterface(&hwi_joint_command_interface_);
-	registerInterface(&hwi_joint_position_interface_);
-	registerInterface(&hwi_joint_velocity_interface_);
-	registerInterface(&hwi_joint_effort_interface_); // empty for now
-	registerInterface(&hwi_joint_remote_interface_); // list of Joints defined as remote
 
 	// Make sure to initialize WPIlib code before creating
 	// a CAN Talon object to avoid NIFPGA: Resource not initialized
@@ -386,7 +353,7 @@ void FRCRobotHWInterface::init(void)
 	else
 	{
 		// TODO : make me a param
-		ctre::phoenix::platform::can::SetCANInterface("can0");
+		ctre::phoenix::platform::can::SetCANInterface(can_interface_.c_str());
 	}
 
 	custom_profile_threads_.resize(num_can_talon_srxs_);
@@ -618,11 +585,8 @@ void FRCRobotHWInterface::init(void)
 
 	navX_angle_ = 0;
 	pressure_ = 0;
+	navX_zero_ = -10000;
 	match_data_enabled_ = false;
-
-	for(size_t i = 0; i < num_dummy_joints_; i++)
-		ROS_INFO_STREAM_NAMED("frcrobot_hw_interface",
-							  "Loading dummy joint " << i << "=" << dummy_joint_names_[i]);
 
 	for (size_t i = 0; i < num_can_talon_srxs_; i++)
 		motion_profile_mutexes_.push_back(std::make_shared<std::mutex>());

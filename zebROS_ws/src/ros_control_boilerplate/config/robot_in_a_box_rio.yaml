@@ -27,7 +27,7 @@ pdp_state_controller:
    publish_rate: 20
 
 joint_state_listener_controller:
-    type:      joint_state_listener_controller/JointStateListenerController
+    type:      state_listener_controller/JointStateListenerController
     topic:     /frcrobot_jetson/joint_states
 
 do1_controller:

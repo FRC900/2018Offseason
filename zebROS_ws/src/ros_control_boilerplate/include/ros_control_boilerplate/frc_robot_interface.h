@@ -55,6 +55,24 @@
 
 namespace ros_control_boilerplate
 {
+
+// Joint used to communicate internally in the hw
+// interface(s) by name rather than via some index
+// in an array. Typically used for communicating with
+// the DS in some way
+class DummyJoint
+{
+	public :
+		DummyJoint(const std::string &name, double *address) :
+			name_(name), address_(address)
+		{
+			name_.erase(name.find_last_not_of('_') + 1);
+		}
+		std::string name_;
+		double *address_;
+};
+#define Dumify(name) ros_control_boilerplate::DummyJoint(#name, &name)
+
 /// \brief Hardware interface for a robot
 class FRCRobotInterface : public hardware_interface::RobotHW
 {
@@ -113,6 +131,7 @@ class FRCRobotInterface : public hardware_interface::RobotHW
 	protected:
 		/** \brief Get the URDF XML from the parameter server */
 		virtual void loadURDF(ros::NodeHandle &nh, std::string param_name);
+		virtual std::vector<DummyJoint> getDummyJoints(void) {}
 
 		// Short name of this class
 		std::string name_;
