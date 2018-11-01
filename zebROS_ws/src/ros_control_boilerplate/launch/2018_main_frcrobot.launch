@@ -55,7 +55,7 @@
 		<node name="robot_visualize" pkg="robot_visualizer" type="robot_visualize" output="screen" />
 		<node name="profile_follow" pkg="robot_visualizer" type="profile_follow" output="screen" />
 
-		<!-- <node name="debug_cmd_vel" pkg="teleop_joystick_control" type="debug_cmd_vel" output="screen" /> -->
+		<node name="base_trajectory_node" pkg="base_trajectory" type="base_trajectory_node" output="screen" /> -->
 
 		<!-- Convert joint states to /tf tranforms -->
 		<!-- <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/-->
