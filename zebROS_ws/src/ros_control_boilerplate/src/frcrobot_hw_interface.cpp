@@ -1022,7 +1022,7 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 void FRCRobotHWInterface::pdp_read_thread(std::shared_ptr<PowerDistributionPanel> pdp,
 										  std::shared_ptr<hardware_interface::PDPHWState> state)
 {
-	ros::Rate r(10); // TODO : Tune me?
+	ros::Rate r(20); // TODO : Tune me?
 	hardware_interface::PDPHWState pdp_state;
 	double time_sum = 0.;
 	unsigned iteration_count = 0;
@@ -1742,7 +1742,9 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 	// Was the robot enabled last time write was run?
 	static bool last_robot_enabled = false;
 
+#ifdef USE_TALON_MOTION_PROFILE
 	bool profile_is_live = false;
+#endif
 
 	static std::array<double, 250> time_sum{};
 	static std::array<int, 250> iteration_count{};
@@ -2579,7 +2581,7 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 	time_idx += 1;
 #endif
 	std::stringstream s;
-	for (size_t i = 0; i < time_idx; i++)
+	for (int i = 0; i < time_idx; i++)
 		s << time_sum[i]/iteration_count[i] << " ";
 	ROS_INFO_STREAM_THROTTLE(2, "write() = " << s.str());
 }
