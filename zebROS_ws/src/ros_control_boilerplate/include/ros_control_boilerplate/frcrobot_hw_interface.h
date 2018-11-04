@@ -97,7 +97,7 @@ class ROSIterativeRobot : public frc::IterativeRobotBase
 		void OneIteration(void)
 		{
 			// wait for driver station data so the loop doesn't hog the CPU
-			DriverStation::GetInstance().WaitForData();
+			//DriverStation::GetInstance().WaitForData(.01);
 			LoopFunc();
 		}
 
