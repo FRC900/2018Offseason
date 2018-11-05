@@ -137,14 +137,12 @@ if ("${ARM_PREFIX}" STREQUAL "arm-frc-linux-gnueabi")
 		${WPI_LIB_DIR}/libwpi.so
 		${WPI_LIB_DIR}/libFRC_NetworkCommunication.so.18.0.0
 		${WPI_LIB_DIR}/libRoboRIO_FRC_ChipObject.so.18.0.0 )
-else()
-	if ("${CMAKE_LIBRARY_ARCHITECTURE}" STREQUAL "arm-linux-gnueabihf") # Jetson TK1
-		set (CTRE_LIB_DIR ${LIB_BASE}/armhf/static)
-	elseif ("${CMAKE_LIBRARY_ARCHITECTURE}" STREQUAL "aarch64-linux-gnu") # Jetson TX1/TX2
-		set (CTRE_LIB_DIR ${LIB_BASE}/aarch64/static)
-	else() # x86-64, hopefully
-		set (CTRE_LIB_DIR ${LIB_BASE}/x86-64/static)
-	endif()
+elseif ("${CMAKE_LIBRARY_ARCHITECTURE}" STREQUAL "arm-linux-gnueabihf") # Jetson TK1
+	set (CTRE_LIB_DIR ${LIB_BASE}/armhf/static)
+elseif ("${CMAKE_LIBRARY_ARCHITECTURE}" STREQUAL "aarch64-linux-gnu") # Jetson TX1/TX2
+	set (CTRE_LIB_DIR ${LIB_BASE}/aarch64/static)
+else() # x86-64, hopefully
+	set (CTRE_LIB_DIR ${LIB_BASE}/x86-64/static)
 endif()
 
 # All platforms need these, they just live
@@ -160,7 +158,14 @@ if (NOT "${ARM_PREFIX}" STREQUAL "arm-frc-linux-gnueabi")
 		${CTRE_LIB_DIR}/libCTRE_PhoenixPlatform_socketcan.a
 		${CTRE_LIB_DIR}/libCTRE_PhoenixCanutils.a
 		)
-	set (FRCROBOT_HW_MAIN_SRCS ${FRCROBOT_HW_MAIN_SRCS} src/dummy_wpilib.cpp)
+	set (ALLWPILIB $ENV{HOME}/allwpilib)
+	include_directories(${ALLWPILIB}/wpiutil/src/main/native/include)
+	set (FRCROBOT_HW_MAIN_SRCS ${FRCROBOT_HW_MAIN_SRCS} 
+		src/dummy_wpilib.cpp
+		${ALLWPILIB}/hal/src/main/native/athena/PDP.cpp
+		${ALLWPILIB}/hal/src/main/native/athena/ctre/PDP.cpp
+		${ALLWPILIB}/hal/src/main/native/athena/ctre/CtreCanNode.cpp
+		)
 endif()
 
 add_executable(frcrobot_hw_main ${FRCROBOT_HW_MAIN_SRCS})

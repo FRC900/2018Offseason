@@ -273,9 +273,9 @@ class FRCRobotHWInterface : public ros_control_boilerplate::FRCRobotInterface
 
 		std::mutex pdp_read_thread_mutex_;
 		std::vector<std::shared_ptr<hardware_interface::PDPHWState>> pdp_read_thread_state_;
-		void pdp_read_thread(std::shared_ptr<PowerDistributionPanel> pdp, std::shared_ptr<hardware_interface::PDPHWState> state);
+		void pdp_read_thread(int32_t pdp, std::shared_ptr<hardware_interface::PDPHWState> state);
 		std::vector<std::thread> pdp_thread_;
-		std::vector<std::shared_ptr<PowerDistributionPanel>> pdps_;
+		std::vector<int32_t> pdps_;
 
 		hardware_interface::RobotControllerState shared_robot_controller_state_;
 		std::mutex robot_controller_state_mutex_;

@@ -1144,57 +1144,19 @@ frc::NidecBrushless::NidecBrushless(int pwmChannel, int dioChannel) : m_safetyHe
 	ROS_ERROR("Called ::NidecBrushless::InitSendable(SendableBuilder& builder) on unsupported platform");
 }
 
-#include <PowerDistributionPanel.h>
-void frc::PowerDistributionPanel::ClearStickyFaults()
+#include <ctre/phoenix/platform/Platform.h>
+extern "C"
 {
-	ROS_ERROR("Called PowerDistributionPanel::ClearStickyFaults() on unsupported platform");
+	void FRC_NetworkCommunication_CANSessionMux_sendMessage(uint32_t messageID, const uint8_t *data, uint8_t dataSize, int32_t periodMs, int32_t *status)
+	{
+		ctre::phoenix::platform::can::CANComm_SendMessage(messageID, data, dataSize, periodMs, status);
+	}
+	void FRC_NetworkCommunication_CANSessionMux_receiveMessage(uint32_t *messageID, uint32_t messageIDMask, uint8_t *data, uint8_t *dataSize, uint32_t *timeStamp, int32_t *status)
+	{
+		ctre::phoenix::platform::can::CANComm_ReceiveMessage(messageID, messageIDMask, data, dataSize, timeStamp, status);
+	}
 }
-double frc::PowerDistributionPanel::GetCurrent(int) const
-{
-	ROS_ERROR("Called PowerDistributionPanel::GetCurrent(int) const on unsupported platform");
-	return -1;
-}
-double frc::PowerDistributionPanel::GetTemperature() const
-{
-	ROS_ERROR("Called PowerDistributionPanel::GetTemperature() const on unsupported platform");
-	return -1;
-}
-double frc::PowerDistributionPanel::GetTotalCurrent() const
-{
-	ROS_ERROR("Called PowerDistributionPanel::GetTotalCurrent() const on unsupported platform");
-	return -1;
-}
-double frc::PowerDistributionPanel::GetTotalEnergy() const
-{
-	ROS_ERROR("Called PowerDistributionPanel::GetTotalEnergy() const on unsupported platform");
-	return -1;
-}
-double frc::PowerDistributionPanel::GetTotalPower() const
-{
-	ROS_ERROR("Called PowerDistributionPanel::GetTotalPower() const on unsupported platform");
-	return -1;
-}
-double frc::PowerDistributionPanel::GetVoltage() const
-{
-	ROS_ERROR("Called PowerDistributionPanel::GetVoltage() const on unsupported platform");
-	return -1;
-}
-frc::PowerDistributionPanel::PowerDistributionPanel()
-{
-	ROS_ERROR("Called PowerDistributionPanel::PowerDistributionPanel() on unsupported platform");
-}
-frc::PowerDistributionPanel::PowerDistributionPanel(int)
-{
-	ROS_ERROR("Called PowerDistributionPanel::PowerDistributionPanel(int) on unsupported platform");
-}
-void frc::PowerDistributionPanel::ResetTotalEnergy()
-{
-	ROS_ERROR("Called PowerDistributionPanel::ResetTotalEnergy() on unsupported platform");
-}
-void frc::PowerDistributionPanel::InitSendable(SendableBuilder&)
-{
-	ROS_ERROR("Called PowerDistributionPanel::InitSendable() on unsupported platform");
-}
+
 
 #include <PWM.h>
 frc::PWM::PWM(int)

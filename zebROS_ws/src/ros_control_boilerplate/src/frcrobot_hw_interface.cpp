@@ -546,13 +546,13 @@ void FRCRobotHWInterface::init(void)
 
 		if (pdp_locals_[i])
 		{
-			pdps_.push_back(std::make_shared<PowerDistributionPanel>());
+			pdps_.push_back(0); // TODO : support multiples?
 			pdp_read_thread_state_.push_back(std::make_shared<hardware_interface::PDPHWState>());
 			pdp_thread_.push_back(std::thread(&FRCRobotHWInterface::pdp_read_thread, this,
 								  pdps_[i], pdp_read_thread_state_[i]));
 		}
 		else
-			pdps_.push_back(nullptr);
+			pdps_.push_back(0);
 
 		// TODO : only support 1 for now
 		break;
@@ -1019,15 +1019,15 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 	}
 }
 
-void FRCRobotHWInterface::pdp_read_thread(std::shared_ptr<PowerDistributionPanel> pdp,
-										  std::shared_ptr<hardware_interface::PDPHWState> state)
+void FRCRobotHWInterface::pdp_read_thread(int32_t pdp, std::shared_ptr<hardware_interface::PDPHWState> state)
 {
 	ros::Rate r(20); // TODO : Tune me?
 	hardware_interface::PDPHWState pdp_state;
+	int32_t status;
 	double time_sum = 0.;
 	unsigned iteration_count = 0;
-	pdp->ClearStickyFaults();
-	pdp->ResetTotalEnergy();
+	HAL_ClearPDPStickyFaults(pdp, &status);
+	HAL_ResetPDPTotalEnergy(pdp, &status);
 	while (ros::ok())
 	{
 		struct timespec start_time;
@@ -1038,15 +1038,17 @@ void FRCRobotHWInterface::pdp_read_thread(std::shared_ptr<PowerDistributionPanel
 #endif
 		{
 			//read info from the PDP hardware
-			pdp_state.setVoltage(pdp->GetVoltage());
-			pdp_state.setTemperature(pdp->GetTemperature());
-			pdp_state.setTotalCurrent(pdp->GetTotalCurrent());
-			pdp_state.setTotalPower(pdp->GetTotalPower());
-			pdp_state.setTotalEnergy(pdp->GetTotalEnergy());
+			pdp_state.setVoltage(HAL_GetPDPVoltage(pdp, &status));
+			pdp_state.setTemperature(HAL_GetPDPTemperature(pdp, &status));
+			pdp_state.setTotalCurrent(HAL_GetPDPTotalCurrent(pdp, &status));
+			pdp_state.setTotalPower(HAL_GetPDPTotalPower(pdp, &status));
+			pdp_state.setTotalEnergy(HAL_GetPDPTotalEnergy(pdp, &status));
 			for (int channel = 0; channel <= 15; channel++)
 			{
-				pdp_state.setCurrent(pdp->GetCurrent(channel), channel);
+				pdp_state.setCurrent(HAL_GetPDPChannelCurrent(pdp, channel, &status), channel);
 			}
+
+			// Copy to state shared with read() thread
 			std::lock_guard<std::mutex> l(pdp_read_thread_mutex_);
 			*state = pdp_state;
 		}
