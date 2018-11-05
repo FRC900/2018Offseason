@@ -254,6 +254,7 @@ class FRCRobotInterface : public hardware_interface::RobotHW
 		std::size_t              num_compressors_;
 
 		std::vector<std::string> pdp_names_;
+		std::vector<int32_t>     pdp_modules_;
 		std::vector<bool>        pdp_locals_;
 		std::size_t              num_pdps_;
 

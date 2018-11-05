@@ -56,7 +56,6 @@
 #include <Solenoid.h>
 #include <DoubleSolenoid.h>
 #include <AHRS.h>
-#include <Compressor.h>
 #include <LiveWindow/LiveWindow.h>
 #include <SmartDashboard/SmartDashboard.h>
 #include <std_msgs/Float64.h>
@@ -267,7 +266,7 @@ class FRCRobotHWInterface : public ros_control_boilerplate::FRCRobotInterface
 		std::vector<std::shared_ptr<frc::DoubleSolenoid>> double_solenoids_;
 		std::vector<std::shared_ptr<AHRS>> navXs_;
 		std::vector<std::shared_ptr<frc::AnalogInput>> analog_inputs_;
-		std::vector<std::shared_ptr<frc::Compressor>> compressors_;
+		std::vector<HAL_CompressorHandle> compressors_;
 		std::thread hal_thread_;
 		std::thread motion_profile_thread_;
 		std::vector<std::shared_ptr<std::mutex>> motion_profile_mutexes_;

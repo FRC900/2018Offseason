@@ -125,6 +125,9 @@ set(LIB_BASE $ENV{HOME}/wpilib/user/cpp/lib/linux)
 if ("${ARM_PREFIX}" STREQUAL "arm-frc-linux-gnueabi")
 	set (CTRE_LIB_DIR ${LIB_BASE}/athena/static)
 
+include_directories(
+	#$ENV{HOME}/wpilib/cpp/current/include
+)
 	# Rio only
 	set (WPI_LIB_DIR        $ENV{HOME}/wpilib/cpp/current/reflib/linux/athena/shared)
 	set (WPI_COMMON_LIB_DIR $ENV{HOME}/wpilib/common/current/lib/linux/athena/shared)
@@ -159,12 +162,25 @@ if (NOT "${ARM_PREFIX}" STREQUAL "arm-frc-linux-gnueabi")
 		${CTRE_LIB_DIR}/libCTRE_PhoenixCanutils.a
 		)
 	set (ALLWPILIB $ENV{HOME}/allwpilib)
-	include_directories(${ALLWPILIB}/wpiutil/src/main/native/include)
+	#include_directories(${ALLWPILIB}/wpiutil/src/main/native/include
+	#${ALLWPILIB}/wpilibc/src/main/native/include
+	#${ALLWPILIB}/hal/src/main/native/include
+	#${ALLWPILIB}/cameraserver/src/main/native/include
+	#${ALLWPILIB}/cscore/src/main/native/include
+	#${ALLWPILIB}/ntcore/src/main/native/include
+	#${ALLWPILIB}/ni-libraries/include
+		#$ENV{HOME}/ni-libraries/src/include
+		#)
 	set (FRCROBOT_HW_MAIN_SRCS ${FRCROBOT_HW_MAIN_SRCS} 
 		src/dummy_wpilib.cpp
+		${ALLWPILIB}/hal/src/main/native/athena/Compressor.cpp
+		${ALLWPILIB}/hal/src/main/native/athena/PCMInternal.cpp
 		${ALLWPILIB}/hal/src/main/native/athena/PDP.cpp
+		${ALLWPILIB}/hal/src/main/native/athena/Solenoid.cpp
+		${ALLWPILIB}/hal/src/main/native/athena/ctre/PCM.cpp
 		${ALLWPILIB}/hal/src/main/native/athena/ctre/PDP.cpp
 		${ALLWPILIB}/hal/src/main/native/athena/ctre/CtreCanNode.cpp
+		${ALLWPILIB}/hal/src/main/native/shared/handles/HandlesInternal.cpp
 		)
 endif()
 

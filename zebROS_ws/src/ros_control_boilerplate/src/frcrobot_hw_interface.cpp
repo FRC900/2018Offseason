@@ -74,7 +74,7 @@
 #include "ros_control_boilerplate/frcrobot_hw_interface.h"
 
 //HAL / wpilib includes
-#include <HAL/DriverStation.h>
+//#include <HAL/DriverStation.h>
 //#include <HAL/HAL.h>
 #include <networktables/NetworkTable.h>
 #include <SmartDashboard/SmartDashboard.h>
@@ -153,8 +153,7 @@ FRCRobotHWInterface::~FRCRobotHWInterface()
 	}
 
 	for (size_t i = 0; i < num_pdps_; i++)
-		if (pdp_locals_[i])
-			pdp_thread_[i].join();
+		pdp_thread_[i].join();
 }
 
 /*
@@ -524,9 +523,19 @@ void FRCRobotHWInterface::init(void)
 							  " as Compressor with pcm " << compressor_pcm_ids_[i]);
 
 		if (compressor_local_hardwares_[i])
-			compressors_.push_back(std::make_shared<frc::Compressor>(compressor_pcm_ids_[i]));
+		{
+			if (!HAL_CheckCompressorModule(compressor_pcm_ids_[i]))
+			{
+				ROS_ERROR("Invalid Compressor PDM ID");
+			}
+			else
+			{
+				int32_t status;
+				compressors_.push_back(HAL_InitializeCompressor(compressor_pcm_ids_[i], &status));
+			}
+		}
 		else
-			compressors_.push_back(nullptr);
+			compressors_.push_back(0);
 	}
 	for (size_t i = 0; i < num_rumbles_; i++)
 		ROS_INFO_STREAM_NAMED("frcrobot_hw_interface",
@@ -544,18 +553,22 @@ void FRCRobotHWInterface::init(void)
 
 		if (pdp_locals_[i])
 		{
-			int32_t status;
-			HAL_InitializePDP(0, &status);
-			pdps_.push_back(0); // TODO : support multiples?
-			pdp_read_thread_state_.push_back(std::make_shared<hardware_interface::PDPHWState>());
-			pdp_thread_.push_back(std::thread(&FRCRobotHWInterface::pdp_read_thread, this,
-								  pdps_[i], pdp_read_thread_state_[i]));
+			if (!HAL_CheckPDPModule(pdp_modules_[i]))
+			{
+				ROS_ERROR("Invalid PDP module number");
+			}
+			else
+			{
+				int32_t status;
+				HAL_InitializePDP(pdp_modules_[i], &status);
+				pdps_.push_back(pdp_modules_[i]);
+				pdp_read_thread_state_.push_back(std::make_shared<hardware_interface::PDPHWState>());
+				pdp_thread_.push_back(std::thread(&FRCRobotHWInterface::pdp_read_thread, this,
+									  pdps_[i], pdp_read_thread_state_[i]));
+			}
 		}
 		else
 			pdps_.push_back(0);
-
-		// TODO : only support 1 for now
-		break;
 	}
 
 	bool started_pub = false;
@@ -2545,7 +2558,10 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 		{
 			const bool setpoint = compressor_command_[i] > 0;
 			if (compressor_local_hardwares_[i])
-				compressors_[i]->SetClosedLoopControl(setpoint);
+			{
+				int32_t status;
+				HAL_SetCompressorClosedLoopControl(compressors_[i], setpoint, &status);
+			}
 			last_compressor_command_[i] = compressor_command_[i];
 			ROS_INFO_STREAM("Wrote compressor " << i << "=" << setpoint);
 		}

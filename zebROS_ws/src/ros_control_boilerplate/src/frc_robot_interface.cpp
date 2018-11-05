@@ -448,8 +448,19 @@ FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_mode
 		}
 		else if (joint_type == "pdp")
 		{
+			int32_t pdp_module = 0;
+			if (joint_params.hasMember("module"))
+			{
+				XmlRpc::XmlRpcValue &xml_pdp_module = joint_params["module"];
+				if (!xml_pdp_module.valid() ||
+					 xml_pdp_module.getType() != XmlRpc::XmlRpcValue::TypeInt)
+					throw std::runtime_error("An invalid PDP joint module id was specified (expecting an int).");
+				pdp_module = xml_pdp_module;
+			}
+
 			pdp_names_.push_back(joint_name);
 			pdp_locals_.push_back(local);
+			pdp_modules_.push_back(pdp_module);
 		}
 		else if (joint_type == "dummy")
 		{
