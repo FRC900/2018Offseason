@@ -74,12 +74,8 @@
 #include "ros_control_boilerplate/frcrobot_hw_interface.h"
 
 //HAL / wpilib includes
-#include "HAL/DriverStation.h"
-#include "HAL/HAL.h"
-#include "HAL/PDP.h"
-#include "HAL/Ports.h"
-#include "HAL/Power.h"
-#include "Joystick.h"
+#include <HAL/DriverStation.h>
+//#include <HAL/HAL.h>
 #include <networktables/NetworkTable.h>
 #include <SmartDashboard/SmartDashboard.h>
 
@@ -357,7 +353,9 @@ void FRCRobotHWInterface::init(void)
 	}
 
 	custom_profile_threads_.resize(num_can_talon_srxs_);
+#ifdef USE_TALON_MOTION_PROFILE
 	profile_is_live_.store(false, std::memory_order_relaxed);
+#endif
 
 	for (size_t i = 0; i < num_can_talon_srxs_; i++)
 	{
@@ -546,6 +544,8 @@ void FRCRobotHWInterface::init(void)
 
 		if (pdp_locals_[i])
 		{
+			int32_t status;
+			HAL_InitializePDP(0, &status);
 			pdps_.push_back(0); // TODO : support multiples?
 			pdp_read_thread_state_.push_back(std::make_shared<hardware_interface::PDPHWState>());
 			pdp_thread_.push_back(std::thread(&FRCRobotHWInterface::pdp_read_thread, this,
@@ -2377,6 +2377,8 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 
 				//ROS_WARN_STREAM("set at: " << ts.getCANID() << " new mode: " << b1 << " command_changed: " << b2 << " cmd: " << command);
 			}
+
+#ifdef USE_TALON_MOTION_PROFILE
 			// If any of the talons are set to MotionProfile and
 			// command == 1 to start the profile, set
 			// profile_is_live_ to true. If this is false
@@ -2386,6 +2388,7 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 			{
 				profile_is_live = true;
 			}
+#endif
 		}
 		else
 		{

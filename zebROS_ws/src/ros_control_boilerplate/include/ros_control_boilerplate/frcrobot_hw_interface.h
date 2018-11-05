@@ -60,6 +60,7 @@
 #include <LiveWindow/LiveWindow.h>
 #include <SmartDashboard/SmartDashboard.h>
 #include <std_msgs/Float64.h>
+
 // custom ROS message types
 #include "ros_control_boilerplate/AutoMode.h"
 #include "ros_control_boilerplate/JoystickState.h"
