@@ -1054,6 +1054,10 @@ void frc::LiveWindow::SetEnabled(bool)
 {
 	ROS_ERROR("Called LiveWindow::SetEnabled(bool) on unsupported platform");
 }
+void frc::LiveWindow::DisableAllTelemetry()
+{
+	ROS_ERROR("Called LiveWindow::DisableAllTelemetry() on unsupported platform");
+}
 
 #include <MotorSafetyHelper.h>
 frc::MotorSafetyHelper::MotorSafetyHelper(MotorSafety *)

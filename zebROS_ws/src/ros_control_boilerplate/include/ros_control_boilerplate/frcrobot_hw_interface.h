@@ -92,6 +92,7 @@ class ROSIterativeRobot : public frc::IterativeRobotBase
 			RobotInit();
 			HAL_ObserveUserProgramStarting();
 			LiveWindow::GetInstance()->SetEnabled(false);
+			LiveWindow::GetInstance()->DisableAllTelemetry();
 		}
 
 		void OneIteration(void)
