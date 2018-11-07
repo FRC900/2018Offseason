@@ -52,6 +52,7 @@
 #include "robot_controller_interface/robot_controller_interface.hpp"
 #include "pdp_state_interface/pdp_state_interface.h"
 #include "remote_hardware_interface/remote_joint_interface.h"
+#include "robot_controller_interface/robot_controller_interface.hpp"
 
 namespace ros_control_boilerplate
 {

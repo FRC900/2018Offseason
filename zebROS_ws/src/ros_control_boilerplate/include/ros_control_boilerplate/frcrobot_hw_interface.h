@@ -63,6 +63,7 @@
 #include "ros_control_boilerplate/AutoMode.h"
 #include "ros_control_boilerplate/JoystickState.h"
 #include "ros_control_boilerplate/MatchSpecificData.h"
+#include <robot_controller_interface/robot_controller_interface.hpp>
 
 #include <robot_controller_interface/robot_controller_interface.hpp>
 
@@ -288,9 +289,6 @@ class FRCRobotHWInterface : public ros_control_boilerplate::FRCRobotInterface
 		void pdp_read_thread(int32_t pdp, std::shared_ptr<hardware_interface::PDPHWState> state);
 		std::vector<std::thread> pdp_thread_;
 		std::vector<int32_t> pdps_;
-
-		hardware_interface::RobotControllerState shared_robot_controller_state_;
-		std::mutex robot_controller_state_mutex_;
 
 		std::vector<std::shared_ptr<Joystick>> joysticks_;
 		std::vector<bool> joystick_up_last_;

@@ -22,6 +22,7 @@ find_package(catkin REQUIRED COMPONENTS
   robot_controller_interface
   pdp_state_interface
   remote_hardware_interface
+  robot_controller_interface
 )
 
 add_message_files (

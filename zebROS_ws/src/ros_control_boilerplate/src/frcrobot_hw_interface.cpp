@@ -682,6 +682,7 @@ void FRCRobotHWInterface::init(void)
 	for (size_t i = 0; i < num_can_talon_srxs_; i++)
 		motion_profile_mutexes_.push_back(std::make_shared<std::mutex>());
 	motion_profile_thread_ = std::thread(&FRCRobotHWInterface::process_motion_profile_buffer_thread, this, 100.);
+
 	ROS_INFO_NAMED("frcrobot_hw_interface", "FRCRobotHWInterface Ready.");
 }
 
@@ -1617,9 +1618,43 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 		}
 	}
 
+	if (run_hal_robot_)
 	{
-		std::lock_guard<std::mutex> l(robot_controller_state_mutex_);
-		robot_controller_state_ = shared_robot_controller_state_;
+		int32_t status;
+		robot_controller_state_.SetFPGAVersion(HAL_GetFPGAVersion(&status));
+		robot_controller_state_.SetFPGARevision(HAL_GetFPGARevision(&status));
+		robot_controller_state_.SetFPGATime(HAL_GetFPGATime(&status));
+		robot_controller_state_.SetUserButton(HAL_GetFPGAButton(&status));
+		robot_controller_state_.SetIsSysActive(HAL_GetSystemActive(&status));
+		robot_controller_state_.SetIsBrownedOut(HAL_GetBrownedOut(&status));
+		robot_controller_state_.SetInputVoltage(HAL_GetVinVoltage(&status));
+		robot_controller_state_.SetInputCurrent(HAL_GetVinCurrent(&status));
+		robot_controller_state_.SetVoltage3V3(HAL_GetUserVoltage3V3(&status));
+		robot_controller_state_.SetCurrent3V3(HAL_GetUserCurrent3V3(&status));
+		robot_controller_state_.SetEnabled3V3(HAL_GetUserActive3V3(&status));
+		robot_controller_state_.SetFaultCount3V3(HAL_GetUserCurrentFaults3V3(&status));
+		robot_controller_state_.SetVoltage5V(HAL_GetUserVoltage5V(&status));
+		robot_controller_state_.SetCurrent5V(HAL_GetUserCurrent5V(&status));
+		robot_controller_state_.SetEnabled5V(HAL_GetUserActive5V(&status));
+		robot_controller_state_.SetFaultCount5V(HAL_GetUserCurrentFaults5V(&status));
+		robot_controller_state_.SetVoltage6V(HAL_GetUserVoltage6V(&status));
+		robot_controller_state_.SetCurrent6V(HAL_GetUserCurrent6V(&status));
+		robot_controller_state_.SetEnabled6V(HAL_GetUserActive6V(&status));
+		robot_controller_state_.SetFaultCount6V(HAL_GetUserCurrentFaults6V(&status));
+		float percent_bus_utilization;
+		uint32_t bus_off_count;
+		uint32_t tx_full_count;
+		uint32_t receive_error_count;
+		uint32_t transmit_error_count;
+		HAL_CAN_GetCANStatus(&percent_bus_utilization, &bus_off_count,
+				&tx_full_count, &receive_error_count,
+				&transmit_error_count, &status);
+
+		robot_controller_state_.SetCANPercentBusUtilization(percent_bus_utilization);
+		robot_controller_state_.SetCANBusOffCount(bus_off_count);
+		robot_controller_state_.SetCANTxFullCount(tx_full_count);
+		robot_controller_state_.SetCANReceiveErrorCount(receive_error_count);
+		robot_controller_state_.SetCANTransmitErrorCount(transmit_error_count);
 	}
 
 	struct timespec end_time;

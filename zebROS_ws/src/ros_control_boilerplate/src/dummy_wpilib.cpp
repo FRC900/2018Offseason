@@ -1302,6 +1302,7 @@ void frc::InterruptableSensorBase::AllocateInterrupts(bool)
 #include <sys/time.h>
 uint64_t HAL_GetFPGATime(int32_t* status)
 {
+	*status = 0;
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
 	return ((uint64_t)tv.tv_sec * 1000000) + tv.tv_usec;
@@ -1312,9 +1313,143 @@ uint64_t HAL_GetFPGATime(int32_t* status)
 HAL_Bool HAL_Initialize(int32_t timeout, int32_t mode)
 {
 	hal::init::HAL_IsInitialized.store(true);
-
 	return true;
 }
+
+int32_t HAL_GetFPGAVersion(int32_t* status)
+{
+	ROS_ERROR("Called HAL_GetFPGAVersion() on unsupported platform");
+	*status = 0;
+	return -900;  // Automatically script this at some point
+}
+
+int64_t HAL_GetFPGARevision(int32_t* status)
+{
+	ROS_ERROR("Called HAL_GetFPGARevision() on unsupported platform");
+	*status = 0;
+	return -900;  // TODO: Find a better number to return;
+}
+
+HAL_Bool HAL_GetFPGAButton(int32_t* status)
+{
+	ROS_ERROR("Called HAL_GetFPGAButton() on unsupported platform");
+	*status = 0;
+	return false;
+}
+
+HAL_Bool HAL_GetSystemActive(int32_t* status)
+{
+	ROS_ERROR("Called HAL_GetSystemActive() on unsupported platform");
+	*status = 0;
+	return true;
+}
+
+HAL_Bool HAL_GetBrownedOut(int32_t* status)
+{
+	ROS_ERROR("Called HAL_GetBrownedOut() on unsupported platform");
+	*status = 0;
+	return false;
+}
+
+double HAL_GetVinVoltage(int32_t* status)
+{
+	ROS_ERROR("Called HAL_GetVinVoltage() on unsupported platform");
+	*status = 0;
+  return -1;
+}
+double HAL_GetVinCurrent(int32_t* status)
+{
+	ROS_ERROR("Called HAL_GetVinCurrent() on unsupported platform");
+	*status = 0;
+  return -1;
+}
+double HAL_GetUserVoltage6V(int32_t* status)
+{
+	ROS_ERROR("Called HAL_GetUserVoltage6V() on unsupported platform");
+	*status = 0;
+  return -1;
+}
+double HAL_GetUserCurrent6V(int32_t* status)
+{
+	ROS_ERROR("Called HAL_GetUserCurrent6V() on unsupported platform");
+	*status = 0;
+  return -1;
+}
+HAL_Bool HAL_GetUserActive6V(int32_t* status)
+{
+	ROS_ERROR("Called HAL_GetUserActive6V() on unsupported platform");
+	*status = 0;
+  return false;
+}
+int32_t HAL_GetUserCurrentFaults6V(int32_t* status)
+{
+	ROS_ERROR("Called HAL_GetUserCurrentFaults6V() on unsupported platform");
+	*status = 0;
+  return -1;
+}
+double HAL_GetUserVoltage5V(int32_t* status)
+{
+	ROS_ERROR("Called HAL_GetUserVoltage5V() on unsupported platform");
+	*status = 0;
+  return -1;
+}
+double HAL_GetUserCurrent5V(int32_t* status)
+{
+	ROS_ERROR("Called HAL_GetUserCurrent5V() on unsupported platform");
+	*status = 0;
+  return -1;
+}
+HAL_Bool HAL_GetUserActive5V(int32_t* status)
+{
+	ROS_ERROR("Called HAL_GetUserActive5V() on unsupported platform");
+	*status = 0;
+  return false;
+}
+int32_t HAL_GetUserCurrentFaults5V(int32_t* status)
+{
+	ROS_ERROR("Called HAL_GetUserCurrentFaults5V() on unsupported platform");
+	*status = 0;
+  return -1;
+}
+double HAL_GetUserVoltage3V3(int32_t* status)
+{
+	ROS_ERROR("Called HAL_GetUserVoltage3V3() on unsupported platform");
+	*status = 0;
+  return -1;
+}
+double HAL_GetUserCurrent3V3(int32_t* status)
+{
+	ROS_ERROR("Called HAL_GetUserCurrent3V3() on unsupported platform");
+	*status = 0;
+  return -1;
+}
+HAL_Bool HAL_GetUserActive3V3(int32_t* status)
+{
+	ROS_ERROR("Called HAL_GetUserActive3V3() on unsupported platform");
+	*status = 0;
+  return false;
+}
+int32_t HAL_GetUserCurrentFaults3V3(int32_t* status)
+{
+	ROS_ERROR("Called HAL_GetUserCurrentFaults3V3() on unsupported platform");
+	*status = 0;
+	return -1;
+}
+void HAL_CAN_GetCANStatus(float* percentBusUtilization, uint32_t* busOffCount,
+                          uint32_t* txFullCount, uint32_t* receiveErrorCount,
+                          uint32_t* transmitErrorCount, int32_t* status)
+{
+	ROS_ERROR("Called HAL_CAN_GetCANStatus() on unsupported platform");
+	*percentBusUtilization = -1;
+	*busOffCount = -1;
+	*txFullCount - -1;
+	*receiveErrorCount = -1;
+	*transmitErrorCount = -1;
+	*status = 0;
+}
+
+
+
 
 #include "wpi/SmallVector.h"
 namespace wpi
