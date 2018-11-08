@@ -37,6 +37,7 @@ class ValueValid
 {
 	public:
 		ValueValid() : valid_(false) { }
+		ValueValid(const T &value) : value_(value), valid_(false) {}
 		T      value_;
 		bool   valid_;
 };
@@ -355,28 +356,28 @@ class TalonStateListenerController :
 			{
 				if (vals[i].valid_)
 				{
-					auto ts = vals[i].data;
-					handles_[i].setPosition(ts.getPosition());
-					handles_[i].setSpeed(ts.getSpeed());
-					handles_[i].setOutputCurrent(ts.getOutputCurrent());
-					handles_[i].setBusVoltage(ts.getBusVoltage());
-					handles_[i].setMotorOutputPercent(ts.getMotorOutputPercent());
-					handles_[i].setOutputVoltage(ts.getOutputVoltage());
-					handles_[i].setTemperature(ts.getTemperature());
-					handles_[i].setClosedLoopError(ts.getClosedLoopError());
-					handles_[i].setIntegralAccumulator(ts.getIntegralAccumulator());
-					handles_[i].setErrorDerivative(ts.getErrorDerivative());
-					handles_[i].setClosedLoopTarget(ts.getClosedLoopTarget());
-					handles_[i].setActiveTrajectoryPosition(ts.getActiveTrajectoryPosition());
-					handles_[i].setActiveTrajectoryVelocity(ts.getActiveTrajectoryVelocity());
-					handles_[i].setActiveTrajectoryHeading(ts.getActiveTrajectoryHeading());
-					handles_[i].setMotionProfileTopLevelBufferCount(ts.getMotionProfileTopLevelBufferCount());
-					handles_[i].setFaults(ts.getFaults());
-					handles_[i].setForwardLimitSwitch(ts.getForwardLimitSwitch());
-					handles_[i].setReverseLimitSwitch(ts.getReverseLimitSwitch());
-					handles_[i].setForwardSoftlimitHit(ts.getForwardSoftlimitHit());
-					handles_[i].setReverseSoftlimitHit(ts.getReverseSoftlimitHit());
-					handles_[i].setStickyFaults(ts.getStickyFaults());
+					auto ts = vals[i].value_;
+					handles_[i]->setPosition(ts.getPosition());
+					handles_[i]->setSpeed(ts.getSpeed());
+					handles_[i]->setOutputCurrent(ts.getOutputCurrent());
+					handles_[i]->setBusVoltage(ts.getBusVoltage());
+					handles_[i]->setMotorOutputPercent(ts.getMotorOutputPercent());
+					handles_[i]->setOutputVoltage(ts.getOutputVoltage());
+					handles_[i]->setTemperature(ts.getTemperature());
+					handles_[i]->setClosedLoopError(ts.getClosedLoopError());
+					handles_[i]->setIntegralAccumulator(ts.getIntegralAccumulator());
+					handles_[i]->setErrorDerivative(ts.getErrorDerivative());
+					handles_[i]->setClosedLoopTarget(ts.getClosedLoopTarget());
+					handles_[i]->setActiveTrajectoryPosition(ts.getActiveTrajectoryPosition());
+					handles_[i]->setActiveTrajectoryVelocity(ts.getActiveTrajectoryVelocity());
+					handles_[i]->setActiveTrajectoryHeading(ts.getActiveTrajectoryHeading());
+					handles_[i]->setMotionProfileTopLevelBufferCount(ts.getMotionProfileTopLevelBufferCount());
+					handles_[i]->setFaults(ts.getFaults());
+					handles_[i]->setForwardLimitSwitch(ts.getForwardLimitSwitch());
+					handles_[i]->setReverseLimitSwitch(ts.getReverseLimitSwitch());
+					handles_[i]->setForwardSoftlimitHit(ts.getForwardSoftlimitHit());
+					handles_[i]->setReverseSoftlimitHit(ts.getReverseSoftlimitHit());
+					handles_[i]->setStickyFaults(ts.getStickyFaults());
 				}
 			}
 
@@ -389,19 +390,19 @@ class TalonStateListenerController :
 
 		// Real-time buffer holds the last command value read from the
 		// "command" topic.
-		realtime_tools::RealtimeBuffer<std::vector<ValidValue<hardware_interface::TalonHWState>>> command_buffer_;
+		realtime_tools::RealtimeBuffer<std::vector<ValueValid<hardware_interface::TalonHWState>>> command_buffer_;
 
 		virtual void commandCB(const talon_state_controller::TalonStateConstPtr &msg)
 		{
 			std::vector<ValueValid<hardware_interface::TalonHWState>> data;
-			data.resize(joint_names_.size());
+			for (size_t i = 0; i < joint_names_.size(); i++)
+				data.push_back(hardware_interface::TalonHWState(msg->can_id[i]));
 			for (size_t i = 0; i < joint_names_.size(); i++)
 			{
 				auto it = std::find(msg->name.cbegin(), msg->name.cend(), joint_names_[i]);
 				if (it != msg->name.cend())
 				{
 					const size_t loc = it - msg->name.cbegin();
-					data[i].value_ = msg->position[loc];
 					data[i].value_.setPosition(msg->position[i]);
 					data[i].value_.setSpeed(msg->speed[i]);
 					data[i].value_.setOutputCurrent(msg->output_voltage[i]);
@@ -416,7 +417,7 @@ class TalonStateListenerController :
 					data[i].value_.setActiveTrajectoryPosition(msg->active_trajectory_position[i]);
 					data[i].value_.setActiveTrajectoryVelocity(msg->active_trajectory_velocity[i]);
 					data[i].value_.setActiveTrajectoryHeading(msg->active_trajectory_heading[i]);
-					data[i].value_.setMotionProfileTopLevelBufferCount(msg->getMotionProfileTopLevelBufferCount[i]);
+					data[i].value_.setMotionProfileTopLevelBufferCount(msg->motion_profile_top_level_buffer_count[i]);
 					//data[i].value_.setFaults(msg->getFaults[i]);
 					data[i].value_.setForwardLimitSwitch(msg->forward_limit_switch[i]);
 					data[i].value_.setReverseLimitSwitch(msg->reverse_limit_switch[i]);
