@@ -12,9 +12,14 @@
     </description>
   </class>
 e
-  <class name="state_listener_controller/JointStateListenerController" type="state_listener_controller::JointStateListenerController" base_class_type="controller_interface::ControllerBase">
+  <class name="state_listener_controller/IMUStateListenerController" type="state_listener_controller::IMUStateListenerController" base_class_type="controller_interface::ControllerBase">
     <description>
       Listens to sensor_msgs:Imu messages for imus marked as remote, writes their value to the local controller
+    </description>
+  </class>
+  <class name="state_listener_controller/TalonStateListenerController" type="state_listener_controller::IMUStateListenerController" base_class_type="controller_interface::ControllerBase">
+    <description>
+      Listens to talon_state messages for talons marked as remote, writes their value to the local controller
     </description>
   </class>
 </library>
