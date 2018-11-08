@@ -74,6 +74,7 @@
 #include "ros_control_boilerplate/frcrobot_hw_interface.h"
 
 //HAL / wpilib includes
+#include <HALInitializer.h>
 #include <networktables/NetworkTable.h>
 #include <SmartDashboard/SmartDashboard.h>
 
@@ -356,6 +357,16 @@ void FRCRobotHWInterface::init(void)
 	// Do base class init. This loads common interface info
 	// used by both the real and sim interfaces
 	FRCRobotInterface::init();
+
+	if (!run_hal_robot_)
+	{
+		//hal::InitializeCANAPI();
+		hal::init::InitializeHandlesInternal();
+		hal::init::InitializeCompressor();
+		hal::init::InitializePCMInternal();
+		hal::init::InitializePDP();
+		hal::init::InitializeSolenoid();
+	}
 
 	// Make sure to initialize WPIlib code before creating
 	// a CAN Talon object to avoid NIFPGA: Resource not initialized

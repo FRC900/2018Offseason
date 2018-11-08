@@ -171,6 +171,7 @@ if (NOT "${ARM_PREFIX}" STREQUAL "arm-frc-linux-gnueabi")
 	#${ALLWPILIB}/ni-libraries/include
 		#$ENV{HOME}/ni-libraries/src/include
 		#)
+	include_directories(${ALLWPILIB}/hal/src/main/native/athena)
 	set (FRCROBOT_HW_MAIN_SRCS ${FRCROBOT_HW_MAIN_SRCS} 
 		src/dummy_wpilib.cpp
 		${ALLWPILIB}/hal/src/main/native/athena/Compressor.cpp
