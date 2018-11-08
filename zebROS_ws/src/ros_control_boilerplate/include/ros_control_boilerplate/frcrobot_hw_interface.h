@@ -53,7 +53,6 @@
 #include <DigitalOutput.h>
 #include <Joystick.h>
 #include <SafePWM.h>
-#include <Solenoid.h>
 #include <DoubleSolenoid.h>
 #include <AHRS.h>
 #include <LiveWindow/LiveWindow.h>
@@ -163,6 +162,18 @@ class ROSIterativeRobot : public frc::IterativeRobotBase
 		Mode m_lastMode = Mode::kNone;
 };
 
+class DoubleSolenoidHandle
+{
+	public:
+		DoubleSolenoidHandle(HAL_SolenoidHandle forward, HAL_SolenoidHandle reverse)
+			: forward_(forward)
+		    , reverse_(reverse)
+	{
+	}
+		HAL_SolenoidHandle forward_;
+		HAL_SolenoidHandle reverse_;
+};
+
 /// \brief Hardware interface for a robot
 class FRCRobotHWInterface : public ros_control_boilerplate::FRCRobotInterface
 {
@@ -263,8 +274,8 @@ class FRCRobotHWInterface : public ros_control_boilerplate::FRCRobotInterface
 		std::vector<std::shared_ptr<frc::DigitalInput>> digital_inputs_;
 		std::vector<std::shared_ptr<frc::DigitalOutput>> digital_outputs_;
 		std::vector<std::shared_ptr<frc::SafePWM>> PWMs_;
-		std::vector<std::shared_ptr<frc::Solenoid>> solenoids_;
-		std::vector<std::shared_ptr<frc::DoubleSolenoid>> double_solenoids_;
+		std::vector<HAL_SolenoidHandle> solenoids_;
+		std::vector<DoubleSolenoidHandle> double_solenoids_;
 		std::vector<std::shared_ptr<AHRS>> navXs_;
 		std::vector<std::shared_ptr<frc::AnalogInput>> analog_inputs_;
 		std::vector<HAL_CompressorHandle> compressors_;

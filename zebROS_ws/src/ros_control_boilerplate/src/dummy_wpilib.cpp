@@ -469,90 +469,6 @@ void frc::AnalogInput::InitSendable(SendableBuilder& builder)
 }
 
 
-#if 0
-#include <Compressor.h>
-frc::Compressor::Compressor(int)
-{
-	ROS_ERROR("Called Compressor::Compressor(int) on unsupported platform");
-}
-void frc::Compressor::SetClosedLoopControl(bool)
-{
-	ROS_ERROR("Called Compressor::SetClosedLoopControl(bool) on unsupported platform");
-}
-
-void frc::Compressor::Start()
-{
-	ROS_ERROR("Called ::Compressor::Start() on unsupported platform");
-}
-void frc::Compressor::Stop()
-{
-	ROS_ERROR("Called ::Compressor::Stop() on unsupported platform");
-}
-bool frc::Compressor::Enabled() const
-{
-	ROS_ERROR("Called ::Compressor::Enabled() const on unsupported platform");
-	return false;
-}
-
-bool frc::Compressor::GetPressureSwitchValue() const
-{
-	ROS_ERROR("Called frc::Compressor::GetPressureSwitchValue() const on unsupported platform");
-	return false;
-}
-
-double frc::Compressor::GetCompressorCurrent() const
-{
-	ROS_ERROR("Called frc::Compressor::GetCompressorCurrent() const on unsupported platform");
-	return std::numeric_limits<double>::max();
-}
-
-bool frc::Compressor::GetClosedLoopControl() const
-{
-	ROS_ERROR("Called frc::Compressor::GetClosedLoopControl() const on unsupported platform");
-	return false;
-}
-
-bool frc::Compressor::GetCompressorCurrentTooHighFault() const
-{
-	ROS_ERROR("Called frc::Compressor::GetCompressorCurrentTooHighFault() const on unsupported platform");
-	return false;
-}
-bool frc::Compressor::GetCompressorCurrentTooHighStickyFault() const
-{
-	ROS_ERROR("Called ::Compressor::GetCompressorCurrentTooHighStickyFault() const on unsupported platform");
-	return false;
-}
-bool frc::Compressor::GetCompressorShortedStickyFault() const
-{
-	ROS_ERROR("Called ::Compressor::GetCompressorShortedStickyFault() const on unsupported platform");
-	return false;
-}
-bool frc::Compressor::GetCompressorShortedFault() const
-{
-	ROS_ERROR("Called ::Compressor::GetCompressorShortedFault() const on unsupported platform");
-	return false;
-}
-bool frc::Compressor::GetCompressorNotConnectedStickyFault() const
-{
-	ROS_ERROR("Called ::Compressor::GetCompressorNotConnectedStickyFault() const on unsupported platform");
-	return false;
-}
-bool frc::Compressor::GetCompressorNotConnectedFault() const
-{
-	ROS_ERROR("Called ::Compressor::GetCompressorNotConnectedFault() const on unsupported platform");
-	return false;
-}
-void frc::Compressor::ClearAllPCMStickyFaults()
-{
-	ROS_ERROR("Called ::Compressor::ClearAllPCMStickyFaults() on unsupported platform");
-}
-
-void frc::Compressor::InitSendable(SendableBuilder& builder)
-{
-	ROS_ERROR("Called frc::Compressor::InitSendable(SendableBuilder& builder) on unsupported platform");
-}
-#endif
-
 #include <DigitalInput.h>
 frc::DigitalInput::DigitalInput(int)
 {
@@ -608,50 +524,6 @@ void frc::DigitalOutput::Set(bool)
   void frc::DigitalOutput::InitSendable(SendableBuilder&)
 {
 	ROS_ERROR("Called frc::DigitalOutput::InitSendable(SendableBuilder& builder) on unsupported platform");
-}
-
-
-#include <DoubleSolenoid.h>
-frc::SolenoidBase::SolenoidBase(int)
-{
-	ROS_ERROR("Called SolenoidBae::SolenoidBase(int) on unsupported platform");
-}
-
-frc::DoubleSolenoid::DoubleSolenoid(int, int) : SolenoidBase(0)
-{
-	ROS_ERROR("Called DoubleSolenoid::DoubleSolenoid(int, int) on unsupported platform");
-}
-frc::DoubleSolenoid::DoubleSolenoid(int x , int, int) : SolenoidBase(x)
-{
-	ROS_ERROR("Called DoubleSolenoid::DoubleSolenoid(int, int, int) on unsupported platform");
-}
-  frc::DoubleSolenoid::~DoubleSolenoid()
-{
-	ROS_ERROR("Called frc::DoubleSolenoid::~DoubleSolenoid() on unsupported platform");
-}
-  void frc::DoubleSolenoid::Set(Value value)
-{
-	ROS_ERROR("Called frc::DoubleSolenoid::Set(Value value) on unsupported platform");
-}
-frc::DoubleSolenoid::Value frc::DoubleSolenoid::Get() const
-{
-	ROS_ERROR("Called ::DoubleSolenoid::Value Get() const on unsupported platform");
-	return kOff;
-}
-  bool frc::DoubleSolenoid::IsFwdSolenoidBlackListed() const
-{
-	ROS_ERROR("Called frc::DoubleSolenoid::IsFwdSolenoidBlackListed() const on unsupported platform");
-	return true;
-}
-  bool frc::DoubleSolenoid::IsRevSolenoidBlackListed() const
-{
-	ROS_ERROR("Called frc::DoubleSolenoid::IsRevSolenoidBlackListed() const on unsupported platform");
-	return true;
-}
-
-  void frc::DoubleSolenoid::InitSendable(SendableBuilder& builder)
-{
-	ROS_ERROR("Called frc::DoubleSolenoid::InitSendable(SendableBuilder& builder) on unsupported platform");
 }
 
 #include <DriverStation.h>
@@ -1340,44 +1212,6 @@ bool frc::SmartDashboard::PutNumber(llvm::StringRef, double)
 	ROS_ERROR("Called SmartDashboard::PutNumber(llvm::StringRef, double) on unsupported platform");
 	return false;
 }
-#include <Solenoid.h>
-frc::Solenoid::Solenoid(int moduleNumber, int channel) : SolenoidBase(moduleNumber)
-{
-	ROS_ERROR("Called Solenoid::Solenoid(int, int) on unsupported platform");
-}
-frc::Solenoid::~Solenoid()
-{
-	ROS_ERROR("Called ::Solenoid::~Solenoid() override on unsupported platform");
-}
-void frc::Solenoid::Set(bool)
-{
-	ROS_ERROR("Called void frc::Solenoid::Set(bool on) on unsupported platform");
-}
-bool frc::Solenoid::Get() const
-{
-	ROS_ERROR("Called bool frc::Solenoid::Get() const on unsupported platform");
-	return false;
-}
-bool frc::Solenoid::IsBlackListed() const
-{
-	ROS_ERROR("Called frc::Solenoid::IsBlackListed() const on unsupported platform");
-	return false;
-}
-void frc::Solenoid::SetPulseDuration(double)
-{
-	ROS_ERROR("Called frc::Solenoid::SetPulseDuration(double durationSeconds) on unsupported platform");
-}
-void frc::Solenoid::StartPulse()
-{
-	ROS_ERROR("Called frc::Solenoid::StartPulse() on unsupported platform");
-}
-
-void frc::Solenoid::InitSendable(SendableBuilder&)
-{
-	ROS_ERROR("Called frc::Solenoid::InitSendable(SendableBuilder& builder) override on unsupported platform");
-}
-
-
 
 #include <networktables/NetworkTable.h>
 bool nt::NetworkTable::GetBoolean(llvm::StringRef, bool) const

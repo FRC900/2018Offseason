@@ -74,8 +74,6 @@
 #include "ros_control_boilerplate/frcrobot_hw_interface.h"
 
 //HAL / wpilib includes
-//#include <HAL/DriverStation.h>
-//#include <HAL/HAL.h>
 #include <networktables/NetworkTable.h>
 #include <SmartDashboard/SmartDashboard.h>
 
@@ -122,6 +120,31 @@
 // The only cases which make sense are local_update = local_hardware, since the value can only be
 // updated by reading the hardware itself.  There, just use a "local" flag.
 //
+// From wpilib HAL.cpp
+/*----------------------------------------------------------------------------*/
+/* Copyright (c) 2016-2018 FIRST. All Rights Reserved.                        */
+/* Open Source Software - may be modified and shared by FRC teams. The code   */
+/* must be accompanied by the FIRST BSD license file in the root directory of */
+/* the project.                                                               */
+/*----------------------------------------------------------------------------*/
+#include "HAL/handles/HandlesInternal.h"
+extern "C" {
+HAL_PortHandle HAL_GetPort(int32_t channel) {
+  // Dont allow a number that wouldn't fit in a uint8_t
+  if (channel < 0 || channel >= 255) return HAL_kInvalidHandle;
+  return hal::createPortHandle(channel, 1);
+}
+
+/**
+ * @deprecated Uses module numbers
+ */
+HAL_PortHandle HAL_GetPortWithModule(int32_t module, int32_t channel) {
+  // Dont allow a number that wouldn't fit in a uint8_t
+  if (channel < 0 || channel >= 255) return HAL_kInvalidHandle;
+  if (module < 0 || module >= 255) return HAL_kInvalidHandle;
+  return hal::createPortHandle(channel, module);
+}
+} // extern "C"
 
 namespace frcrobot_control
 {
@@ -150,6 +173,14 @@ FRCRobotHWInterface::~FRCRobotHWInterface()
 			custom_profile_threads_[i].join();
 			talon_read_threads_[i].join();
 		}
+	}
+
+	for (size_t i = 0; i < num_solenoids_; i++)
+		HAL_FreeSolenoidPort(solenoids_[i]);
+	for (size_t i = 0; i < num_double_solenoids_; i++)
+	{
+		HAL_FreeSolenoidPort(double_solenoids_[i].forward_);
+		HAL_FreeSolenoidPort(double_solenoids_[i].reverse_);
 	}
 
 	for (size_t i = 0; i < num_pdps_; i++)
@@ -462,9 +493,17 @@ void FRCRobotHWInterface::init(void)
 							  << " with pcm " << solenoid_pcms_[i]);
 
 		if (solenoid_local_hardwares_[i])
-			solenoids_.push_back(std::make_shared<frc::Solenoid>(solenoid_pcms_[i], solenoid_ids_[i]));
+		{
+			int32_t status;
+			solenoids_.push_back(HAL_InitializeSolenoidPort(HAL_GetPortWithModule(solenoid_pcms_[i], solenoid_ids_[i]), &status));
+			if (solenoids_.back() == HAL_kInvalidHandle)
+				ROS_ERROR_STREAM("Error intializing solenoid : status=" << status);
+			else
+				HAL_Report(HALUsageReporting::kResourceType_Solenoid,
+						solenoid_ids_[i], solenoid_pcms_[i]);
+		}
 		else
-			solenoids_.push_back(nullptr);
+			solenoids_.push_back(HAL_kInvalidHandle);
 	}
 	for (size_t i = 0; i < num_double_solenoids_; i++)
 	{
@@ -477,9 +516,34 @@ void FRCRobotHWInterface::init(void)
 							  << " with pcm " << double_solenoid_pcms_[i]);
 
 		if (double_solenoid_local_hardwares_[i])
-			double_solenoids_.push_back(std::make_shared<frc::DoubleSolenoid>(double_solenoid_pcms_[i], double_solenoid_forward_ids_[i], double_solenoid_reverse_ids_[i]));
+		{
+			int32_t forward_status;
+			int32_t reverse_status;
+			auto forward_handle = HAL_InitializeSolenoidPort(
+					HAL_GetPortWithModule(double_solenoid_pcms_[i], double_solenoid_forward_ids_[i]),
+					&forward_status);
+			auto reverse_handle = HAL_InitializeSolenoidPort(
+					HAL_GetPortWithModule(double_solenoid_pcms_[i], double_solenoid_reverse_ids_[i]),
+					&reverse_status);
+			if ((forward_handle != HAL_kInvalidHandle) &&
+			    (reverse_handle != HAL_kInvalidHandle) )
+			{
+				double_solenoids_.push_back(DoubleSolenoidHandle(forward_handle, reverse_handle));
+				HAL_Report(HALUsageReporting::kResourceType_Solenoid,
+						double_solenoid_forward_ids_[i], solenoid_pcms_[i]);
+				HAL_Report(HALUsageReporting::kResourceType_Solenoid,
+						double_solenoid_reverse_ids_[i], solenoid_pcms_[i]);
+			}
+			else
+			{
+				ROS_ERROR_STREAM("Error intializing double solenoid : status=" << forward_status << " : " << reverse_status);
+				double_solenoids_.push_back(DoubleSolenoidHandle(HAL_kInvalidHandle, HAL_kInvalidHandle));
+				HAL_FreeSolenoidPort(forward_handle);
+				HAL_FreeSolenoidPort(reverse_handle);
+			}
+		}
 		else
-			double_solenoids_.push_back(nullptr);
+			double_solenoids_.push_back(DoubleSolenoidHandle(HAL_kInvalidHandle, HAL_kInvalidHandle));
 	}
 
 	//RIGHT NOW THIS WILL ONLY WORK IF THERE IS ONLY ONE NAVX INSTANTIATED
@@ -532,10 +596,13 @@ void FRCRobotHWInterface::init(void)
 			{
 				int32_t status;
 				compressors_.push_back(HAL_InitializeCompressor(compressor_pcm_ids_[i], &status));
+				if (compressors_.back() != HAL_kInvalidHandle)
+					HAL_Report(HALUsageReporting::kResourceType_Compressor,
+								compressor_pcm_ids_[i]);
 			}
 		}
 		else
-			compressors_.push_back(0);
+			compressors_.push_back(HAL_kInvalidHandle);
 	}
 	for (size_t i = 0; i < num_rumbles_; i++)
 		ROS_INFO_STREAM_NAMED("frcrobot_hw_interface",
@@ -2505,13 +2572,18 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 		if (solenoid_state_[i] != setpoint)
 		{
 			if (solenoid_local_hardwares_[i])
-				solenoids_[i]->Set(setpoint);
+			{
+				int32_t status;
+				HAL_SetSolenoid(solenoids_[i], setpoint, &status);
+				if (status != 0)
+					ROS_ERROR_STREAM("Error setting solenoid " << solenoid_names_[i] <<
+							" to " << setpoint << " status = " << status);
+			}
 			solenoid_state_[i] = setpoint;
 			ROS_INFO_STREAM("Solenoid " << solenoid_names_[i] <<
 							" at id " << solenoid_ids_[i] <<
 							" / pcm " << solenoid_pcms_[i] <<
 							" = " << setpoint);
-
 		}
 	}
 
@@ -2528,7 +2600,24 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 		if (double_solenoid_state_[i] != double_solenoid_command_[i])
 		{
 			if (double_solenoid_local_hardwares_[i])
-				double_solenoids_[i]->Set(setpoint);
+			{
+				bool forward = false;
+				bool reverse = false;
+				if (setpoint == DoubleSolenoid::Value::kForward)
+					forward = true;
+				else if (setpoint == DoubleSolenoid::Value::kReverse)
+					forward = true;
+
+				int32_t status;
+				HAL_SetSolenoid(double_solenoids_[i].forward_, forward, &status);
+				if (status != 0)
+					ROS_ERROR_STREAM("Error setting double solenoid " << double_solenoid_names_[i] <<
+							" forward to " << forward << " status = " << status);
+				HAL_SetSolenoid(double_solenoids_[i].reverse_, reverse, &status);
+				if (status != 0)
+					ROS_ERROR_STREAM("Error setting double solenoid " << double_solenoid_names_[i] <<
+							" reverse to " << reverse << " status = " << status);
+			}
 			double_solenoid_state_[i] = double_solenoid_command_[i];
 			ROS_INFO_STREAM("Double solenoid " << double_solenoid_names_[i] <<
 					" at forward id " << double_solenoid_forward_ids_[i] <<
