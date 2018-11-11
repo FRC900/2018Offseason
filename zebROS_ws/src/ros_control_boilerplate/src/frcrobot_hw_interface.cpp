@@ -692,6 +692,9 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 {
 	ros::Rate rate(75); // TODO : configure me from a file
 
+
+	// TODO : configure from file or from relevant
+	// control mode?
 	ros::Time last_status_1_time = ros::Time::now();
 	ros::Duration status_1_period = ros::Duration(.01);
 
