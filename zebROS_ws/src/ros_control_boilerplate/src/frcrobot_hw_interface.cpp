@@ -360,8 +360,8 @@ void FRCRobotHWInterface::init(void)
 
 	if (!run_hal_robot_)
 	{
-		//hal::InitializeCANAPI();
-		hal::init::InitializeHandlesInternal();
+		//hal::InitializeCAN();
+		hal::init::InitializeCANAPI();
 		hal::init::InitializeCompressor();
 		hal::init::InitializePCMInternal();
 		hal::init::InitializePDP();

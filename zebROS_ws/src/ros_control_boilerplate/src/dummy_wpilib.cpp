@@ -1026,9 +1026,17 @@ frc::NidecBrushless::NidecBrushless(int pwmChannel, int dioChannel) : m_safetyHe
 #include <ctre/phoenix/platform/Platform.h>
 extern "C"
 {
+	void HAL_CAN_SendMessage(uint32_t messageID, const uint8_t *data, uint8_t dataSize, int32_t periodMs, int32_t *status)
+	{
+		ctre::phoenix::platform::can::CANComm_SendMessage(messageID, data, dataSize, periodMs, status);
+	}
 	void FRC_NetworkCommunication_CANSessionMux_sendMessage(uint32_t messageID, const uint8_t *data, uint8_t dataSize, int32_t periodMs, int32_t *status)
 	{
 		ctre::phoenix::platform::can::CANComm_SendMessage(messageID, data, dataSize, periodMs, status);
+	}
+	void HAL_CAN_ReceiveMessage(uint32_t *messageID, uint32_t messageIDMask, uint8_t *data, uint8_t *dataSize, uint32_t *timeStamp, int32_t *status)
+	{
+		ctre::phoenix::platform::can::CANComm_ReceiveMessage(messageID, messageIDMask, data, dataSize, timeStamp, status);
 	}
 	void FRC_NetworkCommunication_CANSessionMux_receiveMessage(uint32_t *messageID, uint32_t messageIDMask, uint8_t *data, uint8_t *dataSize, uint32_t *timeStamp, int32_t *status)
 	{
@@ -1286,8 +1294,25 @@ void frc::InterruptableSensorBase::AllocateInterrupts(bool)
 	ROS_ERROR("Called frc::InterruptableSensorBase::AllocateInterrupts(bool watcher) on unsupported platform");
 }
 
-#include "llvm/SmallVector.h"
-namespace llvm
+#include <sys/time.h>
+uint64_t HAL_GetFPGATime(int32_t* status)
+{
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return ((uint64_t)tv.tv_sec * 1000000) + tv.tv_usec;
+
+}
+
+#include <HALInitializer.h>
+HAL_Bool HAL_Initialize(int32_t timeout, int32_t mode)
+{
+	hal::init::HAL_IsInitialized.store(true);
+
+	return true;
+}
+
+#include "wpi/SmallVector.h"
+namespace wpi
 {
 	/// grow_pod - This is an implementation of the grow() method which only works
 	/// on POD-like datatypes and is out of line to reduce code duplication.

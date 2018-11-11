@@ -162,26 +162,51 @@ if (NOT "${ARM_PREFIX}" STREQUAL "arm-frc-linux-gnueabi")
 		${CTRE_LIB_DIR}/libCTRE_PhoenixCanutils.a
 		)
 	set (ALLWPILIB $ENV{HOME}/allwpilib)
-	#include_directories(${ALLWPILIB}/wpiutil/src/main/native/include
-	#${ALLWPILIB}/wpilibc/src/main/native/include
-	#${ALLWPILIB}/hal/src/main/native/include
-	#${ALLWPILIB}/cameraserver/src/main/native/include
-	#${ALLWPILIB}/cscore/src/main/native/include
-	#${ALLWPILIB}/ntcore/src/main/native/include
-	#${ALLWPILIB}/ni-libraries/include
-		#$ENV{HOME}/ni-libraries/src/include
-		#)
+
+	# Generate FRCUsageReporting.h
+	file(STRINGS ${ALLWPILIB}/hal/src/generate/Instances.txt RAW_INSTANCES)
+	file(STRINGS ${ALLWPILIB}/hal/src/generate/ResourceType.txt RAW_RESOURCE_TYPES)
+
+	SET(usage_reporting_types_cpp "")
+	SET(usage_reporting_instances_cpp "")
+	SET(usage_reporting_types "")
+	SET(usage_reporting_instances "")
+
+	foreach(ITEM ${RAW_INSTANCES})
+		list(APPEND usage_reporting_instances_cpp "    ${ITEM},")
+	endforeach()
+
+	foreach(ITEM ${RAW_RESOURCE_TYPES})
+		list(APPEND usage_reporting_types_cpp "    ${ITEM},")
+	endforeach()
+
+	string(REPLACE ";" "\n" usage_reporting_types_cpp "${usage_reporting_types_cpp}")
+	string(REPLACE ";" "\n" usage_reporting_instances_cpp "${usage_reporting_instances_cpp}")
+	configure_file(${ALLWPILIB}/hal/src/generate/FRCUsageReporting.h.in ${CATKIN_DEVEL_PREFIX}/include/hal/FRCUsageReporting.h)
+
+	include_directories(
+		${ALLWPILIB}/wpiutil/src/main/native/include
+		#${ALLWPILIB}/wpilibc/src/main/native/include
+		${ALLWPILIB}/hal/src/main/native/include
+		#${ALLWPILIB}/cameraserver/src/main/native/include
+		#${ALLWPILIB}/cscore/src/main/native/include
+		#${ALLWPILIB}/ntcore/src/main/native/include
+		${ALLWPILIB}/ni-libraries/include
+		$ENV{HOME}/ni-libraries/src/include
+		)
+	add_definitions(--std=c++14)
 	include_directories(${ALLWPILIB}/hal/src/main/native/athena)
 	set (FRCROBOT_HW_MAIN_SRCS ${FRCROBOT_HW_MAIN_SRCS} 
 		src/dummy_wpilib.cpp
 		${ALLWPILIB}/hal/src/main/native/athena/Compressor.cpp
+		${ALLWPILIB}/hal/src/main/native/athena/CANAPI.cpp
+		${ALLWPILIB}/hal/src/main/native/athena/HALInitializer.cpp
 		${ALLWPILIB}/hal/src/main/native/athena/PCMInternal.cpp
 		${ALLWPILIB}/hal/src/main/native/athena/PDP.cpp
 		${ALLWPILIB}/hal/src/main/native/athena/Solenoid.cpp
 		${ALLWPILIB}/hal/src/main/native/athena/ctre/PCM.cpp
-		${ALLWPILIB}/hal/src/main/native/athena/ctre/PDP.cpp
 		${ALLWPILIB}/hal/src/main/native/athena/ctre/CtreCanNode.cpp
-		${ALLWPILIB}/hal/src/main/native/shared/handles/HandlesInternal.cpp
+		${ALLWPILIB}/hal/src/main/native/cpp/handles/HandlesInternal.cpp
 		)
 endif()
 
