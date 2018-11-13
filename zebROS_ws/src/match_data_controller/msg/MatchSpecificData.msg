@@ -18,4 +18,4 @@ bool isFMSAttatched
 bool isOperatorControl
 bool isTest
 
-double GetBatteryVoltage()
+float64 BatteryVoltage
