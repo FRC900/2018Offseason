@@ -864,7 +864,7 @@ bool runTrajectory(int slot) {
 	return true;
 }
 
-void match_data_cb(const ros_control_boilerplate::MatchSpecificData::ConstPtr &msg) {
+void match_data_cb(const match_data_controller::MatchSpecificData::ConstPtr &msg) {
     matchData.writeFromNonRT(MatchData(msg->isEnabled, msg->isAutonomous, msg->allianceData));
 
 	// Not sure about the msg->isEnabled part - robot

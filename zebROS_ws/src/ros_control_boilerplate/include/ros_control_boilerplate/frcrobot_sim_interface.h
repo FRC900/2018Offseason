@@ -43,7 +43,7 @@
 #include <atomic>
 #include <thread>
 #include <elevator_controller/CubeState.h>
-#include <ros_control_boilerplate/MatchSpecificData.h>
+#include <match_data_controller/MatchSpecificData.h>
 
 namespace frcrobot_control
 {
@@ -76,7 +76,7 @@ class FRCRobotSimInterface : public ros_control_boilerplate::FRCRobotInterface
 		std::atomic<bool> has_cube;
         
         ros::Subscriber match_data_sub_;
-        void match_data_callback(const ros_control_boilerplate::MatchSpecificData &match_data);
+        void match_data_callback(const match_data_controller::MatchSpecificData &match_data);
 		std::atomic<bool> match_data_enabled_;
 
 		void loop_joy(void);
