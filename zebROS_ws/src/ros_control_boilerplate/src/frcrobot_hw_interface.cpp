@@ -1180,20 +1180,20 @@ void FRCRobotHWInterface::pcm_read_thread(HAL_CompressorHandle pcm, int32_t pcm_
 			!writing_points_.load(std::memory_order_relaxed))
 #endif
 		{
-			pcm_state.getEnabled(HAL_GetCompressor(pcm, &status));
-			pcm_state.getPressureSwitch(HAL_GetCompressorPressureSwitch(pcm, &status));
-			pcm_state.getCompressorCurrent(HAL_GetCompressorCurrent(pcm, &status));
-			pcm_state.getClosedLoopControl(HAL_GetCompressorClosedLoopControl(pcm, &status));
-			pcm_state.getCurrentTooHigh(HAL_GetCompressorCurrentTooHighFault(pcm, &status));
-			pcm_state.getCurrentTooHighSticky(HAL_GetCompressorCurrentTooHighStickyFault(pcm, &status));
+			pcm_state.setEnabled(HAL_GetCompressor(pcm, &status));
+			pcm_state.setPressureSwitch(HAL_GetCompressorPressureSwitch(pcm, &status));
+			pcm_state.setCompressorCurrent(HAL_GetCompressorCurrent(pcm, &status));
+			pcm_state.setClosedLoopControl(HAL_GetCompressorClosedLoopControl(pcm, &status));
+			pcm_state.setCurrentTooHigh(HAL_GetCompressorCurrentTooHighFault(pcm, &status));
+			pcm_state.setCurrentTooHighSticky(HAL_GetCompressorCurrentTooHighStickyFault(pcm, &status));
 
-			pcm_state.getShorted(HAL_GetCompressorShortedFault(pcm, &status));
-			pcm_state.getShortedSticky(HAL_GetCompressorShortedStickyFault(pcm, &status));
-			pcm_state.getNotConntected(HAL_GetCompressorNotConnectedFault(pcm, &status));
-			pcm_state.getNotConnecteSticky(HAL_GetCompressorNotConnectedStickyFault(pcm, &status));
-			pcm_state.getVoltageFault(HAL_GetPCMSolenoidVoltageFault(pcm, &status));
-			pcm_state.getVoltageStickFault(HAL_GetPCMSolenoidVoltageStickyFault(pcm, &status));
-			pcm_state.getSolenoidBlacklist(HAL_GetPCMSolenoidBlackList(pcm, &status));
+			pcm_state.setShorted(HAL_GetCompressorShortedFault(pcm, &status));
+			pcm_state.setShortedSticky(HAL_GetCompressorShortedStickyFault(pcm, &status));
+			pcm_state.setNotConntected(HAL_GetCompressorNotConnectedFault(pcm, &status));
+			pcm_state.setNotConnecteSticky(HAL_GetCompressorNotConnectedStickyFault(pcm, &status));
+			pcm_state.setVoltageFault(HAL_GetPCMSolenoidVoltageFault(pcm, &status));
+			pcm_state.setVoltageStickFault(HAL_GetPCMSolenoidVoltageStickyFault(pcm, &status));
+			pcm_state.setSolenoidBlacklist(HAL_GetPCMSolenoidBlackList(pcm, &status));
 
 			// Copy to state shared with read() thread
 			std::lock_guard<std::mutex> l(pcm_read_thread_mutex_);
