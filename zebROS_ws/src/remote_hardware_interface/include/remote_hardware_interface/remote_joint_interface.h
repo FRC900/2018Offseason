@@ -5,6 +5,7 @@
 #include <hardware_interface/imu_sensor_interface.h>
 #undef private
 #include <pdp_state_interface/pdp_state_interface.h>
+#include <pcm_state_interface/pcm_state_interface.h>
 #include <talon_interface/talon_state_interface.h>
 
 // Create a separate type of joint interface for joints which
@@ -56,6 +57,7 @@ namespace hardware_interface
 	};
 	class RemoteImuSensorInterface  : public HardwareResourceManager<ImuWriteableSensorHandle,  ClaimResources> {};
 	class RemotePDPStateInterface   : public HardwareResourceManager<PDPWritableStateHandle,    ClaimResources> {};
+	class RemotePCMStateInterface   : public HardwareResourceManager<PCMWritableStateHandle,    ClaimResources> {};
 	class RemoteTalonStateInterface : public HardwareResourceManager<TalonWriteableStateHandle, ClaimResources> {};
 }
 

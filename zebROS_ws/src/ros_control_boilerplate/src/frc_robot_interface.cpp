@@ -757,7 +757,7 @@ void FRCRobotInterface::init()
 	last_compressor_command_.resize(num_compressors_);
 	for (size_t i = 0; i < num_compressors_; i++)
 	{
-		ROS_INFO_STREAM_NAMED(name_, "FRCRobotInterface: Registering interface for : " << compressor_names_[i] << " at pcm_id " << compressor_pcm_ids_[i]);
+		ROS_INFO_STREAM_NAMED(name_, "FRCRobotInterface: Registering interface for compressor / PCM : " << compressor_names_[i] << " at pcm_id " << compressor_pcm_ids_[i]);
 
 		last_compressor_command_[i] = std::numeric_limits<double>::max();
 		compressor_command_[i] = 0;
@@ -770,13 +770,22 @@ void FRCRobotInterface::init()
 		joint_position_interface_.registerHandle(cch);
 		if (!compressor_local_updates_[i])
 			joint_remote_interface_.registerHandle(cch);
+
+		pcm_state_.push_back(hardware_interface::PCMState(compressor_pcm_ids_[i]));
+		hardware_interface::PCMStateHandle pcmsh(compressor_names_[i], &pcm_state_[i]);
+		pcm_state_interface_.registerHandle(pcmsh);
+		if (!compressor_local_updates_[i])
+		{
+			hardware_interface::PCMWritableStateHandle rpcmsh(compressor_names_[i], &pcm_state_[i]);
+			pcm_remote_state_interface_.registerHandle(rpcmsh);
+		}
 	}
 
 	num_pdps_ = pdp_names_.size();
 	pdp_state_.resize(num_pdps_);
 	for (size_t i = 0; i < num_pdps_; i++)
 	{
-		ROS_INFO_STREAM_NAMED(name_, "FRCRobotInterface: Registering interface for : " << pdp_names_[i]);
+		ROS_INFO_STREAM_NAMED(name_, "FRCRobotInterface: Registering interface for PDP : " << pdp_names_[i]);
 
 		hardware_interface::PDPStateHandle csh(pdp_names_[i], &pdp_state_[i]);
 		pdp_state_interface_.registerHandle(csh);
@@ -866,11 +875,13 @@ void FRCRobotInterface::init()
 	registerInterface(&joint_velocity_interface_);
 	registerInterface(&joint_effort_interface_); // empty for now
 	registerInterface(&joint_remote_interface_); // list of Joints defined as remote
-	registerInterface(&pdp_remote_state_interface_); // list of Joints defined as remote
 	registerInterface(&imu_interface_);
-	registerInterface(&imu_remote_interface_);
 	registerInterface(&pdp_state_interface_);
+	registerInterface(&pcm_state_interface_);
 	registerInterface(&robot_controller_state_interface_);
+	registerInterface(&pdp_remote_state_interface_); // list of Joints defined as remote
+	registerInterface(&pcm_remote_state_interface_); // list of Joints defined as remote
+	registerInterface(&imu_remote_interface_);
 
 	ROS_INFO_STREAM_NAMED(name_, "FRCRobotInterface Ready.");
 }

@@ -279,8 +279,13 @@ class FRCRobotHWInterface : public ros_control_boilerplate::FRCRobotInterface
 		std::vector<DoubleSolenoidHandle> double_solenoids_;
 		std::vector<std::shared_ptr<AHRS>> navXs_;
 		std::vector<std::shared_ptr<frc::AnalogInput>> analog_inputs_;
+
+		std::mutex pcm_read_thread_mutex_;
+		std::vector<std::shared_ptr<hardware_interface::PCMState>> pcm_read_thread_state_;
+		void pcm_read_thread(HAL_CompressorHandle pcm, int32_t pcm_id, std::shared_ptr<hardware_interface::PCMState> state);
+		std::vector<std::thread> pcm_thread_;
 		std::vector<HAL_CompressorHandle> compressors_;
-		std::thread hal_thread_;
+
 		std::thread motion_profile_thread_;
 		std::vector<std::shared_ptr<std::mutex>> motion_profile_mutexes_;
 

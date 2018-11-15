@@ -164,7 +164,6 @@ FRCRobotHWInterface::FRCRobotHWInterface(ros::NodeHandle &nh, urdf::Model *urdf_
 
 FRCRobotHWInterface::~FRCRobotHWInterface()
 {
-	hal_thread_.join();
 	motion_profile_thread_.join();
 
 	for (size_t i = 0; i < num_can_talon_srxs_; i++)
@@ -614,6 +613,11 @@ void FRCRobotHWInterface::init(void)
 		}
 		else
 			compressors_.push_back(HAL_kInvalidHandle);
+
+		pcm_read_thread_state_.push_back(std::make_shared<hardware_interface::PCMState>(compressor_pcm_ids_[i]));
+		if (compressors_[i] != HAL_kInvalidHandle)
+			pcm_thread_.push_back(std::thread(&FRCRobotHWInterface::pcm_read_thread, this,
+						compressors_[i], compressor_pcm_ids_[i], pcm_read_thread_state_[i]));
 	}
 	for (size_t i = 0; i < num_rumbles_; i++)
 		ROS_INFO_STREAM_NAMED("frcrobot_hw_interface",
@@ -1158,6 +1162,54 @@ void FRCRobotHWInterface::pdp_read_thread(int32_t pdp, std::shared_ptr<hardware_
 	}
 }
 
+void FRCRobotHWInterface::pcm_read_thread(HAL_CompressorHandle pcm, int32_t pcm_id,
+										  std::shared_ptr<hardware_interface::PCMState> state)
+{
+	ros::Rate r(20); // TODO : Tune me?
+	hardware_interface::PCMState pcm_state(pcm_id);
+	int32_t status;
+	double time_sum = 0.;
+	unsigned iteration_count = 0;
+	HAL_ClearAllPCMStickyFaults(pcm, &status);
+	while (ros::ok())
+	{
+		struct timespec start_time;
+		clock_gettime(CLOCK_MONOTONIC, &start_time);
+#ifdef USE_TALON_MOTION_PROFILE
+		if (!profile_is_live_.load(std::memory_order_relaxed) &&
+			!writing_points_.load(std::memory_order_relaxed))
+#endif
+		{
+			pcm_state.getEnabled(HAL_GetCompressor(pcm, &status));
+			pcm_state.getPressureSwitch(HAL_GetCompressorPressureSwitch(pcm, &status));
+			pcm_state.getCompressorCurrent(HAL_GetCompressorCurrent(pcm, &status));
+			pcm_state.getClosedLoopControl(HAL_GetCompressorClosedLoopControl(pcm, &status));
+			pcm_state.getCurrentTooHigh(HAL_GetCompressorCurrentTooHighFault(pcm, &status));
+			pcm_state.getCurrentTooHighSticky(HAL_GetCompressorCurrentTooHighStickyFault(pcm, &status));
+
+			pcm_state.getShorted(HAL_GetCompressorShortedFault(pcm, &status));
+			pcm_state.getShortedSticky(HAL_GetCompressorShortedStickyFault(pcm, &status));
+			pcm_state.getNotConntected(HAL_GetCompressorNotConnectedFault(pcm, &status));
+			pcm_state.getNotConnecteSticky(HAL_GetCompressorNotConnectedStickyFault(pcm, &status));
+			pcm_state.getVoltageFault(HAL_GetPCMSolenoidVoltageFault(pcm, &status));
+			pcm_state.getVoltageStickFault(HAL_GetPCMSolenoidVoltageStickyFault(pcm, &status));
+			pcm_state.getSolenoidBlacklist(HAL_GetPCMSolenoidBlackList(pcm, &status));
+
+			// Copy to state shared with read() thread
+			std::lock_guard<std::mutex> l(pcm_read_thread_mutex_);
+			*state = pcm_state;
+		}
+		struct timespec end_time;
+		clock_gettime(CLOCK_MONOTONIC, &end_time);
+		time_sum +=
+			((double)end_time.tv_sec -  (double)start_time.tv_sec) +
+			((double)end_time.tv_nsec - (double)start_time.tv_nsec) / 1000000000.;
+		iteration_count += 1;
+		ROS_INFO_STREAM_THROTTLE(2, "pcm_read = " << time_sum / iteration_count);
+		r.sleep();
+	}
+}
+
 void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 {
 	static double time_sum = 0;
@@ -1601,14 +1653,15 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 		}
 	}
 
-#if 0
 	// TODO : thread me also?
 	for (size_t i = 0; i < num_compressors_; i++)
 	{
-		if (compressor_locals_[i])
-			compressor_state_[i] = compressors_[i]->GetCompressorCurrent();
+		if (compressor_local_updates_[i])
+		{
+			std::lock_guard<std::mutex> l(pcm_read_thread_mutex_);
+			pcm_state_[i] = *pcm_read_thread_state_[i];
+		}
 	}
-#endif
 	for (size_t i = 0; i < num_pdps_; i++)
 	{
 		if (pdp_locals_[i])
