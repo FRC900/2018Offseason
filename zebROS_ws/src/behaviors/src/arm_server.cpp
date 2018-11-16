@@ -101,7 +101,7 @@ class ArmAction
             bool intake_finished_before_timeout = ai_.waitForResult(ros::Duration(intake_timeout)); 
             if(!intake_finished_before_timeout) {
                 result_.success = false;
-                as_.setAborted(result_); 
+                as_.setSucceeded(result_);
                 ROS_ERROR("Intake actionlib timed out in arm_server. ABORTING!");
                 return;
             }
