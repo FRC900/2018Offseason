@@ -1119,6 +1119,61 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 		{
 			pdp_state_.setCurrent(pdp_joint_.GetCurrent(channel), channel);
 		}
+
+		joystick_state_.setleftStickX(Driverstation::GetInstance().leftStickX();
+		joystick_state_.setleftStickY(Driverstation::GetInstance().leftStickY();
+		joystick_state_.setrightStickX(Driverstation::GetInstance().rightStickX();
+		joystick_state_.setrightStickY(Driverstation::GetInstance().rightStickY();
+		joystick_state_.setleftTrigger(Driverstation::GetInstance().leftTrigger();
+		joystick_state_.setrightTrigger(Driverstation::GetInstance().rightTrigger();
+		joystick_state_.setbuttonAButton(Driverstation::GetInstance().isbuttonAButton();
+		joystick_state_.setbuttonAPress(Driverstation::GetInstance().isbuttonAPress();
+		joystick_state_.setbuttonARelease(Driverstation::GetInstance().isbuttonARelease();
+		joystick_state_.setbuttonBButton(Driverstation::GetInstance().isbuttonBButton();
+		joystick_state_.setbuttonBPress(Driverstation::GetInstance().isbuttonBPress();
+		joystick_state_.setbuttonBRelease(Driverstation::GetInstance().isbuttonBRelease();
+		joystick_state_.setbuttonXButton(Driverstation::GetInstance().isbuttonXButton();
+		joystick_state_.setbuttonXPress(Driverstation::GetInstance().isbuttonXPress();
+		joystick_state_.setbuttonXRelease(Driverstation::GetInstance().buttonXRelease();
+		joystick_state_.setbuttonYButton(Driverstation::GetInstance().isbuttonYButton();
+		joystick_state_.setbuttonYPress(Driverstation::GetInstance().isbuttonYPress();
+		joystick_state_.setbuttonYRelease(Driverstation::GetInstance().isbuttonYRelease();
+		joystick_state_.setbumperLeftButton(Driverstation::GetInstance().isbumperLeftButton();
+		joystick_state_.setbumperLeftPress(Driverstation::GetInstance().isbumperLeftPress();
+		joystick_state_.setbumperLeftRelease(Driverstation::GetInstance().isbumperLeftRelease();
+		joystick_state_.setbumperRightButton(Driverstation::GetInstance().isbumperRightButton();
+		joystick_state_.setbumperRightPress(Driverstation::GetInstance().isbumperRightPress();
+		joystick_state_.setbumperRightRelease(Driverstation::GetInstance().isbumperRightRelease();
+		joystick_state_.setbuttonBackButton(Driverstation::GetInstance().isbuttonBackButton();
+		joystick_state_.setbuttonBackPress(Driverstation::GetInstance().isbuttonBackPress();
+		joystick_state_.setbuttonBackRelease(Driverstation::GetInstance().isbuttonBackRelease();
+		joystick_state_.setbuttonStartButton(Driverstation::GetInstance().isbuttonStartButton();
+		joystick_state_.setbuttonStartPress(Driverstation::GetInstance().isbuttonStartPress();
+		joystick_state_.setbuttonStartRelease(Driverstation::GetInstance().isbuttonStartRelease();
+		joystick_state_.setstickLeftButton(Driverstation::GetInstance().isstickLeftButton();
+		joystick_state_.setstickLeftPress(Driverstation::GetInstance().isstickLeftPress();
+		joystick_state_.setstickLeftRelease(Driverstation::GetInstance().isstickLeftRelease();
+		joystick_state_.setstickRightButton(Driverstation::GetInstance().isstickRightButton();
+		joystick_state_.setstickRightPress(Driverstation::GetInstance().isstickRightPress();
+		joystick_state_.setstickRightRelease(Driverstation::GetInstance().isstickRightRelease();
+		joystick_state_.setdirectionUpButton(Driverstation::GetInstance().isdirectionUpButton();
+		joystick_state_.setdirectionUpPress(Driverstation::GetInstance().isdirectionUpPress();
+		joystick_state_.setdirectionUpRelease(Driverstation::GetInstance().isdirectionUpRelease();
+		joystick_state_.setdirectionDownButton(Driverstation::GetInstance().isdirectionDownButton();
+		joystick_state_.setdirectionDownPress(Driverstation::GetInstance().isdirectionDownPress();
+		joystick_state_.setdirectionDownRelease(Driverstation::GetInstance().isdirectionDownRelease();
+		joystick_state_.setdirectionLeftButton(Driverstation::GetInstance().isdirectionLeftButton();
+		joystick_state_.setdirectionLeftPress(Driverstation::GetInstance().isdirectionLeftPress();
+		joystick_state_.setdirectionLeftRelease(Driverstation::GetInstance().isdirectionLeftRelease();
+		joystick_state_.setdirectionRightButton(Driverstation::GetInstance().isdirectionRightButton();
+		joystick_state_.setdirectionRightPress(Driverstation::GetInstance().isdirectionRightPress();
+		joystick_state_.setdirectionRightRelease(Driverstation::GetInstance().isdirectionRightRelease();
+		{
+			joystick_state_.setCurrent(Driverstation::GetInstance().GetCurrent(channel), channel);
+		}
+
+
+
 	}
 
 	{
