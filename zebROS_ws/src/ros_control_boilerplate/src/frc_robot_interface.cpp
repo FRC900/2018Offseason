@@ -857,9 +857,11 @@ void FRCRobotInterface::init()
 			joint_remote_interface_.registerHandle(dch);
 	}
 
-	hardware_interface::RobotControllerStateHandle rcsh("robot_controller_name", &robot_controller_state_);
-	robot_controller_state_interface_.registerHandle(rcsh);
-
+	if (run_hal_robot_)
+	{
+		hardware_interface::RobotControllerStateHandle rcsh("robot_controller_name", &robot_controller_state_);
+		robot_controller_state_interface_.registerHandle(rcsh);
+	}
 
 	// Publish various FRC-specific data using generic joint state for now
 	// For simple things this might be OK, but for more complex state

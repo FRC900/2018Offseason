@@ -133,7 +133,7 @@ class FRCRobotInterface : public hardware_interface::RobotHW
 	protected:
 		/** \brief Get the URDF XML from the parameter server */
 		virtual void loadURDF(ros::NodeHandle &nh, std::string param_name);
-		virtual std::vector<DummyJoint> getDummyJoints(void) {}
+		virtual std::vector<DummyJoint> getDummyJoints(void) { return std::vector<DummyJoint>();}
 
 		// Short name of this class
 		std::string name_;
