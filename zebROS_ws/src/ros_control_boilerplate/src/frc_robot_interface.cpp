@@ -756,6 +756,8 @@ void FRCRobotInterface::init()
 	compressor_command_.resize(num_compressors_);
 	last_compressor_command_.resize(num_compressors_);
 	for (size_t i = 0; i < num_compressors_; i++)
+		pcm_state_.push_back(hardware_interface::PCMState(compressor_pcm_ids_[i]));
+	for (size_t i = 0; i < num_compressors_; i++)
 	{
 		ROS_INFO_STREAM_NAMED(name_, "FRCRobotInterface: Registering interface for compressor / PCM : " << compressor_names_[i] << " at pcm_id " << compressor_pcm_ids_[i]);
 
@@ -771,7 +773,7 @@ void FRCRobotInterface::init()
 		if (!compressor_local_updates_[i])
 			joint_remote_interface_.registerHandle(cch);
 
-		pcm_state_.push_back(hardware_interface::PCMState(compressor_pcm_ids_[i]));
+		ROS_INFO_STREAM("pcm_state_[i] = " << &pcm_state_[i]);
 		hardware_interface::PCMStateHandle pcmsh(compressor_names_[i], &pcm_state_[i]);
 		pcm_state_interface_.registerHandle(pcmsh);
 		if (!compressor_local_updates_[i])

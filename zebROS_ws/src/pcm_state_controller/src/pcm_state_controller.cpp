@@ -42,9 +42,15 @@ bool PCMStateController::init(hardware_interface::PCMStateInterface *hw,
 							  ros::NodeHandle                       &root_nh,
 							  ros::NodeHandle                       &controller_nh)
 {
+	ROS_INFO_NAMED("pcm_state_controller", "PCMStateController::init() called");
 	// get all joint names from the hardware interface
 	const std::vector<std::string> &pcm_names = hw->getNames();
 	num_pcms_ = pcm_names.size();
+	if (num_pcms_ < 1)
+	{
+		ROS_ERROR_STREAM("Cannot initialize zero PCMs - need to add a compressor joint def?");
+		return false;
+	}
 	for (size_t i = 0; i < num_pcms_; i++)
 		ROS_DEBUG("Got joint %s", pcm_names[i].c_str());
 
@@ -79,7 +85,7 @@ bool PCMStateController::init(hardware_interface::PCMStateInterface *hw,
 		m.voltage_sticky_fault.push_back(false);
 		m.solenoid_blacklist.push_back(0);
 
-		pcm_state_[i] = hw->getHandle(pcm_names[i]);
+		pcm_state_.push_back(hw->getHandle(pcm_names[i]));
 	}
 
 	return true;
