@@ -773,7 +773,6 @@ void FRCRobotInterface::init()
 		if (!compressor_local_updates_[i])
 			joint_remote_interface_.registerHandle(cch);
 
-		ROS_INFO_STREAM("pcm_state_[i] = " << &pcm_state_[i]);
 		hardware_interface::PCMStateHandle pcmsh(compressor_names_[i], &pcm_state_[i]);
 		pcm_state_interface_.registerHandle(pcmsh);
 		if (!compressor_local_updates_[i])
