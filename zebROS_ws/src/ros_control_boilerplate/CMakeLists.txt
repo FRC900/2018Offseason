@@ -157,13 +157,13 @@ set (CTRE_USER_LIBS
 	${CTRE_LIB_DIR}/libCTRE_PhoenixCCI.a
 )
 
+set (ALLWPILIB ../../../allwpilib)
 if (NOT "${ARM_PREFIX}" STREQUAL "arm-frc-linux-gnueabi")
 	set (CTRE_USER_LIBS 
 		${CTRE_USER_LIBS}
 		${CTRE_LIB_DIR}/libCTRE_PhoenixPlatform_socketcan.a
 		${CTRE_LIB_DIR}/libCTRE_PhoenixCanutils.a
 		)
-	set (ALLWPILIB $ENV{HOME}/allwpilib)
 
 	# Generate FRCUsageReporting.h
 	file(STRINGS ${ALLWPILIB}/hal/src/generate/Instances.txt RAW_INSTANCES)
@@ -210,7 +210,12 @@ if (NOT "${ARM_PREFIX}" STREQUAL "arm-frc-linux-gnueabi")
 		${ALLWPILIB}/hal/src/main/native/athena/ctre/CtreCanNode.cpp
 		${ALLWPILIB}/hal/src/main/native/cpp/handles/HandlesInternal.cpp
 		)
+else()
+	set (FRCROBOT_HW_MAIN_SRCS ${FRCROBOT_HW_MAIN_SRCS} 
+		src/rio_wpilib.cpp
+		)
 endif()
+include_directories(${ALLWPILIB}/hal/src/main/native/athena)
 
 add_executable(frcrobot_hw_main ${FRCROBOT_HW_MAIN_SRCS})
 

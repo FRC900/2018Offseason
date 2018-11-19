@@ -402,7 +402,7 @@ void FRCRobotHWInterface::init(void)
 		ROS_INFO_STREAM_NAMED("frcrobot_hw_interface",
 							  "Loading joint " << i << "=" << can_talon_srx_names_[i] <<
 							  (can_talon_srx_local_updates_[i] ? " local" : " remote") << " update, " <<
-							  (can_talon_srx_local_hardwares_[i] ? "local" : "remote") << " hardware " <<
+							  (can_talon_srx_local_hardwares_[i] ? "local" : "remote") << " hardware" <<
 							  " as CAN id " << can_talon_srx_can_ids_[i]);
 
 		if (can_talon_srx_local_hardwares_[i])
@@ -438,7 +438,7 @@ void FRCRobotHWInterface::init(void)
 		ROS_INFO_STREAM_NAMED("frcrobot_hw_interface",
 							  "Loading joint " << i << "=" << nidec_brushless_names_[i] <<
 							  (nidec_brushless_local_updates_[i] ? " local" : " remote") << " update, " <<
-							  (nidec_brushless_local_hardwares_[i] ? "local" : "remote") << " hardware " <<
+							  (nidec_brushless_local_hardwares_[i] ? "local" : "remote") << " hardware" <<
 							  " as PWM channel " << nidec_brushless_pwm_channels_[i] <<
 							  " / DIO channel " << nidec_brushless_dio_channels_[i] <<
 							  " invert " << nidec_brushless_inverts_[i]);
@@ -467,7 +467,7 @@ void FRCRobotHWInterface::init(void)
 		ROS_INFO_STREAM_NAMED("frcrobot_hw_interface",
 							  "Loading joint " << i << "=" << digital_output_names_[i] <<
 							  (digital_output_local_updates_[i] ? " local" : " remote") << " update, " <<
-							  (digital_output_local_hardwares_[i] ? "local" : "remote") << " hardware " <<
+							  (digital_output_local_hardwares_[i] ? "local" : "remote") << " hardware" <<
 							  " as Digital Output " << digital_output_dio_channels_[i] <<
 							  " invert " << digital_output_inverts_[i]);
 
@@ -481,7 +481,7 @@ void FRCRobotHWInterface::init(void)
 		ROS_INFO_STREAM_NAMED("frcrobot_hw_interface",
 							  "Loading joint " << i << "=" << pwm_names_[i] <<
 							  (pwm_local_updates_[i] ? " local" : " remote") << " update, " <<
-							  (pwm_local_hardwares_[i] ? "local" : "remote") << " hardware " <<
+							  (pwm_local_hardwares_[i] ? "local" : "remote") << " hardware" <<
 							  " as Digitial Output " << pwm_pwm_channels_[i] <<
 							  " invert " << pwm_inverts_[i]);
 
@@ -498,7 +498,7 @@ void FRCRobotHWInterface::init(void)
 		ROS_INFO_STREAM_NAMED("frcrobot_hw_interface",
 							  "Loading joint " << i << "=" << solenoid_names_[i] <<
 							  (solenoid_local_updates_[i] ? " local" : " remote") << " update, " <<
-							  (solenoid_local_hardwares_[i] ? "local" : "remote") << " hardware " <<
+							  (solenoid_local_hardwares_[i] ? "local" : "remote") << " hardware" <<
 							  " as Solenoid " << solenoid_ids_[i]
 							  << " with pcm " << solenoid_pcms_[i]);
 
@@ -520,7 +520,7 @@ void FRCRobotHWInterface::init(void)
 		ROS_INFO_STREAM_NAMED("frcrobot_hw_interface",
 							  "Loading joint " << i << "=" << double_solenoid_names_[i] <<
 							  (double_solenoid_local_updates_[i] ? " local" : " remote") << " update, " <<
-							  (double_solenoid_local_hardwares_[i] ? "local" : "remote") << " hardware " <<
+							  (double_solenoid_local_hardwares_[i] ? "local" : "remote") << " hardware" <<
 							  " as Double Solenoid forward " << double_solenoid_forward_ids_[i] <<
 							  " reverse " << double_solenoid_reverse_ids_[i]
 							  << " with pcm " << double_solenoid_pcms_[i]);
@@ -593,7 +593,7 @@ void FRCRobotHWInterface::init(void)
 		ROS_INFO_STREAM_NAMED("frcrobot_hw_interface",
 							  "Loading joint " << i << "=" << compressor_names_[i] <<
 							  (compressor_local_updates_[i] ? " local" : " remote") << " update, " <<
-							  (compressor_local_hardwares_[i] ? "local" : "remote") << " hardware " <<
+							  (compressor_local_hardwares_[i] ? "local" : "remote") << " hardware" <<
 							  " as Compressor with pcm " << compressor_pcm_ids_[i]);
 
 		if (compressor_local_hardwares_[i])
@@ -623,7 +623,7 @@ void FRCRobotHWInterface::init(void)
 		ROS_INFO_STREAM_NAMED("frcrobot_hw_interface",
 							  "Loading joint " << i << "=" << rumble_names_[i] <<
 							  (rumble_local_updates_[i] ? " local" : " remote") << " update, " <<
-							  (rumble_local_hardwares_[i] ? "local" : "remote") << " hardware " <<
+							  (rumble_local_hardwares_[i] ? "local" : "remote") << " hardware" <<
 							  " as Rumble with port" << rumble_ports_[i]);
 
 	for (size_t i = 0; i < num_pdps_; i++)
@@ -1340,7 +1340,7 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 		start_timespec = end_time;
 
 		// Update joystick state as often as possible
-		if (realtime_pub_joystick_->trylock())
+		if ((joysticks_.size() > 0) && realtime_pub_joystick_->trylock())
 		{
 			auto &m = realtime_pub_joystick_->msg_;
 			m.header.stamp = time_now_t;
@@ -1507,7 +1507,6 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 				<< " match_data = " << time_sum_match_data / iteration_count_match_data);
 	}
 
-
 	for (std::size_t joint_id = 0; joint_id < num_can_talon_srxs_; ++joint_id)
 	{
 		if (can_talon_srx_local_hardwares_[joint_id])
@@ -1653,7 +1652,6 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 		}
 	}
 
-	// TODO : thread me also?
 	for (size_t i = 0; i < num_compressors_; i++)
 	{
 		if (compressor_local_updates_[i])
