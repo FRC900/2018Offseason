@@ -408,9 +408,8 @@ void FRCRobotHWInterface::init(void)
 		if (can_talon_srx_local_hardwares_[i])
 		{
 			can_talons_.push_back(std::make_shared<ctre::phoenix::motorcontrol::can::TalonSRX>(can_talon_srx_can_ids_[i]));
-			can_talons_[i]->Set(ctre::phoenix::motorcontrol::ControlMode::Disabled, 0);
-			can_talons_[i]->SetStatusFramePeriod(ctre::phoenix::motorcontrol::StatusFrameEnhanced::Status_10_MotionMagic, 10, 50);
-			//TODO: test above sketchy change
+			can_talons_[i]->Set(ctre::phoenix::motorcontrol::ControlMode::Disabled, 0, 20);
+
 			// Clear sticky faults
 			//safeTalonCall(can_talons_[i]->ClearStickyFaults(timeoutMs), "ClearStickyFaults()");
 
@@ -423,9 +422,10 @@ void FRCRobotHWInterface::init(void)
 			can_talons_mp_written_.push_back(std::make_shared<std::atomic<bool>>(false));
 			can_talons_mp_running_.push_back(std::make_shared<std::atomic<bool>>(false));
 
-
 			custom_profile_threads_[i] = std::thread(&FRCRobotHWInterface::custom_profile_thread, this, i);
 
+			// Create a thread for each talon that is responsible for reading
+			// status data from that controller.
 			talon_read_state_mutexes_.push_back(std::make_shared<std::mutex>());
 			talon_read_thread_states_.push_back(std::make_shared<hardware_interface::TalonHWState>(can_talon_srx_can_ids_[i]));
 			talon_read_threads_.push_back(std::thread(&FRCRobotHWInterface::talon_read_thread, this,
