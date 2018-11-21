@@ -76,12 +76,12 @@
 //HAL / wpilib includes
 #include <HALInitializer.h>
 #include <networktables/NetworkTable.h>
-#include <SmartDashboard/SmartDashboard.h>
-#include <HAL/CAN.h>
-#include <HAL/Compressor.h>
-#include <HAL/PDP.h>
-#include <HAL/Power.h>
-#include <HAL/Solenoid.h>
+#include <hal/CAN.h>
+#include <hal/Compressor.h>
+#include <hal/PDP.h>
+#include <hal/Power.h>
+#include <hal/Solenoid.h>
+#include <frc/Joystick.h>
 
 #include <ctre/phoenix/motorcontrol/SensorCollection.h>
 #include <ctre/phoenix/platform/Platform.h>
@@ -133,7 +133,7 @@
 /* must be accompanied by the FIRST BSD license file in the root directory of */
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
-#include "HAL/handles/HandlesInternal.h"
+#include "hal/handles/HandlesInternal.h"
 extern "C" {
 
 /**

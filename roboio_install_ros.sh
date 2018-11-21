@@ -22,7 +22,7 @@ ssh -p 22 admin@$1 'opkg install libeigen python-dev libpython2 python-core '
 ssh -p 22 admin@$1 'opkg clean'
 ssh -p 22 admin@$1 'opkg install libcurl4 lz4 libboost-filesystem1.60.0 libboost-program-options1.60.0 libboost-signals1.60.0 libboost-regex1.60.0 libboost-thread1.60.0 libboost-chrono1.60.0 libboost-date-time1.60.0 libboost-atomic1.60.0'
 ssh -p 22 admin@$1 'opkg clean'
-ssh -p 22 admin@$1 'opkg install libbz2 cmake libxml2 libgnutls-bin libgnutls-openssl27  '
+ssh -p 22 admin@$1 'opkg install libbz2 cmake libxml2 libgnutls-bin libgnutls-openssl27'
 ssh -p 22 admin@$1 'opkg clean'
 ssh -p 22 admin@$1 'opkg install libgnutls30 libgnutlsxx28 nettle libgmp10 libgmpxx4 libz1 git make '
 ssh -p 22 admin@$1 'opkg clean'
@@ -30,11 +30,11 @@ ssh -p 22 admin@$1 'opkg install gcc g++ gcc-symlinks g++-symlinks binutils pyth
 ssh -p 22 admin@$1 'opkg clean'
 ssh -p 22 admin@$1 'opkg install python-pkgutil python-dateutil python-argparse python-nose '
 ssh -p 22 admin@$1 'opkg clean'
-ssh -p 22 admin@$1 'opkg install python-netifaces libglog0 python-pip coreutils gdb i2c-tools '
+ssh -p 22 admin@$1 'opkg install python-netifaces python-pip coreutils gdb i2c-tools '
 ssh -p 22 admin@$1 'opkg clean'
 ssh -p 22 admin@$1 'opkg install ntp ntp-tickadj ntp-utils ntpdate rsync htop curl libusb-1.0-dev'
 ssh -p 22 admin@$1 'opkg clean'
-ssh -p 22 admin@$1 'opkg install openssl-conf openssl-dev openssl-staticdev openssl"
+ssh -p 22 admin@$1 'opkg install gflags gflags-bash-completion libglog openssl'
 
 ssh -p 22 admin@$1 'pip install catkin_pkg rospkg rosdistro vcstools rosdep wstool rosinstall rosinstall_generator defusedxml empy'
 

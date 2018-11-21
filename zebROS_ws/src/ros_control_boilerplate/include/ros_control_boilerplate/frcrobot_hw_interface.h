@@ -45,30 +45,29 @@
 #include <ros_control_boilerplate/frc_robot_interface.h>
 #include <realtime_tools/realtime_publisher.h>
 
-#include <ctre/phoenix/motorcontrol/can/TalonSRX.h>
-#include <IterativeRobotBase.h>
-#include <DriverStation.h>
-#include <NidecBrushless.h>
-#include <DigitalInput.h>
-#include <DigitalOutput.h>
-#include <Joystick.h>
-#include <SafePWM.h>
-#include <DoubleSolenoid.h>
-#ifndef HWI_ROBORIO
-#include <HAL/FRCUsageReporting.h>
-#include <HAL/HALBase.h>
-#endif
-#include <HAL/DriverStation.h>
-#include <AHRS.h>
-#include <LiveWindow/LiveWindow.h>
-#include <SmartDashboard/SmartDashboard.h>
-#include <std_msgs/Float64.h>
-
-// custom ROS message types
+#include <robot_controller_interface/robot_controller_interface.hpp>
 #include "ros_control_boilerplate/AutoMode.h"
 #include "ros_control_boilerplate/JoystickState.h"
 #include "ros_control_boilerplate/MatchSpecificData.h"
-#include <robot_controller_interface/robot_controller_interface.hpp>
+#include <std_msgs/Float64.h>
+
+#include <ctre/phoenix/motorcontrol/can/TalonSRX.h>
+#include <frc/IterativeRobotBase.h>
+#include <frc/DriverStation.h>
+#include <frc/NidecBrushless.h>
+#include <frc/DigitalInput.h>
+#include <frc/DigitalOutput.h>
+#include <frc/SafePWM.h>
+#include <frc/Solenoid.h>
+#include <frc/DoubleSolenoid.h>
+#include <frc/Compressor.h>
+#include <frc/livewindow/LiveWindow.h>
+#include <frc/smartdashboard/SmartDashboard.h>
+#include <hal/HALBase.h>
+#include <hal/DriverStation.h>
+#include <hal/FRCUsageReporting.h>
+
+#include <AHRS.h>
 
 #include <robot_controller_interface/robot_controller_interface.hpp>
 
@@ -80,13 +79,9 @@ namespace frcrobot_control
 class ROSIterativeRobot : public frc::IterativeRobotBase
 {
 	public:
-#ifdef HWI_ROBORIO
-		ROSIterativeRobot(void)
-#else
 		ROSIterativeRobot(void) : IterativeRobotBase(0.02)
-#endif
 		{
-			HAL_Report(HALUsageReporting::kResourceType_Framework, 900, 0, "https://www.ros.org");
+			HAL_Report(HALUsageReporting::kResourceType_Framework, HALUsageReporting::kFramework_ROS);
 			HAL_Report(HALUsageReporting::kResourceType_RobotDrive, 900, 0, "field centric swerve");
 #if 0
 			for (int i = 0; i < 900; i++)

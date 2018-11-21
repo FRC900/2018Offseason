@@ -115,37 +115,73 @@ set (FRCROBOT_HW_MAIN_SRCS
 	src/generic_hw_control_loop.cpp
 )
 
+set (WPI_SYSROOT $ENV{HOME}/frc2019/roborio/arm-frc2019-linux-gnueabi)
+include_directories(
+	${catkin_INCLUDE_DIRS}
+	${WPI_SYSROOT}/include/wpilib
+	${WPI_SYSROOT}/include
+	${WPI_SYSROOT}/include/navx
+)
 set (ALLWPILIB ../../../allwpilib)
+
+set (WPI_BASE_LIB_DIR   ${WPI_SYSROOT}/lib/wpilib/linux)
+
 # Base regardless of OS type
-set(LIB_BASE $ENV{HOME}/wpilib/user/cpp/lib/linux)
-if ("${ARM_PREFIX}" STREQUAL "arm-frc-linux-gnueabi")
+if ("${ARM_PREFIX}" STREQUAL "arm-frc2019-linux-gnueabi")
 
-	include_directories(
-		$ENV{HOME}/wpilib/user/cpp/include
-		$ENV{HOME}/wpilib/cpp/current/include
-	)
-add_definitions(-DHWI_ROBORIO)
+	add_definitions(-DHWI_ROBORIO)
 	# Rio only
-	set (WPI_LIB_DIR        $ENV{HOME}/wpilib/cpp/current/reflib/linux/athena/shared)
-	set (WPI_COMMON_LIB_DIR $ENV{HOME}/wpilib/common/current/lib/linux/athena/shared)
-	set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L ${WPI_LIB_DIR}")
-	set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L ${WPI_COMMON_LIB_DIR}")
+	#set (WPI_LIB_DIR        $ENV{HOME}/wpilib/cpp/current/reflib/linux/athena/shared)
+	#set (WPI_COMMON_LIB_DIR $ENV{HOME}/wpilib/common/current/lib/linux/athena/shared)
+	#set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L ${WPI_LIB_DIR}")
+	#set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L ${WPI_COMMON_LIB_DIR}")
 
-	# Only need WPI libs for the Rio
-	set (CTRE_LIB_DIR ${LIB_BASE}/athena/static)
+	set (CTRE_LIB_DIR ${WPI_SYSROOT}/lib/ctre/linux/athena/static)
+
+	# Link against wpi user libraries for CAN talon and navX-MXP code and
+	# wpilib for HAL, driver station, and so on
+	set (WPI_SHARED_LIB_DIR ${WPI_BASE_LIB_DIR}/athena/shared)
 	set (PLATFORM_SPECIFIC_LIBS
-		${LIB_BASE}/../libnavx_frc_cpp.a
-		${WPI_LIB_DIR}/libwpi.so
-		${WPI_LIB_DIR}/libFRC_NetworkCommunication.so.18.0.0
-		${WPI_LIB_DIR}/libRoboRIO_FRC_ChipObject.so.18.0.0 )
+		${WPI_SHARED_LIB_DIR}/libcameraserverd.so
+		${WPI_SHARED_LIB_DIR}/libntcored.so
+		${WPI_SHARED_LIB_DIR}/libvisa.so
+		${WPI_SHARED_LIB_DIR}/libwpilibcd.so
+		${WPI_SHARED_LIB_DIR}/libcscored.so
+		${WPI_SHARED_LIB_DIR}/libFRC_NetworkCommunication.so.19.0.0
+		${WPI_SHARED_LIB_DIR}/libNiFpga.so.18.0.0
+		${WPI_SHARED_LIB_DIR}/libNiFpgaLv.so.18.0.0
+		${WPI_SHARED_LIB_DIR}/libRoboRIO_FRC_ChipObject.so.19.0.0
+		${WPI_SHARED_LIB_DIR}/libNiRioSrv.so.18.0.0
+		${WPI_SHARED_LIB_DIR}/libniriodevenum.so.18.0.0
+		${WPI_SHARED_LIB_DIR}/libniriosession.so.18.0.0
+		${WPI_SHARED_LIB_DIR}/libopencv_calib3d.so.3.4
+		${WPI_SHARED_LIB_DIR}/libopencv_imgproc.so.3.4
+		${WPI_SHARED_LIB_DIR}/libopencv_superres.so.3.4
+		${WPI_SHARED_LIB_DIR}/libopencv_core.so.3.4
+		${WPI_SHARED_LIB_DIR}/libopencv_ml.so.3.4
+		${WPI_SHARED_LIB_DIR}/libopencv_videoio.so.3.4
+		${WPI_SHARED_LIB_DIR}/libopencv_features2d.so.3.4
+		${WPI_SHARED_LIB_DIR}/libopencv_objdetect.so.3.4
+		${WPI_SHARED_LIB_DIR}/libopencv_video.so.3.4
+		${WPI_SHARED_LIB_DIR}/libopencv_flann.so.3.4
+		${WPI_SHARED_LIB_DIR}/libopencv_photo.so.3.4
+		${WPI_SHARED_LIB_DIR}/libopencv_videostab.so.3.4
+		${WPI_SHARED_LIB_DIR}/libopencv_highgui.so.3.4
+		${WPI_SHARED_LIB_DIR}/libopencv_shape.so.3.4
+		${WPI_SHARED_LIB_DIR}/libopencv_imgcodecs.so.3.4
+		${WPI_SHARED_LIB_DIR}/libopencv_stitching.so.3.4
+		${WPI_SHARED_LIB_DIR}/libwpiHald.so
+		${WPI_SHARED_LIB_DIR}/libwpiutild.so
+		${WPI_SYSROOT}/lib/navx/linux/athena/static/libnavx_frc.a
+	)
 elseif ("${CMAKE_LIBRARY_ARCHITECTURE}" STREQUAL "arm-linux-gnueabihf") # Jetson TK1
-	set (CTRE_LIB_DIR ${LIB_BASE}/armhf/static)
+	set (CTRE_LIB_DIR ${WPI_SYSROOT}/lib/ctre/linux/armhf/static)
 elseif ("${CMAKE_LIBRARY_ARCHITECTURE}" STREQUAL "aarch64-linux-gnu") # Jetson TX1/TX2
-	set (CTRE_LIB_DIR ${LIB_BASE}/aarch64/static)
-else() # x86-64, hopefully
-	set (CTRE_LIB_DIR ${LIB_BASE}/x86-64/static)
+	set (CTRE_LIB_DIR ${WPI_SYSROOT}/lib/ctre/linux/aarch64/static)
+else() # x86-64, hopefully. First person to try and build native on a Mac gets kicked off the team
+	set (CTRE_LIB_DIR ${WPI_SYSROOT}/lib/ctre/linux/x86-64/static)
 endif()
-
+  
 # All platforms need these, they just live
 # in different dirs for different architectures
 set (CTRE_USER_LIBS
@@ -153,12 +189,15 @@ set (CTRE_USER_LIBS
 	${CTRE_LIB_DIR}/libCTRE_PhoenixCCI.a
 )
 
-if (NOT "${ARM_PREFIX}" STREQUAL "arm-frc-linux-gnueabi")
+# Add socketcan library to everything but the Rio
+# This adds code to use linux CAN sockets to talk to
+# the CAN bus for the Jetson
+if (NOT "${ARM_PREFIX}" STREQUAL "arm-frc2019-linux-gnueabi")
 	set (CTRE_USER_LIBS 
 		${CTRE_USER_LIBS}
 		${CTRE_LIB_DIR}/libCTRE_PhoenixPlatform_socketcan.a
 		${CTRE_LIB_DIR}/libCTRE_PhoenixCanutils.a
-		)
+	)
 
 	# For now, use 2019beta includes only for this code to line up with the
 	# 2019 beta sources we pull in below. Eventually sync this up when 
@@ -167,7 +206,7 @@ if (NOT "${ARM_PREFIX}" STREQUAL "arm-frc-linux-gnueabi")
 		$ENV{HOME}/frc2019/roborio/arm-frc2019-linux-gnueabi/include/wpilib
 		$ENV{HOME}/frc2019/roborio/arm-frc2019-linux-gnueabi/include
 		$ENV{HOME}/frc2019/roborio/arm-frc2019-linux-gnueabi/include/navx
-		)
+	)
 	add_definitions(--std=c++14)
 	set (FRCROBOT_HW_MAIN_SRCS ${FRCROBOT_HW_MAIN_SRCS} 
 		src/dummy_wpilib.cpp
@@ -180,11 +219,11 @@ if (NOT "${ARM_PREFIX}" STREQUAL "arm-frc-linux-gnueabi")
 		${ALLWPILIB}/hal/src/main/native/athena/ctre/PCM.cpp
 		${ALLWPILIB}/hal/src/main/native/athena/ctre/CtreCanNode.cpp
 		${ALLWPILIB}/hal/src/main/native/cpp/handles/HandlesInternal.cpp
-		)
-else()
-	set (FRCROBOT_HW_MAIN_SRCS ${FRCROBOT_HW_MAIN_SRCS} 
-		src/rio_wpilib.cpp # Temp until 2019 code ready?
-		)
+	)
+#else()
+#set (FRCROBOT_HW_MAIN_SRCS ${FRCROBOT_HW_MAIN_SRCS} 
+#src/rio_wpilib.cpp # Temp until 2019 code ready?
+#)
 endif()
 
 # Used to find HALInitializer from wpilib internal repo
