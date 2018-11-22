@@ -5,7 +5,7 @@ set(ARM_PREFIX arm-frc2019-linux-gnueabi)
 set(CMAKE_C_COMPILER ${ARM_PREFIX}-gcc)
 set(CMAKE_CXX_COMPILER ${ARM_PREFIX}-g++)
 
-set(CMAKE_SYSROOT $ENV{HOME}/frc2019/roborio/${ARM_PREFIX})
+set(CMAKE_SYSROOT /home/ubuntu/frc2019/roborio/${ARM_PREFIX})
 
 set(CMAKE_FIND_ROOT_PATH ${CMAKE_SYSROOT};$ENV{HOME}/2018Offseason/zebROS_ws/install_isolated)
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
@@ -23,7 +23,5 @@ find_program(CMAKE_AR ${ARM_PREFIX}-gcc-ar)
 set(OPT_FLAGS "-O3 -flto=4 -mcpu=cortex-a9 -mfpu=neon -fvect-cost-model")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${OPT_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} ${OPT_FLAGS}")
-#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath,/usr/arm-frc-linux-gnueabi/opt/ros/kinetic/lib")
 set(CMAKE_INSTALL_RPATH "$ENV{HOME}/frc2019/roborio/arm-frc2019-linux-gnueabi/opt/ros/kinetic/lib")
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
-

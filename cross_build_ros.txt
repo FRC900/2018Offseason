@@ -51,7 +51,7 @@ wstool update -j8 -t src
 add "<depend>urdfdom_headers</depend>" to src/urdf/urdf_parser_plugin/package.xml
 
 # Do a fresh build - kill off any lingering dependencies
-rm -rf $HOME/frc2019/roborio/arm-frc2019-linux-gnueabi/opt/ros/kinetic devel_isolated build_isolated
+rm -rf ~/frc2019/roborio/arm-frc2019-linux-gnueabi/opt/ros/kinetic devel_isolated build_isolated
 
 # Note - if this fails looking for gencpp*cmake, run from a new terminal
 # window where no ROS setup.bash has previously been sourced
@@ -59,7 +59,7 @@ rm -rf $HOME/frc2019/roborio/arm-frc2019-linux-gnueabi/opt/ros/kinetic devel_iso
 
 # Add newly built cross-libs to git repo so they are
 # used for subsequent Rio imagings
-cd $HOME/frc2019/roborio/arm-frc2019-linux-gnueabi
+cd /home/ubuntu/frc2019/roborio/arm-frc2019-linux-gnueabi
 tar -cjf ~/2018Offseason/roscore_roborio_2018.tar.bz2 opt/ros/kinetic
 
 # I needed to add "-DYAML_CPP_INCLUDE_DIRS=/$HOME/frc2019/roborio/arm-frc2019-linux-gnueabi/include

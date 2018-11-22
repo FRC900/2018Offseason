@@ -77,7 +77,7 @@ sudo rm -rf poco-1.7.9p1.tar.gz poco-1.7.9p1
 #Hack in a cmake file for Eigen3
 # TODO - sed magic to change /usr to $HOME/frc2019/roborio/arm-frc2019-linux-gnueabi/usr in Eigen3Config.cmake
 mkdir -p $HOME/frc2019/roborio/arm-frc2019-linux-gnueabi/usr/lib/cmake/eigen3
-sed -e 's_/usr_\$ENV{HOME}/frc2019/roborio/arm-frc2019-linux-gnueabi_' < /usr/lib/cmake/eigen3/Eigen3Config.cmake > $HOME/frc2019/roborio/arm-frc2019-linux-gnueabi/usr/lib/cmake/eigen3/Eigen3Config.cmake
+sed -e 's_/usr_\$ENV{HOME}/frc2019/roborio/arm-frc2019-linux-gnueabi/usr_' < /usr/lib/cmake/eigen3/Eigen3Config.cmake > $HOME/frc2019/roborio/arm-frc2019-linux-gnueabi/usr/lib/cmake/eigen3/Eigen3Config.cmake
 
 # Build and instll SIP libraries
 cd
