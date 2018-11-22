@@ -159,7 +159,6 @@ install_package($base_uri . "libopencv-videostab3.2_3.2+git0+70bbf17b13-r0.5_cor
 install_package($base_uri . "opencv-apps_3.2+git0+70bbf17b13-r0.5_cortexa9-vfpv3.ipk");
 install_package($base_uri . "opencv-dbg_3.2+git0+70bbf17b13-r0.5_cortexa9-vfpv3.ipk");
 install_package($base_uri . "opencv-dev_3.2+git0+70bbf17b13-r0.5_cortexa9-vfpv3.ipk");
-install_package($base_uri . "opencv-samples-dbg_3.2+git0+70bbf17b13-r0.5_cortexa9-vfpv3.ipk");
 install_package($base_uri . "opencv-samples_3.2+git0+70bbf17b13-r0.5_cortexa9-vfpv3.ipk");
 install_package($base_uri . "opencv_3.2+git0+70bbf17b13-r0.5_cortexa9-vfpv3.ipk");
 

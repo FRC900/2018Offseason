@@ -38,7 +38,7 @@ http://devsite.ctr-electronics.com/maven/release/com/ctre/phoenix
 
 # And navX
 http://www.kauailabs.com/maven2/com/kauailabs/navx/navx/
-
+http://www.kauailabs.com/maven2/com/kauailabs/navx/frc/navx-cpp/
 # Get ros for RoboRIO libraries
 cd $HOME/frc2019/roborio/arm-frc2019-linux-gnueabi
 sudo tar -xjf $HOME/2018Offseason/roscore_roborio_2018.tar.bz2
@@ -77,7 +77,7 @@ sudo rm -rf poco-1.7.9p1.tar.gz poco-1.7.9p1
 #Hack in a cmake file for Eigen3
 # TODO - sed magic to change /usr to $HOME/frc2019/roborio/arm-frc2019-linux-gnueabi/usr in Eigen3Config.cmake
 mkdir -p $HOME/frc2019/roborio/arm-frc2019-linux-gnueabi/usr/lib/cmake/eigen3
-cp /usr/lib/cmake/eigen3/Eigen3Config.cmake $HOME/frc2019/roborio/arm-frc2019-linux-gnueabi/usr/lib/cmake/eigen3
+sed -e 's_/usr_\$ENV{HOME}/frc2019/roborio/arm-frc2019-linux-gnueabi_' < /usr/lib/cmake/eigen3/Eigen3Config.cmake > $HOME/frc2019/roborio/arm-frc2019-linux-gnueabi/usr/lib/cmake/eigen3/Eigen3Config.cmake
 
 # Build and instll SIP libraries
 cd
@@ -178,7 +178,6 @@ make -j8 install
 cd
 sudo rm -rf yaml-cpp
 
-
 cd
 git clone https://github.com/rdiankov/collada-dom.git
 cd collada-dom
@@ -186,4 +185,3 @@ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$HOME/2018Offseason/zebR
 make -j8 install
 cd
 sudo rm -rf collada-dom
-
