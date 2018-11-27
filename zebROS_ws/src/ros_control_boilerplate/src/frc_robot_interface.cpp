@@ -646,8 +646,6 @@ void FRCRobotInterface::init()
 	}
 
 	hardware_interface::PDPStateHandle psh("pdp_name", &pdp_state_);
-	joystick_data_controller::JoystickStateHandle psh("joystick_name", &joystick_state_);
-	joystick_state_interface_.registerHandle(psh);
 	pdp_state_interface_.registerHandle(psh);
 
 	hardware_interface::RobotControllerStateHandle rcsh("robot_controller_name", &robot_controller_state_);
@@ -673,7 +671,6 @@ void FRCRobotInterface::init()
 	registerInterface(&joint_state_interface_);
 	registerInterface(&talon_command_interface_);
 	registerInterface(&joint_command_interface_);
-	registerInterface(&joystick_state_interface_);
 	registerInterface(&joint_position_interface_);
 	registerInterface(&joint_velocity_interface_);
 	registerInterface(&joint_effort_interface_); // empty for now

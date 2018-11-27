@@ -40,7 +40,7 @@ For a more detailed simulation example, see sim_hw_interface.cpp
 #include <ros_control_boilerplate/frcrobot_sim_interface.h>
 #include <ros_control_boilerplate/nextVelocity.h>
 #include <ros_control_boilerplate/nextVelocity.h>
-#include <ros_control_boilerplate/JoystickState.h>
+#include <joystick_data_controller/JoystickState.h>
 #include <termios.h>
 #include <signal.h>
 #include <stdio.h>
@@ -132,7 +132,7 @@ class TeleopJointsKeyboard
 		{
 			std::cout << "init " << std::endl;
 			// TODO: make this robot agonistic
-			joints_pub_ = nh_.advertise<ros_control_boilerplate::JoystickState>("/frcrobot/joystick_states", 1);
+			joints_pub_ = nh_.advertise<joystick_data_controller::JoystickState>("/frcrobot/joystick_states", 1);
 		}
 
 		~TeleopJointsKeyboard()
@@ -493,8 +493,8 @@ class TeleopJointsKeyboard
 
 		ros::NodeHandle nh_;
 		ros::Publisher joints_pub_;
-		ros_control_boilerplate::JoystickState cmd_;
-		ros_control_boilerplate::JoystickState cmd_last_;
+		joystick_data_controller::JoystickState cmd_;
+		joystick_data_controller::JoystickState cmd_last_;
 		bool has_recieved_joints_;
 
 };
