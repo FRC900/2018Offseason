@@ -10,12 +10,12 @@
 #include <string>
 #include <cmath>
 #include <sensor_msgs/JointState.h>
-#include <ros_control_boilerplate/MatchSpecificData.h>
+#include <match_data_controller/MatchSpecificData.h>
 #include <pdp_state_controller/PDPData.h>
 
 //BE WARNED. THIS NODE USES IMPERIAL UNITS..........
 
 void pressureCallback(const sensor_msgs::JointState &joint_state);
-void matchDataCallback(const ros_control_boilerplate::MatchSpecificData &MatchData);
+void matchDataCallback(const match_data_controller::MatchSpecificData &MatchData);
 void currentCallback(const pdp_state_controller::PDPData &current);
 

@@ -513,7 +513,7 @@ void FRCRobotSimInterface::cube_state_callback(const elevator_controller::CubeSt
     has_cube = cube.has_cube;
 }
 
-void FRCRobotSimInterface::match_data_callback(const ros_control_boilerplate::MatchSpecificData &match_data) {
+void FRCRobotSimInterface::match_data_callback(const match_data_controller::MatchSpecificData &match_data) {
 	match_data_enabled_.store(match_data.isEnabled, std::memory_order_relaxed);
 }
 
