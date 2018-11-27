@@ -1,31 +1,31 @@
-#include "pdp_state_controller/pdp_state_controller.h"
-#include "pdp_state_controller/PDPData.h"
+#include "match_data_controller/match_data_controller.h"
+#include "match_data_controller/MatchSpecificData.h"
 #include <cstddef>
 #include <algorithm>
 
-namespace pdp_state_controller
+namespace match_data_controller
 {
 
-bool PDPStateController::init(hardware_interface::PDPStateInterface *hw,
+bool MatchStateController::init(hardware_interface::MatchStateInterface *hw,
 								ros::NodeHandle 					&root_nh,
 								ros::NodeHandle 					&controller_nh)
 {
-	ROS_INFO_STREAM_NAMED("pdp_state_controller", "init is running");
+	ROS_INFO_STREAM_NAMED("match_data_controller", "init is running");
 
-	std::vector<std::string> pdp_names = hw->getNames();
-	if (pdp_names.size() > 1) {
-		ROS_ERROR_STREAM("Cannot initialize multiple PDPs.");
+	std::vector<std::string> match_names = hw->getNames();
+	if (match_names.size() > 1) {
+		ROS_ERROR_STREAM("Cannot initialize multiple matches.");
 		return false; }
-	else if (pdp_names.size() < 1) {
-		ROS_ERROR_STREAM("Cannot initialize zero PDPs.");
+	else if (match_names.size() < 1) {
+		ROS_ERROR_STREAM("Cannot initialize zero matches.");
 		return false; }
 
-	const std::string pdp_name = pdp_names[0];
+	const std::string match_name = match_names[0];
 
 	if (!controller_nh.getParam("publish_rate", publish_rate_))
-                ROS_ERROR("Could not read publish_rate in PDP state controller");
+                ROS_ERROR("Could not read publish_rate in match data controller");
 
-	realtime_pub_.reset(new realtime_tools::RealtimePublisher<pdp_state_controller::PDPData>(root_nh, "pdp_states", 4));
+	realtime_pub_.reset(new realtime_tools::RealtimePublisher<match_data_controller::matchData>(root_nh, "match_data", 4));
 
 	auto &m = realtime_pub_->msg_;
 
@@ -40,18 +40,18 @@ bool PDPStateController::init(hardware_interface::PDPStateInterface *hw,
 		m.current[channel] = 0;
 	}
 
-	pdp_state_ = hw->getHandle(pdp_name);
+	match_data_ = hw->getHandle(match_name);
 
 	return true;
 	
 }
 
-void PDPStateController::starting(const ros::Time &time)
+void MatchStateController::starting(const ros::Time &time)
 {
 	last_publish_time_ = time;
 }
 
-void PDPStateController::update(const ros::Time &time, const ros::Duration & )
+void matchstatecontroller::update(const ros::Time &time, const ros::Duration & )
 {
 	//ROS_INFO_STREAM("pdp pub: " << publish_rate_);
 	if ((publish_rate_ > 0.0) && (last_publish_time_ + ros::Duration(1.0 / publish_rate_) < time))
@@ -64,7 +64,7 @@ void PDPStateController::update(const ros::Time &time, const ros::Duration & )
 
 			m.header.stamp = time;
 
-			auto &ps = pdp_state_;
+			auto &ps = match_data_;
 			
 			//read from the object and stuff it in a msg
 			m.voltage = ps->getVoltage();
@@ -84,8 +84,8 @@ void PDPStateController::update(const ros::Time &time, const ros::Duration & )
 	}
 }
 
-void PDPStateController::stopping(const ros::Time & ) 
+void MatchStateController::stopping(const ros::Time & ) 
 {}
 }
 
-PLUGINLIB_EXPORT_CLASS( pdp_state_controller::PDPStateController, controller_interface::ControllerBase)
+PLUGINLIB_EXPORT_CLASS( match_data_controller::MatchStateController, controller_interface::ControllerBase)
