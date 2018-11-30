@@ -75,7 +75,7 @@ catkin_package(
 include_directories(
   include/
   ${catkin_INCLUDE_DIRS}
-  ${Gflags_INCLUDE_DIRS}
+  #${Gflags_INCLUDE_DIRS}
 )
 
 # Sim version of main control
@@ -117,19 +117,15 @@ set (FRCROBOT_HW_MAIN_SRCS
 	src/generic_hw_control_loop.cpp
 )
 
-include_directories(
-  $ENV{HOME}/wpilib/user/cpp/include
-  $ENV{HOME}/wpilib/cpp/current/include
-)
-
 # Base regardless of OS type
 set(LIB_BASE $ENV{HOME}/wpilib/user/cpp/lib/linux)
 if ("${ARM_PREFIX}" STREQUAL "arm-frc-linux-gnueabi")
-	set (CTRE_LIB_DIR ${LIB_BASE}/athena/static)
 
-include_directories(
-	#$ENV{HOME}/wpilib/cpp/current/include
-)
+	include_directories(
+		$ENV{HOME}/wpilib/user/cpp/include
+		$ENV{HOME}/wpilib/cpp/current/include
+	)
+add_definitions(-DHWI_ROBORIO)
 	# Rio only
 	set (WPI_LIB_DIR        $ENV{HOME}/wpilib/cpp/current/reflib/linux/athena/shared)
 	set (WPI_COMMON_LIB_DIR $ENV{HOME}/wpilib/common/current/lib/linux/athena/shared)
@@ -137,6 +133,7 @@ include_directories(
 	set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L ${WPI_COMMON_LIB_DIR}")
 
 	# Only need WPI libs for the Rio
+	set (CTRE_LIB_DIR ${LIB_BASE}/athena/static)
 	set (PLATFORM_SPECIFIC_LIBS
 		${LIB_BASE}/../libnavx_frc_cpp.a
 		${WPI_LIB_DIR}/libwpi.so
@@ -165,39 +162,24 @@ if (NOT "${ARM_PREFIX}" STREQUAL "arm-frc-linux-gnueabi")
 		${CTRE_LIB_DIR}/libCTRE_PhoenixCanutils.a
 		)
 
-	# Generate FRCUsageReporting.h
-	file(STRINGS ${ALLWPILIB}/hal/src/generate/Instances.txt RAW_INSTANCES)
-	file(STRINGS ${ALLWPILIB}/hal/src/generate/ResourceType.txt RAW_RESOURCE_TYPES)
-
-	SET(usage_reporting_types_cpp "")
-	SET(usage_reporting_instances_cpp "")
-	SET(usage_reporting_types "")
-	SET(usage_reporting_instances "")
-
-	foreach(ITEM ${RAW_INSTANCES})
-		list(APPEND usage_reporting_instances_cpp "    ${ITEM},")
-	endforeach()
-
-	foreach(ITEM ${RAW_RESOURCE_TYPES})
-		list(APPEND usage_reporting_types_cpp "    ${ITEM},")
-	endforeach()
-
-	string(REPLACE ";" "\n" usage_reporting_types_cpp "${usage_reporting_types_cpp}")
-	string(REPLACE ";" "\n" usage_reporting_instances_cpp "${usage_reporting_instances_cpp}")
-	configure_file(${ALLWPILIB}/hal/src/generate/FRCUsageReporting.h.in ${CATKIN_DEVEL_PREFIX}/include/hal/FRCUsageReporting.h)
-
+	# For now, use 2019beta includes only for this code to line up with the
+	# 2019 beta sources we pull in below. Eventually sync this up when 
+	# everything moves to 2019 code
 	include_directories(
-		${ALLWPILIB}/wpiutil/src/main/native/include
+		$ENV{HOME}/frc2019/roborio/arm-frc2019-linux-gnueabi/include/wpilib
+		$ENV{HOME}/frc2019/roborio/arm-frc2019-linux-gnueabi/include
+		$ENV{HOME}/frc2019/roborio/arm-frc2019-linux-gnueabi/include/navx
+		${ALLWPILIB}/hal/src/main/native/athena
+		#${ALLWPILIB}/wpiutil/src/main/native/include
 		#${ALLWPILIB}/wpilibc/src/main/native/include
-		${ALLWPILIB}/hal/src/main/native/include
+		#${ALLWPILIB}/hal/src/main/native/include
 		#${ALLWPILIB}/cameraserver/src/main/native/include
 		#${ALLWPILIB}/cscore/src/main/native/include
 		#${ALLWPILIB}/ntcore/src/main/native/include
-		${ALLWPILIB}/ni-libraries/include
-		$ENV{HOME}/ni-libraries/src/include
+		#${ALLWPILIB}/ni-libraries/include
+		#$ENV{HOME}/ni-libraries/src/include
 		)
 	add_definitions(--std=c++14)
-	include_directories(${ALLWPILIB}/hal/src/main/native/athena)
 	set (FRCROBOT_HW_MAIN_SRCS ${FRCROBOT_HW_MAIN_SRCS} 
 		src/dummy_wpilib.cpp
 		${ALLWPILIB}/hal/src/main/native/athena/Compressor.cpp
@@ -212,10 +194,10 @@ if (NOT "${ARM_PREFIX}" STREQUAL "arm-frc-linux-gnueabi")
 		)
 else()
 	set (FRCROBOT_HW_MAIN_SRCS ${FRCROBOT_HW_MAIN_SRCS} 
-		src/rio_wpilib.cpp
+		src/rio_wpilib.cpp # Temp until 2019 code ready?
 		)
 endif()
-include_directories(${ALLWPILIB}/hal/src/main/native/athena)
+#include_directories(${ALLWPILIB}/hal/src/main/native/athena)
 
 add_executable(frcrobot_hw_main ${FRCROBOT_HW_MAIN_SRCS})
 

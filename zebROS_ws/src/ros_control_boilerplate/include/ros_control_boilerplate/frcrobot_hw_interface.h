@@ -54,6 +54,11 @@
 #include <Joystick.h>
 #include <SafePWM.h>
 #include <DoubleSolenoid.h>
+#ifndef HWI_ROBORIO
+#include <HAL/FRCUsageReporting.h>
+#include <HAL/HALBase.h>
+#endif
+#include <HAL/DriverStation.h>
 #include <AHRS.h>
 #include <LiveWindow/LiveWindow.h>
 #include <SmartDashboard/SmartDashboard.h>
@@ -75,7 +80,11 @@ namespace frcrobot_control
 class ROSIterativeRobot : public frc::IterativeRobotBase
 {
 	public:
+#ifdef HWI_ROBORIO
 		ROSIterativeRobot(void)
+#else
+		ROSIterativeRobot(void) : IterativeRobotBase(0.02)
+#endif
 		{
 			HAL_Report(HALUsageReporting::kResourceType_Framework, 900, 0, "https://www.ros.org");
 			HAL_Report(HALUsageReporting::kResourceType_RobotDrive, 900, 0, "field centric swerve");

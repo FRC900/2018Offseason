@@ -347,7 +347,7 @@ uint8_t AHRS::GetActualUpdateRateInternal(uint8_t update_rate)
 	ROS_ERROR("Called AHRS::GetActualUpdateRateInternal(uint8_t update_rate) on unsupported platform");
 }
 
-#include <AnalogInput.h>
+#include <frc/AnalogInput.h>
 frc::AnalogInput::AnalogInput(int)
 {
 	ROS_ERROR("Called AnalogInput::AnalogInput(int) on unsupported platform");
@@ -469,7 +469,7 @@ void frc::AnalogInput::InitSendable(SendableBuilder& builder)
 }
 
 
-#include <DigitalInput.h>
+#include <frc/DigitalInput.h>
 frc::DigitalInput::DigitalInput(int)
 {
 	ROS_ERROR("Called DigitalInput::DigitalInput(int) on unsupported platform");
@@ -508,7 +508,7 @@ void frc::DigitalInput::InitSendable(SendableBuilder& builder)
 	ROS_ERROR("Called frc::DigitalInput::InitSendable(SendableBuilder& builder) on unsupported platform");
 }
 
-#include <DigitalOutput.h>
+#include <frc/DigitalOutput.h>
 frc::DigitalOutput::DigitalOutput(int)
 {
 	ROS_ERROR("Called DigitalOutput::DigitalOutput(int) on unsupported platform");
@@ -526,11 +526,7 @@ void frc::DigitalOutput::Set(bool)
 	ROS_ERROR("Called frc::DigitalOutput::InitSendable(SendableBuilder& builder) on unsupported platform");
 }
 
-#include <DriverStation.h>
-class frc::MatchInfoData {
-  MatchInfoData() {
-  }
-};
+#include <frc/DriverStation.h>
 class frc::MatchDataSender {
   MatchDataSender() {
   }
@@ -616,7 +612,7 @@ bool frc::DriverStation::IsTest() const
 }
 
 
-#include <HAL/DriverStation.h>
+#include <hal/DriverStation.h>
 
 void HAL_ObserveUserProgramAutonomous(void)
 {
@@ -646,7 +642,7 @@ int32_t HAL_SetJoystickOutputs(int32_t joystickNum, int64_t outputs,
 }
 
 
-#include <ErrorBase.h>
+#include <frc/ErrorBase.h>
 frc::ErrorBase::ErrorBase()
 {
 	ROS_ERROR("Called ErrorBase::ErrorBase() on unsupported platform");
@@ -672,25 +668,25 @@ const Error &frc::ErrorBase::GetError() const
 	static Error e;
 	return e;
 }
-void frc::ErrorBase::SetErrnoError(llvm::Twine const&, llvm::StringRef, llvm::StringRef, int) const
+void frc::ErrorBase::SetErrnoError(wpi::Twine const&, wpi::StringRef, wpi::StringRef, int) const
 {
-	ROS_ERROR("Called ErrorBase::SetErrnoError(llvm::Twine const&, llvm::StringRef, llvm::StringRef, int) const on unsupported platform");
+	ROS_ERROR("Called ErrorBase::SetErrnoError(wpi::Twine const&, wpi::StringRef, wpi::StringRef, int) const on unsupported platform");
 }
-void frc::ErrorBase::SetError(int, llvm::Twine const&, llvm::StringRef, llvm::StringRef, int) const
+void frc::ErrorBase::SetError(int, wpi::Twine const&, wpi::StringRef, wpi::StringRef, int) const
 {
-	ROS_ERROR("Called ErrorBase::SetError(int, llvm::Twine const&, llvm::StringRef, llvm::StringRef, int) const on unsupported platform");
+	ROS_ERROR("Called ErrorBase::SetError(int, wpi::Twine const&, wpi::StringRef, wpi::StringRef, int) const on unsupported platform");
 }
-void frc::ErrorBase::SetErrorRange(int, int, int, int, llvm::Twine const&, llvm::StringRef, llvm::StringRef, int) const
+void frc::ErrorBase::SetErrorRange(int, int, int, int, wpi::Twine const&, wpi::StringRef, wpi::StringRef, int) const
 {
-	ROS_ERROR("Called ErrorBase::SetErrorRange(int, int, int, int, llvm::Twine const&, llvm::StringRef, llvm::StringRef, int) const on unsupported platform");
+	ROS_ERROR("Called ErrorBase::SetErrorRange(int, int, int, int, wpi::Twine const&, wpi::StringRef, wpi::StringRef, int) const on unsupported platform");
 }
-void frc::ErrorBase::SetImaqError(int, llvm::Twine const&, llvm::StringRef, llvm::StringRef, int) const
+void frc::ErrorBase::SetImaqError(int, wpi::Twine const&, wpi::StringRef, wpi::StringRef, int) const
 {
-	ROS_ERROR("Called ErrorBase::SetImaqError(int, llvm::Twine const&, llvm::StringRef, llvm::StringRef, int) const on unsupported platform");
+	ROS_ERROR("Called ErrorBase::SetImaqError(int, wpi::Twine const&, wpi::StringRef, wpi::StringRef, int) const on unsupported platform");
 }
-void frc::ErrorBase::SetWPIError(llvm::Twine const&, int, llvm::Twine const&, llvm::StringRef, llvm::StringRef, int) const
+void frc::ErrorBase::SetWPIError(wpi::Twine const&, int, wpi::Twine const&, wpi::StringRef, wpi::StringRef, int) const
 {
-	ROS_ERROR("Called ErrorBase::SetWPIError(llvm::Twine const&, int, llvm::Twine const&, llvm::StringRef, llvm::StringRef, int) const on unsupported platform");
+	ROS_ERROR("Called ErrorBase::SetWPIError(wpi::Twine const&, int, wpi::Twine const&, wpi::StringRef, wpi::StringRef, int) const on unsupported platform");
 }
 bool frc::ErrorBase::StatusIsFatal() const
 {
@@ -698,7 +694,7 @@ bool frc::ErrorBase::StatusIsFatal() const
 	return false;
 }
 
-#include <GenericHID.h>
+#include <frc/GenericHID.h>
 frc::GenericHID::GenericHID(int) : m_ds(DriverStation::GetInstance())
 {
 	ROS_ERROR("Called GenericHID::GenericHID(int) on unsupported platform");
@@ -729,7 +725,13 @@ bool frc::GenericHID::GetRawButtonReleased(int)
 	return false;
 }
 
-#include <IterativeRobotBase.h>
+#include <frc/IterativeRobotBase.h>
+frc::IterativeRobotBase::IterativeRobotBase(double period)
+    : m_period(period),
+      m_watchdog(period)
+{
+	ROS_ERROR("Called IterativeRobotBase::IterativeRobotBase(double) on unsupported platform");
+}
 void frc::IterativeRobotBase::AutonomousInit()
 {
 	ROS_ERROR("Called IterativeRobotBase::AutonomousInit() on unsupported platform");
@@ -771,7 +773,7 @@ void frc::IterativeRobotBase::TestPeriodic()
 	ROS_ERROR("Called IterativeRobotBase::TestPeriodic() on unsupported platform");
 }
 
-#include <Joystick.h>
+#include <frc/Joystick.h>
 frc::Joystick::Joystick(int x) : GenericHID(x)
 {
 	ROS_ERROR("Called Joystick::Joystick(int) on unsupported platform");
@@ -823,11 +825,6 @@ int frc::Joystick::GetTwistChannel() const
 int frc::Joystick::GetThrottleChannel() const
 {
 	ROS_ERROR("Called frc::Joystick::GetThrottleChannel() const on unsupported platform");
-	return std::numeric_limits<int>::min();
-}
-int frc::Joystick::GetAxisChannel(AxisType axis) const
-{
-	ROS_ERROR("Called frc::Joystick::GetAxisChannel(AxisType axis) const on unsupported platform");
 	return std::numeric_limits<int>::min();
 }
 double frc::Joystick::GetX(JoystickHand) const
@@ -916,7 +913,7 @@ double frc::Joystick::GetDirectionDegrees() const
 	return std::numeric_limits<double>::max();
 }
 
-#include <LiveWindow/LiveWindow.h>
+#include <frc/livewindow/LiveWindow.h>
 LiveWindow *frc::LiveWindow::GetInstance()
 {
 	ROS_ERROR("Called LiveWindow::GetInstance() on unsupported platform");
@@ -935,7 +932,7 @@ void frc::LiveWindow::UpdateValues()
 	ROS_ERROR("Called LiveWindow::UpdateValues() on unsupported platform");
 }
 
-#include <MotorSafetyHelper.h>
+#include <frc/MotorSafetyHelper.h>
 frc::MotorSafetyHelper::MotorSafetyHelper(MotorSafety *)
 {
 	ROS_ERROR("Called MotorSafetyHelper::MotorSafetyHelper() on unsupported platform");
@@ -945,7 +942,7 @@ frc::MotorSafetyHelper::~MotorSafetyHelper()
 	ROS_ERROR("Called MotorSafetyHelper::~MotorSafetyHelper() on unsupported platform");
 }
 
-#include <NidecBrushless.h>
+#include <frc/NidecBrushless.h>
 frc::NidecBrushless::NidecBrushless(int pwmChannel, int dioChannel) : m_safetyHelper(this), m_dio(dioChannel), m_pwm(pwmChannel)
 {
 	ROS_ERROR("Called NidecBrushless::NidecBrushless(int, int) on unsupported platform");
@@ -1011,9 +1008,9 @@ frc::NidecBrushless::NidecBrushless(int pwmChannel, int dioChannel) : m_safetyHe
 	ROS_ERROR("Called ::NidecBrushless::IsSafetyEnabled() const on unsupported platform");
 	return false;
 }
-  void frc::NidecBrushless::GetDescription(llvm::raw_ostream& desc) const
+  void frc::NidecBrushless::GetDescription(wpi::raw_ostream& desc) const
 {
-	ROS_ERROR("Called ::NidecBrushless::GetDescription(llvm::raw_ostream& desc) const on unsupported platform");
+	ROS_ERROR("Called ::NidecBrushless::GetDescription(wpi::raw_ostream& desc) const on unsupported platform");
 }
 
   int frc::NidecBrushless::GetChannel() const
@@ -1054,7 +1051,7 @@ extern "C"
 }
 
 
-#include <PWM.h>
+#include <frc/PWM.h>
 frc::PWM::PWM(int)
 {
 	ROS_ERROR("Called PWM::PWM(int) on unsupported platform");
@@ -1123,7 +1120,7 @@ void frc::PWM::GetRawBounds(int32_t*, int32_t*, int32_t*, int32_t*, int32_t*)
 	ROS_ERROR("Called PWM::InitSendable(SendableBuilder& builder) on unsupported platform");
 }
 
-#include <RobotBase.h>
+#include <frc/RobotBase.h>
 bool frc::RobotBase::IsAutonomous() const
 {
 	ROS_ERROR("Called RobotBase::IsAutonomous() const on unsupported platform");
@@ -1143,13 +1140,21 @@ frc::RobotBase::RobotBase() : m_ds(DriverStation::GetInstance())
 {
 	ROS_ERROR("Called RobotBase::RobotBase() on unsupported platform");
 }
-int64_t HAL_Report(int32_t resource, int32_t instanceNumber,
-                   int32_t context, const char* feature)
+frc::RobotBase::~RobotBase()
 {
-	ROS_ERROR("Called HAL_Report(int32_t resource, int32_t instanceNumber, int32_t context, const char* feature) onunsupported platform");
+	ROS_ERROR("Called RobotBase::~RobotBase() on unsupported platform");
+}
+
+extern "C" {
+int64_t HAL_Report(int32_t resource, int32_t instanceNumber,
+		int32_t context, const char* feature)
+{
+	ROS_INFO_STREAM("HAL_Report resource = " << resource << " instanceNumber = " << instanceNumber <<
+			" context = " << context << " feature = " << feature);
 	return -1;
 }
-#include <SafePWM.h>
+}
+#include <frc/SafePWM.h>
 frc::SafePWM::SafePWM(int channel) : PWM(channel)
 {
 	ROS_ERROR("Called SafePWM::SafePWM(int) on unsupported platform");
@@ -1181,16 +1186,16 @@ void frc::SafePWM::SetSafetyEnabled(bool )
 {
 	ROS_ERROR("Called ::SafePWM::SetSafetyEnabled(bool enabled) on unsupported platform");
 }
-void frc::SafePWM::GetDescription(llvm::raw_ostream& ) const
+void frc::SafePWM::GetDescription(wpi::raw_ostream& ) const
 {
-	ROS_ERROR("Called ::SafePWM::GetDescription(llvm::raw_ostream& desc) const on unsupported platform");
+	ROS_ERROR("Called ::SafePWM::GetDescription(wpi::raw_ostream& desc) const on unsupported platform");
 }
 void frc::SafePWM::SetSpeed(double )
 {
 	ROS_ERROR("Called ::SafePWM::SetSpeed on unsupported platform");
 }
 
-#include <SmartDashboard/SendableBase.h>
+#include <frc/smartdashboard/SendableBase.h>
 frc::SendableBase::SendableBase(bool)
 {
 	ROS_ERROR("Called SendableBase::SendableBase(bool) on unsupported platform");
@@ -1200,54 +1205,54 @@ std::string frc::SendableBase::GetName() const
 	ROS_ERROR("Called string frc::SendableBase::GetName() const on unsupported platform");
 	return std::string();
 }
-void frc::SendableBase::SetName(const llvm::Twine& name)
+void frc::SendableBase::SetName(const wpi::Twine& name)
 {
-	ROS_ERROR("Called ::SendableBase::SetName(const llvm::Twine& name) on unsupported platform");
+	ROS_ERROR("Called ::SendableBase::SetName(const wpi::Twine& name) on unsupported platform");
 }
 std::string frc::SendableBase::GetSubsystem() const
 {
 	ROS_ERROR("Called string frc::SendableBase::GetSubsystem() const on unsupported platform");
 	return std::string();
 }
-void frc::SendableBase::SetSubsystem(const llvm::Twine& subsystem)
+void frc::SendableBase::SetSubsystem(const wpi::Twine& subsystem)
 {
-	ROS_ERROR("Called ::SendableBase::SetSubsystem(const llvm::Twine& subsystem) on unsupported platform");
+	ROS_ERROR("Called ::SendableBase::SetSubsystem(const wpi::Twine& subsystem) on unsupported platform");
 }
 
 frc::SendableBase::~SendableBase()
 {
 	ROS_ERROR("Called SendableBase::~SendableBase() on unsupported platform");
 }
-#include <SmartDashboard/SmartDashboard.h>
-bool frc::SmartDashboard::PutBoolean(llvm::StringRef, bool)
+#include <frc/smartdashboard/SmartDashboard.h>
+bool frc::SmartDashboard::PutBoolean(wpi::StringRef, bool)
 {
-	ROS_ERROR("Called SmartDashboard::PutBoolean(llvm::StringRef, bool) on unsupported platform");
+	ROS_ERROR("Called SmartDashboard::PutBoolean(wpi::StringRef, bool) on unsupported platform");
 	return false;
 }
-bool frc::SmartDashboard::PutNumber(llvm::StringRef, double)
+bool frc::SmartDashboard::PutNumber(wpi::StringRef, double)
 {
-	ROS_ERROR("Called SmartDashboard::PutNumber(llvm::StringRef, double) on unsupported platform");
+	ROS_ERROR("Called SmartDashboard::PutNumber(wpi::StringRef, double) on unsupported platform");
 	return false;
 }
 
 #include <networktables/NetworkTable.h>
-bool nt::NetworkTable::GetBoolean(llvm::StringRef, bool) const
+bool nt::NetworkTable::GetBoolean(wpi::StringRef, bool) const
 {
-	ROS_ERROR("Called NetworkTable::GetBoolean(llvm::StringRef, bool) const on unsupported platform");
+	ROS_ERROR("Called NetworkTable::GetBoolean(wpi::StringRef, bool) const on unsupported platform");
 	return false;
 }
-double nt::NetworkTable::GetNumber(llvm::StringRef, double) const
+double nt::NetworkTable::GetNumber(wpi::StringRef, double) const
 {
-	ROS_ERROR("Called NetworkTable::GetNumber(llvm::StringRef, double) const on unsupported platform");
+	ROS_ERROR("Called NetworkTable::GetNumber(wpi::StringRef, double) const on unsupported platform");
 	return std::numeric_limits<double>::max();
 }
-std::shared_ptr<NetworkTable> nt::NetworkTable::GetTable(llvm::StringRef)
+std::shared_ptr<NetworkTable> nt::NetworkTable::GetTable(wpi::StringRef)
 {
-	ROS_ERROR("Called NetworkTable::GetTable(llvm::StringRef) on unsupported platform");
+	ROS_ERROR("Called NetworkTable::GetTable(wpi::StringRef) on unsupported platform");
 	return nullptr;
 }
 
-#include <PIDSource.h>
+#include <frc/PIDSource.h>
 void frc::PIDSource::SetPIDSourceType(PIDSourceType pidSource)
 {
 	ROS_ERROR("Called frc::PIDSource::SetPIDSourceType(PIDSourceType pidSource) on unsupported platform");
@@ -1258,7 +1263,7 @@ PIDSourceType frc::PIDSource::GetPIDSourceType() const
 	return frc::PIDSourceType::kDisplacement;
 }
 
-#include <InterruptableSensorBase.h>
+#include <frc/InterruptableSensorBase.h>
 void frc::InterruptableSensorBase::RequestInterrupts(HAL_InterruptHandlerFunction, void*)
 {
 	ROS_ERROR("Called frc::InterruptableSensorBase::RequestInterrupts(HAL_InterruptHandlerFunction handler, void* param) on unsupported platform");
@@ -1303,6 +1308,9 @@ void frc::InterruptableSensorBase::AllocateInterrupts(bool)
 	ROS_ERROR("Called frc::InterruptableSensorBase::AllocateInterrupts(bool watcher) on unsupported platform");
 }
 
+#include <HALInitializer.h>
+extern "C" {
+
 #include <sys/time.h>
 uint64_t HAL_GetFPGATime(int32_t* status)
 {
@@ -1313,7 +1321,6 @@ uint64_t HAL_GetFPGATime(int32_t* status)
 
 }
 
-#include <HALInitializer.h>
 HAL_Bool HAL_Initialize(int32_t timeout, int32_t mode)
 {
 	hal::init::HAL_IsInitialized.store(true);
@@ -1452,8 +1459,32 @@ void HAL_CAN_GetCANStatus(float* percentBusUtilization, uint32_t* busOffCount,
 	*status = 0;
 }
 
+} /// extern "C"
 
+#include <frc/Watchdog.h>
 
+frc::Watchdog::Watchdog(double timeout, std::function<void()> callback)
+    : m_timeout(timeout),
+      m_callback(callback),
+      m_notifier(&Watchdog::TimeoutFunc, this)
+{
+	ROS_ERROR("Called frc::Watchdog::Watchdog(double timeout, std::function<void()> callback) on unsupported platform");
+}
+
+void frc::Watchdog::TimeoutFunc()
+{
+	ROS_ERROR("Called frc::Watchdog::TimeoutFunc() on unsupported platform");
+}
+
+#include <frc/Notifier.h>
+frc::Notifier::Notifier(std::function<void ()>)
+{
+	ROS_ERROR("Called frc::Notifier::Notifier(std::function<void ()>) on unsupported platform");
+}
+frc::Notifier::~Notifier()
+{
+	ROS_ERROR("Called frc::Notifier::~Notifier() on unsupported platform");
+}
 
 #include "wpi/SmallVector.h"
 namespace wpi

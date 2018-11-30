@@ -74,9 +74,16 @@
 #include "ros_control_boilerplate/frcrobot_hw_interface.h"
 
 //HAL / wpilib includes
+#ifndef HWI_ROBORIO
 #include <HALInitializer.h>
+#endif
 #include <networktables/NetworkTable.h>
 #include <SmartDashboard/SmartDashboard.h>
+#include <HAL/CAN.h>
+#include <HAL/Compressor.h>
+#include <HAL/PDP.h>
+#include <HAL/Power.h>
+#include <HAL/Solenoid.h>
 
 #include <ctre/phoenix/motorcontrol/SensorCollection.h>
 #include <ctre/phoenix/platform/Platform.h>
@@ -130,11 +137,6 @@
 /*----------------------------------------------------------------------------*/
 #include "HAL/handles/HandlesInternal.h"
 extern "C" {
-HAL_PortHandle HAL_GetPort(int32_t channel) {
-  // Dont allow a number that wouldn't fit in a uint8_t
-  if (channel < 0 || channel >= 255) return HAL_kInvalidHandle;
-  return hal::createPortHandle(channel, 1);
-}
 
 /**
  * @deprecated Uses module numbers
@@ -183,6 +185,8 @@ FRCRobotHWInterface::~FRCRobotHWInterface()
 		HAL_FreeSolenoidPort(double_solenoids_[i].reverse_);
 	}
 
+	for (size_t i = 0; i < num_compressors_; i++)
+		pcm_thread_[i].join();
 	for (size_t i = 0; i < num_pdps_; i++)
 		pdp_thread_[i].join();
 }
@@ -357,6 +361,7 @@ void FRCRobotHWInterface::init(void)
 	// used by both the real and sim interfaces
 	FRCRobotInterface::init();
 
+#ifndef HWI_ROBORIO
 	if (!run_hal_robot_)
 	{
 		//hal::InitializeCAN();
@@ -366,6 +371,7 @@ void FRCRobotHWInterface::init(void)
 		hal::init::InitializePDP();
 		hal::init::InitializeSolenoid();
 	}
+#endif
 
 	// Make sure to initialize WPIlib code before creating
 	// a CAN Talon object to avoid NIFPGA: Resource not initialized
@@ -504,7 +510,7 @@ void FRCRobotHWInterface::init(void)
 
 		if (solenoid_local_hardwares_[i])
 		{
-			int32_t status;
+			int32_t status = 0;
 			solenoids_.push_back(HAL_InitializeSolenoidPort(HAL_GetPortWithModule(solenoid_pcms_[i], solenoid_ids_[i]), &status));
 			if (solenoids_.back() == HAL_kInvalidHandle)
 				ROS_ERROR_STREAM("Error intializing solenoid : status=" << status);
@@ -527,8 +533,8 @@ void FRCRobotHWInterface::init(void)
 
 		if (double_solenoid_local_hardwares_[i])
 		{
-			int32_t forward_status;
-			int32_t reverse_status;
+			int32_t forward_status = 0;
+			int32_t reverse_status = 0;
 			auto forward_handle = HAL_InitializeSolenoidPort(
 					HAL_GetPortWithModule(double_solenoid_pcms_[i], double_solenoid_forward_ids_[i]),
 					&forward_status);
@@ -596,6 +602,7 @@ void FRCRobotHWInterface::init(void)
 							  (compressor_local_hardwares_[i] ? "local" : "remote") << " hardware" <<
 							  " as Compressor with pcm " << compressor_pcm_ids_[i]);
 
+		pcm_read_thread_state_.push_back(std::make_shared<hardware_interface::PCMState>(compressor_pcm_ids_[i]));
 		if (compressor_local_hardwares_[i])
 		{
 			if (!HAL_CheckCompressorModule(compressor_pcm_ids_[i]))
@@ -604,20 +611,19 @@ void FRCRobotHWInterface::init(void)
 			}
 			else
 			{
-				int32_t status;
+				int32_t status = 0;
 				compressors_.push_back(HAL_InitializeCompressor(compressor_pcm_ids_[i], &status));
-				if (compressors_.back() != HAL_kInvalidHandle)
+				if (compressors_[i] != HAL_kInvalidHandle)
+				{
+					pcm_thread_.push_back(std::thread(&FRCRobotHWInterface::pcm_read_thread, this,
+								compressors_[i], compressor_pcm_ids_[i], pcm_read_thread_state_[i]));
 					HAL_Report(HALUsageReporting::kResourceType_Compressor,
-								compressor_pcm_ids_[i]);
+							compressor_pcm_ids_[i]);
+				}
 			}
 		}
 		else
 			compressors_.push_back(HAL_kInvalidHandle);
-
-		pcm_read_thread_state_.push_back(std::make_shared<hardware_interface::PCMState>(compressor_pcm_ids_[i]));
-		if (compressors_[i] != HAL_kInvalidHandle)
-			pcm_thread_.push_back(std::thread(&FRCRobotHWInterface::pcm_read_thread, this,
-						compressors_[i], compressor_pcm_ids_[i], pcm_read_thread_state_[i]));
 	}
 	for (size_t i = 0; i < num_rumbles_; i++)
 		ROS_INFO_STREAM_NAMED("frcrobot_hw_interface",
@@ -633,6 +639,8 @@ void FRCRobotHWInterface::init(void)
 							  " local = " << pdp_locals_[i] <<
 							  " as PDP");
 
+#ifdef HWI_ROBORIO
+		// 2018 way of doing things
 		if (pdp_locals_[i])
 		{
 			if (!HAL_CheckPDPModule(pdp_modules_[i]))
@@ -641,16 +649,47 @@ void FRCRobotHWInterface::init(void)
 			}
 			else
 			{
-				int32_t status;
+				int32_t status = 0;
 				HAL_InitializePDP(pdp_modules_[i], &status);
 				pdps_.push_back(pdp_modules_[i]);
 				pdp_read_thread_state_.push_back(std::make_shared<hardware_interface::PDPHWState>());
 				pdp_thread_.push_back(std::thread(&FRCRobotHWInterface::pdp_read_thread, this,
-									  pdps_[i], pdp_read_thread_state_[i]));
+							pdps_[i], pdp_read_thread_state_[i]));
 			}
 		}
 		else
 			pdps_.push_back(0);
+
+#else
+		// 2019 version of PDP stuff
+		if (pdp_locals_[i])
+		{
+			if (!HAL_CheckPDPModule(pdp_modules_[i]))
+			{
+				ROS_ERROR("Invalid PDP module number");
+				pdps_.push_back(HAL_kInvalidHandle);
+			}
+			else
+			{
+				int32_t status = 0;
+				pdps_.push_back(HAL_InitializePDP(pdp_modules_[i], &status));
+				pdp_read_thread_state_.push_back(std::make_shared<hardware_interface::PDPHWState>());
+				if (pdps_[i] == HAL_kInvalidHandle)
+				{
+					ROS_ERROR_STREAM("Could not initialize PDP module, status = " << status);
+				}
+				else
+				{
+					HAL_Report(HALUsageReporting::kResourceType_PDP, pdp_modules_[i]);
+
+					pdp_thread_.push_back(std::thread(&FRCRobotHWInterface::pdp_read_thread, this,
+										  pdps_[i], pdp_read_thread_state_[i]));
+				}
+			}
+		}
+		else
+			pdps_.push_back(HAL_kInvalidHandle);
+#endif
 	}
 
 	bool started_pub = false;
@@ -1122,7 +1161,7 @@ void FRCRobotHWInterface::pdp_read_thread(int32_t pdp, std::shared_ptr<hardware_
 {
 	ros::Rate r(20); // TODO : Tune me?
 	hardware_interface::PDPHWState pdp_state;
-	int32_t status;
+	int32_t status = 0;
 	double time_sum = 0.;
 	unsigned iteration_count = 0;
 	HAL_ClearPDPStickyFaults(pdp, &status);
@@ -1137,6 +1176,7 @@ void FRCRobotHWInterface::pdp_read_thread(int32_t pdp, std::shared_ptr<hardware_
 #endif
 		{
 			//read info from the PDP hardware
+			// TODO - error checking?
 			pdp_state.setVoltage(HAL_GetPDPVoltage(pdp, &status));
 			pdp_state.setTemperature(HAL_GetPDPTemperature(pdp, &status));
 			pdp_state.setTotalCurrent(HAL_GetPDPTotalCurrent(pdp, &status));
@@ -1167,7 +1207,7 @@ void FRCRobotHWInterface::pcm_read_thread(HAL_CompressorHandle pcm, int32_t pcm_
 {
 	ros::Rate r(20); // TODO : Tune me?
 	hardware_interface::PCMState pcm_state(pcm_id);
-	int32_t status;
+	int32_t status = 0;
 	double time_sum = 0.;
 	unsigned iteration_count = 0;
 	HAL_ClearAllPCMStickyFaults(pcm, &status);
@@ -1180,6 +1220,7 @@ void FRCRobotHWInterface::pcm_read_thread(HAL_CompressorHandle pcm, int32_t pcm_
 			!writing_points_.load(std::memory_order_relaxed))
 #endif
 		{
+			// TODO : error checking?
 			pcm_state.setEnabled(HAL_GetCompressor(pcm, &status));
 			pcm_state.setPressureSwitch(HAL_GetCompressorPressureSwitch(pcm, &status));
 			pcm_state.setCompressorCurrent(HAL_GetCompressorCurrent(pcm, &status));
@@ -1671,7 +1712,8 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 
 	if (run_hal_robot_)
 	{
-		int32_t status;
+		// TODO : error checking via status
+		int32_t status = 0;
 		robot_controller_state_.SetFPGAVersion(HAL_GetFPGAVersion(&status));
 		robot_controller_state_.SetFPGARevision(HAL_GetFPGARevision(&status));
 		robot_controller_state_.SetFPGATime(HAL_GetFPGATime(&status));
@@ -2673,7 +2715,7 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 		{
 			if (solenoid_local_hardwares_[i])
 			{
-				int32_t status;
+				int32_t status = 0;
 				HAL_SetSolenoid(solenoids_[i], setpoint, &status);
 				if (status != 0)
 					ROS_ERROR_STREAM("Error setting solenoid " << solenoid_names_[i] <<
@@ -2708,11 +2750,12 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 				else if (setpoint == DoubleSolenoid::Value::kReverse)
 					forward = true;
 
-				int32_t status;
+				int32_t status = 0;
 				HAL_SetSolenoid(double_solenoids_[i].forward_, forward, &status);
 				if (status != 0)
 					ROS_ERROR_STREAM("Error setting double solenoid " << double_solenoid_names_[i] <<
 							" forward to " << forward << " status = " << status);
+				status = 0;
 				HAL_SetSolenoid(double_solenoids_[i].reverse_, reverse, &status);
 				if (status != 0)
 					ROS_ERROR_STREAM("Error setting double solenoid " << double_solenoid_names_[i] <<
@@ -2748,7 +2791,7 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 			const bool setpoint = compressor_command_[i] > 0;
 			if (compressor_local_hardwares_[i])
 			{
-				int32_t status;
+				int32_t status = 0;
 				HAL_SetCompressorClosedLoopControl(compressors_[i], setpoint, &status);
 			}
 			last_compressor_command_[i] = compressor_command_[i];
