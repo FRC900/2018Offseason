@@ -33,6 +33,7 @@ add_message_files (
   AutoMode.msg
   AutoModeStatus.msg
 )
+
 generate_messages(
   DEPENDENCIES
   std_msgs
@@ -40,8 +41,8 @@ generate_messages(
 )
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
-find_package(Gflags REQUIRED)
-find_package(Eigen3 REQUIRED)
+#find_package(Gflags REQUIRED)
+#find_package(Eigen3 REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -70,12 +71,9 @@ catkin_package(
 ## Build ##
 ###########
 
-#include_directories(SYSTEM ${EIGEN3_INCLUDE_DIRS})
-
 include_directories(
   include/
   ${catkin_INCLUDE_DIRS}
-  #${Gflags_INCLUDE_DIRS}
 )
 
 # Sim version of main control
@@ -117,6 +115,7 @@ set (FRCROBOT_HW_MAIN_SRCS
 	src/generic_hw_control_loop.cpp
 )
 
+set (ALLWPILIB ../../../allwpilib)
 # Base regardless of OS type
 set(LIB_BASE $ENV{HOME}/wpilib/user/cpp/lib/linux)
 if ("${ARM_PREFIX}" STREQUAL "arm-frc-linux-gnueabi")
@@ -154,7 +153,6 @@ set (CTRE_USER_LIBS
 	${CTRE_LIB_DIR}/libCTRE_PhoenixCCI.a
 )
 
-set (ALLWPILIB ../../../allwpilib)
 if (NOT "${ARM_PREFIX}" STREQUAL "arm-frc-linux-gnueabi")
 	set (CTRE_USER_LIBS 
 		${CTRE_USER_LIBS}
@@ -169,15 +167,6 @@ if (NOT "${ARM_PREFIX}" STREQUAL "arm-frc-linux-gnueabi")
 		$ENV{HOME}/frc2019/roborio/arm-frc2019-linux-gnueabi/include/wpilib
 		$ENV{HOME}/frc2019/roborio/arm-frc2019-linux-gnueabi/include
 		$ENV{HOME}/frc2019/roborio/arm-frc2019-linux-gnueabi/include/navx
-		${ALLWPILIB}/hal/src/main/native/athena
-		#${ALLWPILIB}/wpiutil/src/main/native/include
-		#${ALLWPILIB}/wpilibc/src/main/native/include
-		#${ALLWPILIB}/hal/src/main/native/include
-		#${ALLWPILIB}/cameraserver/src/main/native/include
-		#${ALLWPILIB}/cscore/src/main/native/include
-		#${ALLWPILIB}/ntcore/src/main/native/include
-		#${ALLWPILIB}/ni-libraries/include
-		#$ENV{HOME}/ni-libraries/src/include
 		)
 	add_definitions(--std=c++14)
 	set (FRCROBOT_HW_MAIN_SRCS ${FRCROBOT_HW_MAIN_SRCS} 
@@ -197,7 +186,9 @@ else()
 		src/rio_wpilib.cpp # Temp until 2019 code ready?
 		)
 endif()
-#include_directories(${ALLWPILIB}/hal/src/main/native/athena)
+
+# Used to find HALInitializer from wpilib internal repo
+include_directories(${ALLWPILIB}/hal/src/main/native/athena)
 
 add_executable(frcrobot_hw_main ${FRCROBOT_HW_MAIN_SRCS})
 

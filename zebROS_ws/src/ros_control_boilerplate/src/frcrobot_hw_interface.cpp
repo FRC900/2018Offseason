@@ -74,9 +74,7 @@
 #include "ros_control_boilerplate/frcrobot_hw_interface.h"
 
 //HAL / wpilib includes
-#ifndef HWI_ROBORIO
 #include <HALInitializer.h>
-#endif
 #include <networktables/NetworkTable.h>
 #include <SmartDashboard/SmartDashboard.h>
 #include <HAL/CAN.h>
@@ -382,16 +380,13 @@ void FRCRobotHWInterface::init(void)
 	}
 	else
 	{
-		// TODO : create stubs so this builds unconditionally
-#ifndef HWI_ROBORIO
 		//hal::InitializeCAN();
 		hal::init::InitializeCANAPI();
 		hal::init::InitializeCompressor();
 		hal::init::InitializePCMInternal();
 		hal::init::InitializePDP();
 		hal::init::InitializeSolenoid();
-#endif
-		// TODO : make me a param
+
 		ctre::phoenix::platform::can::SetCANInterface(can_interface_.c_str());
 	}
 
@@ -620,6 +615,7 @@ void FRCRobotHWInterface::init(void)
 			if (!HAL_CheckCompressorModule(compressor_pcm_ids_[i]))
 			{
 				ROS_ERROR("Invalid Compressor PDM ID");
+				compressors_.push_back(HAL_kInvalidHandle);
 			}
 			else
 			{
@@ -627,10 +623,11 @@ void FRCRobotHWInterface::init(void)
 				compressors_.push_back(HAL_InitializeCompressor(compressor_pcm_ids_[i], &status));
 				if (compressors_[i] != HAL_kInvalidHandle)
 				{
+					pcm_read_thread_mutexes_.push_back(std::make_shared<std::mutex>());
 					pcm_thread_.push_back(std::thread(&FRCRobotHWInterface::pcm_read_thread, this,
-								compressors_[i], compressor_pcm_ids_[i], pcm_read_thread_state_[i]));
-					HAL_Report(HALUsageReporting::kResourceType_Compressor,
-							compressor_pcm_ids_[i]);
+								compressors_[i], compressor_pcm_ids_[i], pcm_read_thread_state_[i],
+								pcm_read_thread_mutexes_[i]));
+					HAL_Report(HALUsageReporting::kResourceType_Compressor, compressor_pcm_ids_[i]);
 				}
 			}
 		}
@@ -658,6 +655,8 @@ void FRCRobotHWInterface::init(void)
 			if (!HAL_CheckPDPModule(pdp_modules_[i]))
 			{
 				ROS_ERROR("Invalid PDP module number");
+				pdps_.push_back(0);
+				pdp_read_thread_state_.push_back(nullptr);
 			}
 			else
 			{
@@ -665,12 +664,17 @@ void FRCRobotHWInterface::init(void)
 				HAL_InitializePDP(pdp_modules_[i], &status);
 				pdps_.push_back(pdp_modules_[i]);
 				pdp_read_thread_state_.push_back(std::make_shared<hardware_interface::PDPHWState>());
+				pdp_read_thread_mutexes_.push_back(std::make_shared<std::mutex>());
 				pdp_thread_.push_back(std::thread(&FRCRobotHWInterface::pdp_read_thread, this,
-							pdps_[i], pdp_read_thread_state_[i]));
+							pdps_[i], pdp_read_thread_state_[i], pdp_read_thread_mutexes_[i]));
+				HAL_Report(HALUsageReporting::kResourceType_PDP, pdp_modules_[i]);
 			}
 		}
 		else
+		{
 			pdps_.push_back(0);
+			pdp_read_thread_state_.push_back(nullptr);
+		}
 
 #else
 		// 2019 version of PDP stuff
@@ -694,8 +698,9 @@ void FRCRobotHWInterface::init(void)
 				{
 					HAL_Report(HALUsageReporting::kResourceType_PDP, pdp_modules_[i]);
 
+					pdp_read_thread_mutexes_.push_back(std::make_shared<std::mutex>());
 					pdp_thread_.push_back(std::thread(&FRCRobotHWInterface::pdp_read_thread, this,
-										  pdps_[i], pdp_read_thread_state_[i]));
+										  pdps_[i], pdp_read_thread_state_[i], pdp_read_thread_mutexes_[i]));
 				}
 			}
 		}
@@ -1169,7 +1174,9 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 	}
 }
 
-void FRCRobotHWInterface::pdp_read_thread(int32_t pdp, std::shared_ptr<hardware_interface::PDPHWState> state)
+void FRCRobotHWInterface::pdp_read_thread(int32_t pdp,
+		std::shared_ptr<hardware_interface::PDPHWState> state,
+		std::shared_ptr<std::mutex> mutex)
 {
 	ros::Rate r(20); // TODO : Tune me?
 	hardware_interface::PDPHWState pdp_state;
@@ -1200,7 +1207,7 @@ void FRCRobotHWInterface::pdp_read_thread(int32_t pdp, std::shared_ptr<hardware_
 			}
 
 			// Copy to state shared with read() thread
-			std::lock_guard<std::mutex> l(pdp_read_thread_mutex_);
+			std::lock_guard<std::mutex> l(*mutex);
 			*state = pdp_state;
 		}
 		struct timespec end_time;
@@ -1215,7 +1222,8 @@ void FRCRobotHWInterface::pdp_read_thread(int32_t pdp, std::shared_ptr<hardware_
 }
 
 void FRCRobotHWInterface::pcm_read_thread(HAL_CompressorHandle pcm, int32_t pcm_id,
-										  std::shared_ptr<hardware_interface::PCMState> state)
+										  std::shared_ptr<hardware_interface::PCMState> state,
+										  std::shared_ptr<std::mutex> mutex)
 {
 	ros::Rate r(20); // TODO : Tune me?
 	hardware_interface::PCMState pcm_state(pcm_id);
@@ -1249,7 +1257,7 @@ void FRCRobotHWInterface::pcm_read_thread(HAL_CompressorHandle pcm, int32_t pcm_
 			pcm_state.setSolenoidBlacklist(HAL_GetPCMSolenoidBlackList(pcm, &status));
 
 			// Copy to state shared with read() thread
-			std::lock_guard<std::mutex> l(pcm_read_thread_mutex_);
+			std::lock_guard<std::mutex> l(*mutex);
 			*state = pcm_state;
 		}
 		struct timespec end_time;
@@ -1709,7 +1717,7 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 	{
 		if (compressor_local_updates_[i])
 		{
-			std::lock_guard<std::mutex> l(pcm_read_thread_mutex_);
+			std::lock_guard<std::mutex> l(*pcm_read_thread_mutexes_[i]);
 			pcm_state_[i] = *pcm_read_thread_state_[i];
 		}
 	}
@@ -1717,7 +1725,7 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 	{
 		if (pdp_locals_[i])
 		{
-			std::lock_guard<std::mutex> l(pdp_read_thread_mutex_);
+			std::lock_guard<std::mutex> l(*pdp_read_thread_mutexes_[i]);
 			pdp_state_[i] = *pdp_read_thread_state_[i];
 		}
 	}
