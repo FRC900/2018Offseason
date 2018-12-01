@@ -858,6 +858,9 @@ void FRCRobotInterface::init()
 			joint_remote_interface_.registerHandle(dch);
 	}
 
+	// TODO : add joint interface for joysticks
+	num_joysticks_ = joystick_names_.size();
+
 	if (run_hal_robot_)
 	{
 		hardware_interface::RobotControllerStateHandle rcsh("robot_controller_name", &robot_controller_state_);

@@ -361,18 +361,6 @@ void FRCRobotHWInterface::init(void)
 	// used by both the real and sim interfaces
 	FRCRobotInterface::init();
 
-#ifndef HWI_ROBORIO
-	if (!run_hal_robot_)
-	{
-		//hal::InitializeCAN();
-		hal::init::InitializeCANAPI();
-		hal::init::InitializeCompressor();
-		hal::init::InitializePCMInternal();
-		hal::init::InitializePDP();
-		hal::init::InitializeSolenoid();
-	}
-#endif
-
 	// Make sure to initialize WPIlib code before creating
 	// a CAN Talon object to avoid NIFPGA: Resource not initialized
 	// errors? See https://www.chiefdelphi.com/forums/showpost.php?p=1640943&postcount=3
@@ -394,6 +382,15 @@ void FRCRobotHWInterface::init(void)
 	}
 	else
 	{
+		// TODO : create stubs so this builds unconditionally
+#ifndef HWI_ROBORIO
+		//hal::InitializeCAN();
+		hal::init::InitializeCANAPI();
+		hal::init::InitializeCompressor();
+		hal::init::InitializePCMInternal();
+		hal::init::InitializePDP();
+		hal::init::InitializeSolenoid();
+#endif
 		// TODO : make me a param
 		ctre::phoenix::platform::can::SetCANInterface(can_interface_.c_str());
 	}
@@ -411,6 +408,8 @@ void FRCRobotHWInterface::init(void)
 							  (can_talon_srx_local_hardwares_[i] ? "local" : "remote") << " hardware" <<
 							  " as CAN id " << can_talon_srx_can_ids_[i]);
 
+		can_talons_mp_written_.push_back(std::make_shared<std::atomic<bool>>(false));
+		can_talons_mp_running_.push_back(std::make_shared<std::atomic<bool>>(false));
 		if (can_talon_srx_local_hardwares_[i])
 		{
 			can_talons_.push_back(std::make_shared<ctre::phoenix::motorcontrol::can::TalonSRX>(can_talon_srx_can_ids_[i]));
@@ -425,8 +424,6 @@ void FRCRobotHWInterface::init(void)
 			// This probably should be a fatal error
 			ROS_INFO_STREAM_NAMED("frcrobot_hw_interface",
 								  "\tTalon SRX firmware version " << can_talons_[i]->GetFirmwareVersion());
-			can_talons_mp_written_.push_back(std::make_shared<std::atomic<bool>>(false));
-			can_talons_mp_running_.push_back(std::make_shared<std::atomic<bool>>(false));
 
 			custom_profile_threads_[i] = std::thread(&FRCRobotHWInterface::custom_profile_thread, this, i);
 
@@ -437,6 +434,21 @@ void FRCRobotHWInterface::init(void)
 			talon_read_threads_.push_back(std::thread(&FRCRobotHWInterface::talon_read_thread, this,
 										  can_talons_[i], talon_read_thread_states_[i],
 										  can_talons_mp_written_[i], talon_read_state_mutexes_[i]));
+		}
+		else
+		{
+			// Need to have a CAN talon object created on the Rio
+			// for them to be enabled.  Don't want to do anything with
+			// them, though, so the local flags should be set to false
+			// which means both reads and writes will be skipped
+			if (run_hal_robot_)
+				can_talons_.push_back(std::make_shared<ctre::phoenix::motorcontrol::can::TalonSRX>(can_talon_srx_can_ids_[i]));
+			else
+				// Add a null pointer as the can talon for this index - no
+				// actual local hardware identified for it so nothing to create
+				can_talons_.push_back(nullptr);
+			talon_read_state_mutexes_.push_back(nullptr);
+			talon_read_thread_states_.push_back(nullptr);
 		}
 	}
 	for (size_t i = 0; i < num_nidec_brushlesses_; i++)
@@ -1035,27 +1047,27 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 
 				update_status_10 = true;
 				last_status_10_time = ros_time_now;
-
-				mp_top_level_buffer_count = talon->GetMotionProfileTopLevelBufferCount();
-#if 0
-
-				ctre::phoenix::motion::MotionProfileStatus talon_status;
-				safeTalonCall(talon->GetMotionProfileStatus(talon_status), "GetMotionProfileStatus");
-
-				internal_status.topBufferRem = talon_status.topBufferRem;
-				internal_status.topBufferCnt = talon_status.topBufferCnt;
-				internal_status.btmBufferCnt = talon_status.btmBufferCnt;
-				internal_status.hasUnderrun = talon_status.hasUnderrun;
-				internal_status.isUnderrun = talon_status.isUnderrun;
-				internal_status.activePointValid = talon_status.activePointValid;
-				internal_status.isLast = talon_status.isLast;
-				internal_status.profileSlotSelect0 = talon_status.profileSlotSelect0;
-				internal_status.profileSlotSelect1 = talon_status.profileSlotSelect1;
-				internal_status.outputEnable = static_cast<hardware_interface::SetValueMotionProfile>(talon_status.outputEnable);
-				internal_status.timeDurMs = talon_status.timeDurMs;
-				update_mp_status = true;
-#endif
 			}
+		}
+
+		if (talon_mode == hardware_interface::TalonMode_MotionProfile)
+		{
+			mp_top_level_buffer_count = talon->GetMotionProfileTopLevelBufferCount();
+			ctre::phoenix::motion::MotionProfileStatus talon_status;
+			safeTalonCall(talon->GetMotionProfileStatus(talon_status), "GetMotionProfileStatus");
+
+			internal_status.topBufferRem = talon_status.topBufferRem;
+			internal_status.topBufferCnt = talon_status.topBufferCnt;
+			internal_status.btmBufferCnt = talon_status.btmBufferCnt;
+			internal_status.hasUnderrun = talon_status.hasUnderrun;
+			internal_status.isUnderrun = talon_status.isUnderrun;
+			internal_status.activePointValid = talon_status.activePointValid;
+			internal_status.isLast = talon_status.isLast;
+			internal_status.profileSlotSelect0 = talon_status.profileSlotSelect0;
+			internal_status.profileSlotSelect1 = talon_status.profileSlotSelect1;
+			internal_status.outputEnable = static_cast<hardware_interface::SetValueMotionProfile>(talon_status.outputEnable);
+			internal_status.timeDurMs = talon_status.timeDurMs;
+			update_mp_status = true;
 		}
 
 		// SensorCollection - 100msec default
@@ -2514,6 +2526,8 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 			const bool b2 = tc.commandChanged(command);
 			const bool b3 = tc.demand1Changed(demand1_type_internal, demand1_value);
 
+			// TODO : undo this
+			//ROS_INFO_STREAM("b1 = " << b1 << " b2 = " << b2 << " b3 = " << b3);
 			if (b1 || b2 || b3 || ros::Time::now().toSec() - can_talon_srx_run_profile_stop_time_[joint_id] < .2)
 			{
 				ctre::phoenix::motorcontrol::ControlMode out_mode;
@@ -2560,8 +2574,10 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 								demand1_type_phoenix = ctre::phoenix::motorcontrol::DemandType::DemandType_ArbitraryFeedForward;
 								break;
 						}
-#ifdef DEBUG_WRITE
-						ROS_INFO_STREAM("called Set(4) on " << joint_id << "=" << can_talon_srx_names_[joint_id]);
+#ifndef DEBUG_WRITE
+					ROS_INFO_STREAM("called Set() on " << joint_id << "=" << can_talon_srx_names_[joint_id] <<
+							" out_mode = " << static_cast<int>(out_mode) << " command = " << command <<
+							" demand1_type_phoenix = " << static_cast<int>(demand1_type_phoenix) << " demand1_value = " << demand1_value);
 #endif
 						talon->Set(out_mode, command, demand1_type_phoenix, demand1_value);
 					}

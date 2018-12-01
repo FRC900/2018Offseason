@@ -1,15 +1,15 @@
 # ros_control_boilerplate Settings -----------------------
 # Settings for ros_control control loop
 generic_hw_control_loop:
-  loop_hz: 300
+  loop_hz: 100
   cycle_time_error_threshold: 0.01
 
 hardware_interface:
    run_hal_robot: false
    can_interface: can0
    joints:
-       - {name: talon3, type: can_talon_srx, can_id: 3}
-       - {name: talon9, type: can_talon_srx, can_id: 9}
+       - {name: talon3, type: can_talon_srx, local: true, can_id: 3}
+       - {name: talon9, type: can_talon_srx, local: true, can_id: 9}
        - {name: pdp, local: true, type: pdp}
        - {name: compressor, local: true, type: compressor, pcm_id: 0}
        - {name: robot_code_ready_jetson, local: true, type: ready}
@@ -57,7 +57,7 @@ talon_state_controller:
 # above.  
 # The type is a talon_controllers/TalonController
 talon3_controller:
-    type: talon_controllers/TalonPositionCloseLoopController
+    type: talon_controllers/TalonPercentOutputController
     joint: talon3
     feedback_type: CTRE_MagEncoder_Absolute
 
