@@ -174,3 +174,13 @@ install_package($base_uri . "libidn11_1.33-r0.6_cortexa9-vfpv3.ipk");
 install_package($base_uri . "libusb-1.0-dev_1.0.21-r0.6_cortexa9-vfpv3.ipk");
 install_package($base_uri . "libusb-1.0-0_1.0.21-r0.6_cortexa9-vfpv3.ipk");
 install_package($base_uri . "libusb-1.0-staticdev_1.0.21-r0.6_cortexa9-vfpv3.ipk");
+
+install_package($base_uri . "libgnutls-openssl27_3.5.9-r0.6_cortexa9-vfpv3.ipk");
+install_package($base_uri . "openssl-conf_1.0.2k-r0.13_cortexa9-vfpv3.ipk");
+install_package($base_uri . "openssl-dbg_1.0.2k-r0.13_cortexa9-vfpv3.ipk");
+install_package($base_uri . "openssl-dev_1.0.2k-r0.13_cortexa9-vfpv3.ipk");
+install_package($base_uri . "openssl-doc_1.0.2k-r0.13_cortexa9-vfpv3.ipk");
+install_package($base_uri . "openssl-engines_1.0.2k-r0.13_cortexa9-vfpv3.ipk");
+install_package($base_uri . "openssl-misc_1.0.2k-r0.13_cortexa9-vfpv3.ipk");
+install_package($base_uri . "openssl-staticdev_1.0.2k-r0.13_cortexa9-vfpv3.ipk");
+install_package($base_uri . "openssl_1.0.2k-r0.13_cortexa9-vfpv3.ipk");
