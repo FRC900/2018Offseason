@@ -9,7 +9,6 @@
 ssh -p 22 admin@$1 date -u --set="\"`date -u +"%Y.%m.%d-%T"`\""
 
 ssh -p 22 admin@$1 'swapon /dev/sda5'
-if true; then 
 
 ssh -p 22 admin@$1 'opkg update'
 
@@ -18,17 +17,17 @@ ssh -p 22 admin@$1 'opkg update'
 # weird dependency hell issues with opkg
 ssh -p 22 admin@$1 'opkg install python-pyyaml'
 ssh -p 22 admin@$1 'opkg clean'
-ssh -p 22 admin@$1 'opkg install libeigen python-dev libpython2 python-core '
+ssh -p 22 admin@$1 'opkg install libeigen python-dev libpython2 python-core'
 ssh -p 22 admin@$1 'opkg clean'
-ssh -p 22 admin@$1 'opkg install libcurl4 lz4 libboost-filesystem1.60.0 libboost-program-options1.60.0 libboost-signals1.60.0 libboost-regex1.60.0 libboost-thread1.60.0 libboost-chrono1.60.0 libboost-date-time1.60.0 libboost-atomic1.60.0'
+ssh -p 22 admin@$1 'opkg install libcurl4 lz4 libboost-filesystem1.63.0 libboost-program-options1.63.0 libboost-signals1.63.0 libboost-regex1.63.0 libboost-thread1.63.0 libboost-chrono1.63.0 libboost-date-time1.63.0 libboost-atomic1.63.0'
 ssh -p 22 admin@$1 'opkg clean'
 ssh -p 22 admin@$1 'opkg install libbz2 cmake libxml2 libgnutls-bin libgnutls-openssl27'
 ssh -p 22 admin@$1 'opkg clean'
-ssh -p 22 admin@$1 'opkg install libgnutls30 libgnutlsxx28 nettle libgmp10 libgmpxx4 libz1 git make '
+ssh -p 22 admin@$1 'opkg install libgnutls30 libgnutlsxx28 nettle libgmp10 libgmpxx4 libz1 git make'
 ssh -p 22 admin@$1 'opkg clean'
-ssh -p 22 admin@$1 'opkg install gcc g++ gcc-symlinks g++-symlinks binutils python-setuptools python-docutils '
+ssh -p 22 admin@$1 'opkg install gcc g++ gcc-symlinks g++-symlinks binutils python-setuptools python3-docutils'
 ssh -p 22 admin@$1 'opkg clean'
-ssh -p 22 admin@$1 'opkg install python-pkgutil python-dateutil python-argparse python-nose '
+ssh -p 22 admin@$1 'opkg install python-pkgutil python-dateutil python-argparse python-nose'
 ssh -p 22 admin@$1 'opkg clean'
 ssh -p 22 admin@$1 'opkg install python-netifaces python-pip coreutils gdb i2c-tools '
 ssh -p 22 admin@$1 'opkg clean'
@@ -46,14 +45,15 @@ ssh -p 22 admin@$1 'rm ~/roscore_roborio_2018.tar.bz2'
 
 # Try to simulate what the cross-build environment
 # looks like 
-ssh -p 22 admin@$1 'ln -s / /usr/arm-frc-linux-gnueabi'
+ssh -p 22 admin@$1 'mkdir -p /home/ubuntu/frc2019'
+ssh -p 22 admin@$1 'ln -s / /home/ubuntu/frc2019/arm-frc2019-linux-gnueabi'
+# TODO -is this needed?
 ssh -p 22 admin@$1 'ln -s /usr/include /include'
 
 # Create workspace. Do a build in the empty workspace to set
 # up various scripts for later use
 ssh -p 22 admin@$1 'mkdir -p 2018Offseason/zebROS_ws/src'
 ssh -p 22 admin@$1 'source /opt/ros/kinetic/setup.bash && cd 2018Offseason/zebROS_ws && catkin_make_isolated --install'
-
 
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!#
 ##################-----------------------------#################
@@ -70,15 +70,9 @@ ssh -p 22 admin@$1 'depmod'
 ssh -p 22 admin@$1 'i2cdetect -y 2'
 ssh -p 22 admin@$1 'echo bq32000 0x68 | tee /sys/class/i2c-adapter/i2c-2/new_device'
 
-ssh -p 22 admin@$1 'git clone https://github.com/gflags/gflags.git'
-ssh -p 22 admin@$1 'cd gflags && cmake -DCMAKE_BUILD_TYPE=Release . &&  make install'
-ssh -p 22 admin@$1 'rm -rf gflags*'
-
 # Copy wpilib to roborio
 ssh -p 22 admin@$1 mkdir wpilib
-cd ~/wpilib/cpp/current/reflib/linux/athena/shared
-scp -P 22 *.so.* admin@$1:wpilib
-cd ~/wpilib/common/current/lib/linux/athena/shared
+cd ~/frc2019/roborio/arm-frc2019-linux-gnueabi/lib/wpilib/linux/athena/shared
 scp -P 22 *.so *.so.3.2 admin@$1:wpilib
 
 scp -P 22 ~/2018Offseason/setupClock admin@$1:/etc/init.d/setupClock
@@ -86,7 +80,6 @@ ssh -p 22 admin@$1 'chmod +x /etc/init.d/setupClock'
 ssh -p 22 admin@$1 'ln -sf /etc/init.d/setupClock /etc/init.d/hwclock.sh'
 ssh -p 22 admin@$1 '/usr/sbin/update-rc.d -f setupClock defaults'
 ssh -p 22 admin@$1 '/usr/sbin/update-rc.d -f hwclock.sh defaults'
-fi
 
 scp -P 22 ~/2018Offseason/jetson_setup/roborio_dot_ssh.tar.bz2 admin@$1:.
 ssh -p 22 admin@$1 'mkdir .ssh'
