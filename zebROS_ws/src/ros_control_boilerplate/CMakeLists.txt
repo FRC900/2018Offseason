@@ -124,18 +124,11 @@ include_directories(
 )
 set (ALLWPILIB ../../../allwpilib)
 
+# Base regardless of OS type
 set (WPI_BASE_LIB_DIR   ${WPI_SYSROOT}/lib/wpilib/linux)
 
-# Base regardless of OS type
+# Rio-only code
 if ("${ARM_PREFIX}" STREQUAL "arm-frc2019-linux-gnueabi")
-
-	add_definitions(-DHWI_ROBORIO)
-	# Rio only
-	#set (WPI_LIB_DIR        $ENV{HOME}/wpilib/cpp/current/reflib/linux/athena/shared)
-	#set (WPI_COMMON_LIB_DIR $ENV{HOME}/wpilib/common/current/lib/linux/athena/shared)
-	#set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L ${WPI_LIB_DIR}")
-	#set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L ${WPI_COMMON_LIB_DIR}")
-
 	set (CTRE_LIB_DIR ${WPI_SYSROOT}/lib/ctre/linux/athena/static)
 
 	# Link against wpi user libraries for CAN talon and navX-MXP code and

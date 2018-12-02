@@ -648,35 +648,6 @@ void FRCRobotHWInterface::init(void)
 							  " local = " << pdp_locals_[i] <<
 							  " as PDP");
 
-#ifdef HWI_ROBORIO
-		// 2018 way of doing things
-		if (pdp_locals_[i])
-		{
-			if (!HAL_CheckPDPModule(pdp_modules_[i]))
-			{
-				ROS_ERROR("Invalid PDP module number");
-				pdps_.push_back(0);
-				pdp_read_thread_state_.push_back(nullptr);
-			}
-			else
-			{
-				int32_t status = 0;
-				HAL_InitializePDP(pdp_modules_[i], &status);
-				pdps_.push_back(pdp_modules_[i]);
-				pdp_read_thread_state_.push_back(std::make_shared<hardware_interface::PDPHWState>());
-				pdp_read_thread_mutexes_.push_back(std::make_shared<std::mutex>());
-				pdp_thread_.push_back(std::thread(&FRCRobotHWInterface::pdp_read_thread, this,
-							pdps_[i], pdp_read_thread_state_[i], pdp_read_thread_mutexes_[i]));
-				HAL_Report(HALUsageReporting::kResourceType_PDP, pdp_modules_[i]);
-			}
-		}
-		else
-		{
-			pdps_.push_back(0);
-			pdp_read_thread_state_.push_back(nullptr);
-		}
-
-#else
 		// 2019 version of PDP stuff
 		if (pdp_locals_[i])
 		{
@@ -706,7 +677,6 @@ void FRCRobotHWInterface::init(void)
 		}
 		else
 			pdps_.push_back(HAL_kInvalidHandle);
-#endif
 	}
 
 	bool started_pub = false;
