@@ -25,7 +25,7 @@ ssh -p 22 admin@$1 'opkg install libbz2 cmake libxml2 libgnutls-bin libgnutls-op
 ssh -p 22 admin@$1 'opkg clean'
 ssh -p 22 admin@$1 'opkg install libgnutls30 libgnutlsxx28 nettle libgmp10 libgmpxx4 libz1 git make'
 ssh -p 22 admin@$1 'opkg clean'
-ssh -p 22 admin@$1 'opkg install gcc g++ gcc-symlinks g++-symlinks binutils python-setuptools python3-docutils'
+ssh -p 22 admin@$1 'opkg install python-setuptools python3-docutils'
 ssh -p 22 admin@$1 'opkg clean'
 ssh -p 22 admin@$1 'opkg install python-pkgutil python-dateutil python-argparse python-nose'
 ssh -p 22 admin@$1 'opkg clean'
@@ -33,7 +33,7 @@ ssh -p 22 admin@$1 'opkg install python-netifaces python-pip coreutils gdb i2c-t
 ssh -p 22 admin@$1 'opkg clean'
 ssh -p 22 admin@$1 'opkg install ntp ntp-tickadj ntp-utils ntpdate rsync htop curl libusb-1.0-dev'
 ssh -p 22 admin@$1 'opkg clean'
-ssh -p 22 admin@$1 'opkg install gflags gflags-bash-completion libglog openssl'
+ssh -p 22 admin@$1 'opkg install gflags gflags-bash-completion libglog0 openssl'
 
 ssh -p 22 admin@$1 'pip install catkin_pkg rospkg rosdistro vcstools rosdep wstool rosinstall rosinstall_generator defusedxml empy'
 
