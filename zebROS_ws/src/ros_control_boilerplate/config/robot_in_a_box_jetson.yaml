@@ -62,7 +62,7 @@ talon3_controller:
     feedback_type: CTRE_MagEncoder_Absolute
 
 talon9_controller:
-    type: talon_controllers/TalonPercentOutputController
+    type: talon_controllers/TalonPositionClosedLoopController
     joint: talon9
     feedback_type: CTRE_MagEncoder_Absolute
 
