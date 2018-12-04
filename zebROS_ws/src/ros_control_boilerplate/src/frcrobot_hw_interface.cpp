@@ -270,7 +270,8 @@ void FRCRobotHWInterface::customProfileSetMode(int joint_id,
 {
 	ctre::phoenix::motorcontrol::ControlMode out_mode;
 
-	convertControlMode(mode, out_mode);
+	if (!convertControlMode(mode, out_mode))
+		return;
 
 	const hardware_interface::FeedbackDevice encoder_feedback = talon_state_[joint_id].getEncoderFeedback();
 	const int encoder_ticks_per_rotation = talon_state_[joint_id].getEncoderTicksPerRotation();
@@ -292,20 +293,10 @@ void FRCRobotHWInterface::customProfileSetMode(int joint_id,
 	}
 
 	ctre::phoenix::motorcontrol::DemandType out_demandtype;
-	switch (demandtype)
+	if (!convertDemand1Type(demandtype, out_demandtype))
 	{
-		case hardware_interface::DemandType::DemandType_Neutral:
-			out_demandtype = ctre::phoenix::motorcontrol::DemandType::DemandType_Neutral;
-			break;
-		case hardware_interface::DemandType::DemandType_AuxPID:
-			out_demandtype = ctre::phoenix::motorcontrol::DemandType::DemandType_AuxPID;
-			break;
-		case hardware_interface::DemandType::DemandType_ArbitraryFeedForward:
-			out_demandtype = ctre::phoenix::motorcontrol::DemandType::DemandType_ArbitraryFeedForward;
-			break;
-		default:
-			ROS_ERROR("Invalid demand type in hw_interface :: customProfileSetMode");
-			return;
+		ROS_ERROR("Invalid demand type in hw_interface :: customProfileSetMode");
+		return;
 	}
 	can_talons_[joint_id]->Set(out_mode, setpoint, out_demandtype, demandvalue); //TODO: unit conversion
 }
@@ -2535,29 +2526,20 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 					ts.setDemand1Value(demand1_value);
 
 					//ROS_INFO_STREAM c("in mode: " << in_mode);
-					if (b3 &&
-						(demand1_type_internal >= hardware_interface::DemandType::DemandType_Neutral) &&
-						(demand1_type_internal  < hardware_interface::DemandType::DemandType_Last) )
+					if (b3)
 					{
 						ctre::phoenix::motorcontrol::DemandType demand1_type_phoenix;
-						switch (demand1_type_internal)
+						if (convertDemand1Type(demand1_type_internal, demand1_type_phoenix))
 						{
-							case hardware_interface::DemandType::DemandType_Neutral:
-								demand1_type_phoenix = ctre::phoenix::motorcontrol::DemandType::DemandType_Neutral;
-								break;
-							case hardware_interface::DemandType::DemandType_AuxPID:
-								demand1_type_phoenix = ctre::phoenix::motorcontrol::DemandType::DemandType_AuxPID;
-								break;
-							case hardware_interface::DemandType::DemandType_ArbitraryFeedForward:
-								demand1_type_phoenix = ctre::phoenix::motorcontrol::DemandType::DemandType_ArbitraryFeedForward;
-								break;
-						}
 #ifndef DEBUG_WRITE
-					ROS_INFO_STREAM("called Set() on " << joint_id << "=" << can_talon_srx_names_[joint_id] <<
-							" out_mode = " << static_cast<int>(out_mode) << " command = " << command <<
-							" demand1_type_phoenix = " << static_cast<int>(demand1_type_phoenix) << " demand1_value = " << demand1_value);
+							ROS_INFO_STREAM("called Set() on " << joint_id << "=" << can_talon_srx_names_[joint_id] <<
+									" out_mode = " << static_cast<int>(out_mode) << " command = " << command <<
+									" demand1_type_phoenix = " << static_cast<int>(demand1_type_phoenix) << " demand1_value = " << demand1_value);
 #endif
-						talon->Set(out_mode, command, demand1_type_phoenix, demand1_value);
+							talon->Set(out_mode, command, demand1_type_phoenix, demand1_value);
+						}
+						else
+							ROS_ERROR("Invalid Demand1 Type in hadrare_interface write()");
 					}
 					else
 					{
@@ -2873,6 +2855,28 @@ bool FRCRobotHWInterface::convertControlMode(
 			return false;
 	}
 	return true;
+}
+
+bool FRCRobotHWInterface::convertDemand1Type(
+	const hardware_interface::DemandType input,
+	ctre::phoenix::motorcontrol::DemandType &output)
+{
+	switch(input)
+	{
+		case hardware_interface::DemandType::DemandType_Neutral:
+			output = ctre::phoenix::motorcontrol::DemandType::DemandType_Neutral;
+			break;
+		case hardware_interface::DemandType::DemandType_AuxPID:
+			output = ctre::phoenix::motorcontrol::DemandType::DemandType_AuxPID;
+			break;
+		case hardware_interface::DemandType::DemandType_ArbitraryFeedForward:
+			output = ctre::phoenix::motorcontrol::DemandType::DemandType_ArbitraryFeedForward;
+			break;
+		default:
+			output = ctre::phoenix::motorcontrol::DemandType::DemandType_Neutral;
+			ROS_WARN("Unknown demand1 type seen in HW interface");
+			return false;
+	}
 }
 
 bool FRCRobotHWInterface::convertNeutralMode(

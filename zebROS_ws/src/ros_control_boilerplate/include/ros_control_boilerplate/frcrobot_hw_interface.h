@@ -228,6 +228,8 @@ class FRCRobotHWInterface : public ros_control_boilerplate::FRCRobotInterface
 
 		bool convertControlMode(const hardware_interface::TalonMode input_mode,
 								ctre::phoenix::motorcontrol::ControlMode &output_mode);
+		bool convertDemand1Type( const hardware_interface::DemandType input,
+				ctre::phoenix::motorcontrol::DemandType &output);
 		bool convertNeutralMode(const hardware_interface::NeutralMode input_mode,
 								ctre::phoenix::motorcontrol::NeutralMode &output_mode);
 		bool convertFeedbackDevice(
