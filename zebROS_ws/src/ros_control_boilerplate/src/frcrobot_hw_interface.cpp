@@ -187,6 +187,9 @@ FRCRobotHWInterface::~FRCRobotHWInterface()
 		pcm_thread_[i].join();
 	for (size_t i = 0; i < num_pdps_; i++)
 		pdp_thread_[i].join();
+
+	if (run_hal_robot_)
+		robot_controller_state_thread_.join();
 }
 
 /*
@@ -704,6 +707,9 @@ void FRCRobotHWInterface::init(void)
 		motion_profile_mutexes_.push_back(std::make_shared<std::mutex>());
 	motion_profile_thread_ = std::thread(&FRCRobotHWInterface::process_motion_profile_buffer_thread, this, 100.);
 
+	if (run_hal_robot_)
+		robot_controller_state_thread_ = std::thread(&FRCRobotHWInterface::robot_controller_state_read_thread, this);
+
 	ROS_INFO_NAMED("frcrobot_hw_interface", "FRCRobotHWInterface Ready.");
 }
 
@@ -1157,6 +1163,7 @@ void FRCRobotHWInterface::pdp_read_thread(int32_t pdp,
 		{
 			//read info from the PDP hardware
 			// TODO - error checking?
+			status = 0;
 			pdp_state.setVoltage(HAL_GetPDPVoltage(pdp, &status));
 			pdp_state.setTemperature(HAL_GetPDPTemperature(pdp, &status));
 			pdp_state.setTotalCurrent(HAL_GetPDPTotalCurrent(pdp, &status));
@@ -1178,6 +1185,73 @@ void FRCRobotHWInterface::pdp_read_thread(int32_t pdp,
 			((double)end_time.tv_nsec - (double)start_time.tv_nsec) / 1000000000.;
 		iteration_count += 1;
 		ROS_INFO_STREAM_THROTTLE(2, "pdp_read = " << time_sum / iteration_count);
+		r.sleep();
+	}
+}
+
+
+void FRCRobotHWInterface::robot_controller_state_read_thread(void)
+{
+	ros::Rate r(20); // TODO : Tune me?
+	hardware_interface::RobotControllerState rcs;
+	int32_t status = 0;
+	double time_sum = 0.;
+	unsigned iteration_count = 0;
+	while (ros::ok())
+	{
+		struct timespec start_time;
+		clock_gettime(CLOCK_MONOTONIC, &start_time);
+#ifdef USE_TALON_MOTION_PROFILE
+		if (!profile_is_live_.load(std::memory_order_relaxed) &&
+			!writing_points_.load(std::memory_order_relaxed))
+#endif
+		{
+			rcs.SetFPGAVersion(HAL_GetFPGAVersion(&status));
+			rcs.SetFPGARevision(HAL_GetFPGARevision(&status));
+			rcs.SetFPGATime(HAL_GetFPGATime(&status));
+			rcs.SetUserButton(HAL_GetFPGAButton(&status));
+			rcs.SetIsSysActive(HAL_GetSystemActive(&status));
+			rcs.SetIsBrownedOut(HAL_GetBrownedOut(&status));
+			rcs.SetInputVoltage(HAL_GetVinVoltage(&status));
+			rcs.SetInputCurrent(HAL_GetVinCurrent(&status));
+			rcs.SetVoltage3V3(HAL_GetUserVoltage3V3(&status));
+			rcs.SetCurrent3V3(HAL_GetUserCurrent3V3(&status));
+			rcs.SetEnabled3V3(HAL_GetUserActive3V3(&status));
+			rcs.SetFaultCount3V3(HAL_GetUserCurrentFaults3V3(&status));
+			rcs.SetVoltage5V(HAL_GetUserVoltage5V(&status));
+			rcs.SetCurrent5V(HAL_GetUserCurrent5V(&status));
+			rcs.SetEnabled5V(HAL_GetUserActive5V(&status));
+			rcs.SetFaultCount5V(HAL_GetUserCurrentFaults5V(&status));
+			rcs.SetVoltage6V(HAL_GetUserVoltage6V(&status));
+			rcs.SetCurrent6V(HAL_GetUserCurrent6V(&status));
+			rcs.SetEnabled6V(HAL_GetUserActive6V(&status));
+			rcs.SetFaultCount6V(HAL_GetUserCurrentFaults6V(&status));
+			float percent_bus_utilization;
+			uint32_t bus_off_count;
+			uint32_t tx_full_count;
+			uint32_t receive_error_count;
+			uint32_t transmit_error_count;
+			HAL_CAN_GetCANStatus(&percent_bus_utilization, &bus_off_count,
+					&tx_full_count, &receive_error_count,
+					&transmit_error_count, &status);
+
+			rcs.SetCANPercentBusUtilization(percent_bus_utilization);
+			rcs.SetCANBusOffCount(bus_off_count);
+			rcs.SetCANTxFullCount(tx_full_count);
+			rcs.SetCANReceiveErrorCount(receive_error_count);
+			rcs.SetCANTransmitErrorCount(transmit_error_count);
+			{
+				std::lock_guard<std::mutex> l(robot_controller_state_mutex_);
+				shared_robot_controller_state_ = rcs;
+			}
+		}
+		struct timespec end_time;
+		clock_gettime(CLOCK_MONOTONIC, &end_time);
+		time_sum +=
+			((double)end_time.tv_sec -  (double)start_time.tv_sec) +
+			((double)end_time.tv_nsec - (double)start_time.tv_nsec) / 1000000000.;
+		iteration_count += 1;
+		ROS_INFO_STREAM_THROTTLE(2, "robot_controller_read = " << time_sum / iteration_count);
 		r.sleep();
 	}
 }
@@ -1693,42 +1767,8 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 
 	if (run_hal_robot_)
 	{
-		// TODO : error checking via status
-		int32_t status = 0;
-		robot_controller_state_.SetFPGAVersion(HAL_GetFPGAVersion(&status));
-		robot_controller_state_.SetFPGARevision(HAL_GetFPGARevision(&status));
-		robot_controller_state_.SetFPGATime(HAL_GetFPGATime(&status));
-		robot_controller_state_.SetUserButton(HAL_GetFPGAButton(&status));
-		robot_controller_state_.SetIsSysActive(HAL_GetSystemActive(&status));
-		robot_controller_state_.SetIsBrownedOut(HAL_GetBrownedOut(&status));
-		robot_controller_state_.SetInputVoltage(HAL_GetVinVoltage(&status));
-		robot_controller_state_.SetInputCurrent(HAL_GetVinCurrent(&status));
-		robot_controller_state_.SetVoltage3V3(HAL_GetUserVoltage3V3(&status));
-		robot_controller_state_.SetCurrent3V3(HAL_GetUserCurrent3V3(&status));
-		robot_controller_state_.SetEnabled3V3(HAL_GetUserActive3V3(&status));
-		robot_controller_state_.SetFaultCount3V3(HAL_GetUserCurrentFaults3V3(&status));
-		robot_controller_state_.SetVoltage5V(HAL_GetUserVoltage5V(&status));
-		robot_controller_state_.SetCurrent5V(HAL_GetUserCurrent5V(&status));
-		robot_controller_state_.SetEnabled5V(HAL_GetUserActive5V(&status));
-		robot_controller_state_.SetFaultCount5V(HAL_GetUserCurrentFaults5V(&status));
-		robot_controller_state_.SetVoltage6V(HAL_GetUserVoltage6V(&status));
-		robot_controller_state_.SetCurrent6V(HAL_GetUserCurrent6V(&status));
-		robot_controller_state_.SetEnabled6V(HAL_GetUserActive6V(&status));
-		robot_controller_state_.SetFaultCount6V(HAL_GetUserCurrentFaults6V(&status));
-		float percent_bus_utilization;
-		uint32_t bus_off_count;
-		uint32_t tx_full_count;
-		uint32_t receive_error_count;
-		uint32_t transmit_error_count;
-		HAL_CAN_GetCANStatus(&percent_bus_utilization, &bus_off_count,
-				&tx_full_count, &receive_error_count,
-				&transmit_error_count, &status);
-
-		robot_controller_state_.SetCANPercentBusUtilization(percent_bus_utilization);
-		robot_controller_state_.SetCANBusOffCount(bus_off_count);
-		robot_controller_state_.SetCANTxFullCount(tx_full_count);
-		robot_controller_state_.SetCANReceiveErrorCount(receive_error_count);
-		robot_controller_state_.SetCANTransmitErrorCount(transmit_error_count);
+		std::lock_guard<std::mutex> l(robot_controller_state_mutex_);
+		robot_controller_state_ = shared_robot_controller_state_;
 	}
 
 	struct timespec end_time;
@@ -1739,6 +1779,7 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 	iteration_count += 1;
 	ROS_INFO_STREAM_THROTTLE(2, "read() = " << time_sum / iteration_count);
 }
+
 
 double FRCRobotHWInterface::getConversionFactor(int encoder_ticks_per_rotation,
 						hardware_interface::FeedbackDevice encoder_feedback,
