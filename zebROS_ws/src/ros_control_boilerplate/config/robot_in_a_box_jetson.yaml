@@ -62,9 +62,15 @@ talon3_controller:
     feedback_type: CTRE_MagEncoder_Absolute
 
 talon9_controller:
-    type: talon_controllers/TalonPositionClosedLoopController
+    type: talon_controllers/TalonVelocityCloseLoopController
     joint: talon9
     feedback_type: CTRE_MagEncoder_Absolute
+    close_loop_values:
+        - {p: 0.1, i: 0.0, d: 0, f: 0.0, i_zone: 0}
+        - {p: 0.1, i: 0.0, d: 0, f: 0.0, i_zone: 0}
+    sensor_phase: False
+    invert_output: False
+    #voltage_compensation_Enable: True
 
 joint_state_listener_controller:
     type:      state_listener_controller/JointStateListenerController
