@@ -197,3 +197,35 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+include_directories(
+  include/
+  ${catkin_INCLUDE_DIRS}
+  $ENV{HOME}/wpilib/cpp/current/include
+  $ENV{HOME}/wpilib/user/cpp/include
+)
+
+add_library(match_data_controller src/match_data_controller.cpp)
+target_link_libraries(match_data_controller ${catkin_LIBRARIES})
+add_dependencies(${PROJECT_NAME}
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS}
+)
+
+install(TARGETS ${PROJECT_NAME}
+   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+ )
+
+## Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+   FILES_MATCHING PATTERN "*.h"
+   PATTERN ".svn" EXCLUDE
+ )
+
+## Mark other files for installation (e.g. launch and bag files, etc.)
+install(FILES
+	match_controller_plugins.xml
+    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)

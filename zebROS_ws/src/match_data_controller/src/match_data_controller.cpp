@@ -29,11 +29,21 @@ bool MatchStateController::init(hardware_interface::MatchStateInterface *hw,
 
 	auto &m = realtime_pub_->msg_;
 
-	m.voltage = 0.0;
-	m.temperature = 0.0;
-	m.totalCurrent = 0.0;
-	m.totalPower = 0.0;
-	m.totalEnergy = 0.0;
+	m.matchTimeRemaining = 0.0;
+	m.allianceData = "";
+	m.getEventName = "";
+	m.allianceColor = 0.0;
+	m.matchType = 0.0;
+	m.driverStationLocation = 0.0;
+	m.matchNumber = 0.0;
+	m.getReplayNumber = 0.0;
+	m.isEnabled = false;
+	m.isDisabled = false;
+	m.isAutonomous = false:
+	m.isFMSAttatched = false;
+	m.isOperatorControl = false;
+	m.isTest = false;
+	m.BatteryVoltage = 0.0;
 	
 	for(int channel = 0; channel <= 15; channel++)
 	{
@@ -67,11 +77,21 @@ void matchstatecontroller::update(const ros::Time &time, const ros::Duration & )
 			auto &ps = match_data_;
 			
 			//read from the object and stuff it in a msg
-			m.voltage = ps->getVoltage();
-			m.temperature = ps->getTemperature();
-			m.totalCurrent = ps->getTotalCurrent();
-			m.totalPower = ps->getTotalPower();
-			m.totalEnergy = ps->getTotalEnergy();
+			m.matchTimeRemaining = ps->getMatchTimeRemaining();
+			m.allianceData = ps->getAllianceData();
+			m.getEventName = ps->getGetEventName();
+			m.allianceColor = ps->getAllianceColor();
+			m.matchType = ps->getMatchType();
+m.driverStationLocation = ps->getDriverStationLocation();
+m.matchNumber = ps->getMatchNumber();
+m.getReplayNumber = ps->getGetReplayNumber();
+m.isEnabled = ps->getIsEnabled();
+m.isDisabled = ps->getIsDisabled();
+m.isAutonomous = ps->getIsAutonomous();
+m.isFMSAttatched = ps->getIsFMSAttatched();
+m.isOperatorControl = ps->getIsOperatorControl();
+m.isTest = ps->getIsTest();
+m.BatteryVoltage = ps->getBatteryVoltage();
 	
 			for(int channel = 0; channel <= 15; channel++)
 			{
