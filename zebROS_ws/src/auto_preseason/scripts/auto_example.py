@@ -152,22 +152,22 @@ def main():
         smach.StateMachine.add('TestCollectedCube', TestHasCube(),
                 transitions={'testTrue':'TestAtCenterE', 'testFalse':'SpinOut'}) #TestArmStuck
         smach.StateMachine.add('TestAtCenterC', TestAtCenterC(),
-                transitions={'testTrue':'TurnToCube', 'testFalse':'PathToCenterC'})
+                transitions={'testTrue':'TestSeesCubes', 'testFalse':'TestSeesCubes'})
         smach.StateMachine.add('TestAtCenterE', TestAtCenterE(),
-                transitions={'testTrue':'TurnToExchange', 'testFalse':'PathToCenterE'})
+                transitions={'testTrue':'ScoreCube', 'testFalse':'ScoreCube'})
         smach.StateMachine.add('TestArmStuck', TestArmStuck(),
                 transitions={'testTrue':'ResetArmPos', 'testFalse': 'SpinOut'})
         smach.StateMachine.add('Exit', Exit(),               
                                 transitions={'exit':'exited'})
         smach.StateMachine.add('TestSeesCubes', TestSeesCubes(),
-                transitions={'testTrue':'PathToCube', 'testFalse':'Party'})
+                transitions={'testTrue':'IntakeCube', 'testFalse':'Party'})
         #actions
         goalPathToExchange = PathGoal()
         goalPathToExchange.goal_index = 2
         goalPathToExchange.x = 0
         goalPathToExchange.y = 0
         goalPathToExchange.rotation = 0
-        goalPathToExchange.time_to_run = 50
+        goalPathToExchange.time_to_run = 0
         smach.StateMachine.add('PathToExchange', 
                                 SimpleActionState('/frcrobot/path_server',
                                             PathAction, goal=goalPathToExchange),
@@ -177,7 +177,7 @@ def main():
         goalPathToCube.x = 0
         goalPathToCube.y = 0
         goalPathToCube.rotation = 0
-        goalPathToCube.time_to_run = 50
+        goalPathToCube.time_to_run = 0
         smach.StateMachine.add('PathToCube', 
                                 SimpleActionState('/frcrobot/path_server',
                                             PathAction, goal=goalPathToCube),
@@ -229,7 +229,7 @@ def main():
         goalMoveBack.x = 0
         goalMoveBack.y = -0.5
         goalMoveBack.rotation = 90
-        goalMoveBack.time_to_run = 50
+        goalMoveBack.time_to_run = 0
         smach.StateMachine.add('MoveRobotBack',
                                 SimpleActionState('/frcrobot/path_server',
                                             PathAction, goal=goalMoveBack),
@@ -239,7 +239,7 @@ def main():
         goalPTCC.x = 0
         goalPTCC.y = 0
         goalPTCC.rotation = 90
-        goalPTCC.time_to_run = 50
+        goalPTCC.time_to_run = 0
         smach.StateMachine.add('PathToCenterC',
                                 SimpleActionState('/frcrobot/path_server',
                                             PathAction,goal=goalPTCC),
@@ -249,7 +249,7 @@ def main():
         goalPTCE.x = 0
         goalPTCE.y = 0
         goalPTCE.rotation = 90
-        goalPTCE.time_to_run = 50
+        goalPTCE.time_to_run = 0
         smach.StateMachine.add('PathToCenterE',
                                 SimpleActionState('/frcrobot/path_server',
                                             PathAction,goal=goalPTCE),
@@ -259,7 +259,7 @@ def main():
         goalTurnCube.x = 0
         goalTurnCube.y = 0
         goalTurnCube.rotation = 90 #essentially snap to angle; rework
-        goalTurnCube.time_to_run = 50
+        goalTurnCube.time_to_run = 0
         smach.StateMachine.add('TurnToCube',
                                 SimpleActionState('/frcrobot/path_server',
                                             PathAction, goal=goalTurnCube),
@@ -269,7 +269,7 @@ def main():
         goalTurnExchange.x = 0
         goalTurnExchange.y = 0
         goalTurnExchange.rotation = 90 #essentially snap to angle; rework
-        goalTurnExchange.time_to_run = 50
+        goalTurnExchange.time_to_run = 0
         smach.StateMachine.add('TurnToExchange',
                                 SimpleActionState('/frcrobot/path_server',
                                             PathAction, goal=goalTurnExchange),
@@ -281,7 +281,7 @@ def main():
         smach.StateMachine.add('SpinOut',
                                 SimpleActionState('/frcrobot/intake_server',
                                             IntakeAction, goal=goalIntake),
-                                transitions={'succeeded':'PathToCube', 'aborted':'Exit', 'preempted':'Exit'})
+                                transitions={'succeeded':'TestHasCube', 'aborted':'Exit', 'preempted':'Exit'})
         smach.StateMachine.add('Party',
                                 SimpleActionState('/frcrobot/party_as',
                                             SingleExitAction),
