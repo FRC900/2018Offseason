@@ -7,23 +7,26 @@ namespace match_data_controller
 {
 
 bool MatchStateController::init(hardware_interface::MatchStateInterface *hw,
-								ros::NodeHandle 					&root_nh,
-								ros::NodeHandle 					&controller_nh)
+	
+	ros::NodeHandle 					&root_nh,
+	ros::NodeHandle 					&controller_nh)
+
 {
 	ROS_INFO_STREAM_NAMED("match_data_controller", "init is running");
 
 	std::vector<std::string> match_names = hw->getNames();
-	if (match_names.size() > 1) {
-		ROS_ERROR_STREAM("Cannot initialize multiple matches.");
-		return false; }
-	else if (match_names.size() < 1) {
-		ROS_ERROR_STREAM("Cannot initialize zero matches.");
-		return false; }
+		if (match_names.size() > 1) {
+			ROS_ERROR_STREAM("Cannot initialize multiple matches.");
+			return false; }
+		
+		else if (match_names.size() < 1) {
+			ROS_ERROR_STREAM("Cannot initialize zero matches.");
+			return false; }
 
 	const std::string match_name = match_names[0];
 
-	if (!controller_nh.getParam("publish_rate", publish_rate_))
-                ROS_ERROR("Could not read publish_rate in match data controller");
+		if (!controller_nh.getParam("publish_rate", publish_rate_))
+                	ROS_ERROR("Could not read publish_rate in match data controller");
 
 	realtime_pub_.reset(new realtime_tools::RealtimePublisher<match_data_controller::matchData>(root_nh, "match_data", 4));
 
@@ -79,19 +82,19 @@ void matchstatecontroller::update(const ros::Time &time, const ros::Duration & )
 			//read from the object and stuff it in a msg
 			m.matchTimeRemaining = ps->getMatchTimeRemaining();
 			m.allianceData = ps->getAllianceData();
-			m.getEventName = ps->getGetEventName();
+			m.eventName = ps->getEventName();
 			m.allianceColor = ps->getAllianceColor();
 			m.matchType = ps->getMatchType();
-m.driverStationLocation = ps->getDriverStationLocation();
-m.matchNumber = ps->getMatchNumber();
-m.getReplayNumber = ps->getGetReplayNumber();
-m.isEnabled = ps->getIsEnabled();
-m.isDisabled = ps->getIsDisabled();
-m.isAutonomous = ps->getIsAutonomous();
-m.isFMSAttatched = ps->getIsFMSAttatched();
-m.isOperatorControl = ps->getIsOperatorControl();
-m.isTest = ps->getIsTest();
-m.BatteryVoltage = ps->getBatteryVoltage();
+			m.driverStationLocation = ps->getDriverStationLocation();
+			m.matchNumber = ps->getMatchNumber();
+			m.replayNumber = ps->getReplayNumber();
+			m.Enabled = ps->getEnabled();
+			m.Disabled = ps->getDisabled();
+			m.Autonomous = ps->getAutonomous();
+			m.FMSAttatched = ps->getFMSAttatched();
+			m.OperatorControl = ps->getOperatorControl();
+			m.Test = ps->getTest();
+			m.BatteryVoltage = ps->getBatteryVoltage();
 	
 			for(int channel = 0; channel <= 15; channel++)
 			{

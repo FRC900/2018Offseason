@@ -648,6 +648,9 @@ void FRCRobotInterface::init()
 	hardware_interface::PDPStateHandle psh("pdp_name", &pdp_state_);
 	pdp_state_interface_.registerHandle(psh);
 
+	hardware_interface::MatchStateHandle psh("match_name", &match_data_);
+	match_data_interface_.registerHandle(psh);
+
 	// Add a flag which indicates we should signal
 	// the driver station that robot code is initialized
 	hardware_interface::JointStateHandle sh("robot_code_ready", &robot_code_ready_, &robot_code_ready_, &robot_code_ready_);

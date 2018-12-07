@@ -3,19 +3,19 @@ Header header
 int32 matchTimeRemaining
 
 string allianceData
-string getEventName
+string eventName
 
 int8 allianceColor
 int8 matchType
 int8 driverStationLocation
 int8 matchNumber
-int8 getReplayNumber
+int8 replayNumber
 
-bool isEnabled
-bool isDisabled
-bool isAutonomous
-bool isFMSAttatched
-bool isOperatorControl
-bool isTest
+bool Enabled
+bool Disabled
+bool Autonomous
+bool FMSAttatched
+bool OperatorControl
+bool Test
 
 float64 BatteryVoltage
