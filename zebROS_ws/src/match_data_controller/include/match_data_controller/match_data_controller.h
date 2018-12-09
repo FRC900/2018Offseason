@@ -28,7 +28,7 @@ class MatchDataController: public controller_interface::Controller<hardware_inte
 
 	private:
 		hardware_interface::MatchStateHandle match_data_;
-		boost::shared_ptr<realtime_tools::RealtimePublisher<match_data_controller::MatchData> > realtime_pub_;
+		boost::shared_ptr<realtime_tools::RealtimePublisher<match_data_controller::MatchSpecificData> > realtime_pub_;
 		ros::Time last_publish_time_;
 		double publish_rate_;
 

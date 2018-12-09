@@ -28,7 +28,7 @@ bool MatchStateController::init(hardware_interface::MatchStateInterface *hw,
 		if (!controller_nh.getParam("publish_rate", publish_rate_))
                 	ROS_ERROR("Could not read publish_rate in match data controller");
 
-	realtime_pub_.reset(new realtime_tools::RealtimePublisher<match_data_controller::matchData>(root_nh, "match_data", 4));
+	realtime_pub_.reset(new realtime_tools::RealtimePublisher<match_data_controller::MatchSpecificData>(root_nh, "match_data", 4));
 
 	auto &m = realtime_pub_->msg_;
 
@@ -48,11 +48,6 @@ bool MatchStateController::init(hardware_interface::MatchStateInterface *hw,
 	m.isTest = false;
 	m.BatteryVoltage = 0.0;
 	
-	for(int channel = 0; channel <= 15; channel++)
-	{
-		m.current[channel] = 0;
-	}
-
 	match_data_ = hw->getHandle(match_name);
 
 	return true;
@@ -95,11 +90,6 @@ void matchstatecontroller::update(const ros::Time &time, const ros::Duration & )
 			m.OperatorControl = ps->getOperatorControl();
 			m.Test = ps->getTest();
 			m.BatteryVoltage = ps->getBatteryVoltage();
-	
-			for(int channel = 0; channel <= 15; channel++)
-			{
-				m.current[channel] = ps->getCurrent(channel);
-			}
 	
 			realtime_pub_->unlockAndPublish();
 			

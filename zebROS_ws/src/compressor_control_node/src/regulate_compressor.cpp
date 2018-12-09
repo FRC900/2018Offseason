@@ -157,7 +157,7 @@ void matchDataCallback(const match_data_controller::MatchSpecificData &MatchData
 {
 	match_time_.store(MatchData.matchTimeRemaining, std::memory_order_relaxed);
 	fms_connected_.store(MatchData.matchTimeRemaining >= 0, std::memory_order_relaxed);
-	is_auto_ = MatchData.isAutonomous;
+	is_auto_ = MatchData.Autonomous;
 }
 
 // consider a boost::circular_buffer
