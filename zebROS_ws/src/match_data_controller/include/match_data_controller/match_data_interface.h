@@ -31,7 +31,7 @@ class MatchState
 			battery_voltage_(0.0),
 
 		//access and set
-		int getMatchTimeRemaining(void) const		{return match_time_remaining_;}
+		{int getMatchTimeRemaining(void) const		{return match_time_remaining_;}
 		
 		std::string getAllianceData(void) const		{return alliance_data_;}
 		std::string getEventName(void) const		{return event_name_;}

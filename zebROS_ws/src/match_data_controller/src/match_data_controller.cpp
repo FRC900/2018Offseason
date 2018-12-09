@@ -9,7 +9,7 @@ namespace match_data_controller
 bool MatchStateController::init(hardware_interface::MatchStateInterface *hw,
 	
 	ros::NodeHandle 					&root_nh,
-	ros::NodeHandle 					&controller_nh)
+	ros::NodeHandle 					&controller_nh),
 
 {
 	ROS_INFO_STREAM_NAMED("match_data_controller", "init is running");
@@ -111,4 +111,4 @@ void MatchStateController::stopping(const ros::Time & )
 {}
 }
 
-PLUGINLIB_EXPORT_CLASS( match_data_controller::MatchStateController, controller_interface::ControllerBase)
+PLUGINLIB_EXPORT_CLASS( match_data_controller::MatchStateController, controller_interface::ControllerBase)}
