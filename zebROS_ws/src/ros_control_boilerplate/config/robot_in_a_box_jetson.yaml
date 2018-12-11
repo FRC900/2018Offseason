@@ -70,8 +70,12 @@ talon9_controller:
         - {p: 0.1, i: 0.0, d: 0, f: 0.0, i_zone: 0}
     sensor_phase: False
     invert_output: False
-    #voltage_compensation_Enable: True
+    dynamic_reconfigure: True
+    voltage_compensation_Enable: True
 
+# Used to listen for joint state published from the given topic
+# (in this case the rio) and copy them to internal copies of 
+# joint data
 joint_state_listener_controller:
     type:      state_listener_controller/JointStateListenerController
     topic:     /frcrobot_rio/joint_states

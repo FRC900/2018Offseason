@@ -13,6 +13,7 @@ hardware_interface:
        - {name: talon3, local: false, type: can_talon_srx, can_id: 3}
        - {name: talon9, local: false, type: can_talon_srx, can_id: 9}
        - {name: pdp, local: true, type: pdp }
+       - {name: compressor, local: true, type: compressor, pcm_id: 0}
        - {name: robot_code_ready_jetson, local: false, type: ready}
        - {name: robot_code_ready_rio, local: true, type: ready}
        - {name: do1, local: true, type: digital_output, dio_channel: 1}
@@ -34,6 +35,10 @@ talon_state_controller:
        
 pdp_state_controller:
    type:         pdp_state_controller/PDPStateController
+   publish_rate: 20
+
+pcm_state_controller:
+   type : pcm_state_controller/PCMStateController
    publish_rate: 20
 
 robot_controller_state_controller:
