@@ -23,7 +23,7 @@ done
 
 sudo apt-get update
 sudo apt-get -y upgrade
-sudo apt-get install -y libeigen3-dev build-essential gfortran git cmake libleveldb-dev libsnappy-dev libhdf5-dev libhdf5-serial-dev liblmdb-dev vim-gtk libgflags-dev libgoogle-glog-dev libatlas-base-dev python-dev python-pip libtinyxml2-dev v4l-conf v4l-utils libgtk2.0-dev pkg-config exfat-fuse exfat-utils libprotobuf-dev protobuf-compiler unzip python-numpy python-scipy python-opencv python-matplotlib chromium-browser wget unzip ccache ntp ntpdate libflann-dev libpcl-dev libproj-dev htop
+sudo apt-get install -y libeigen3-dev build-essential gfortran git cmake libleveldb-dev libsnappy-dev libhdf5-dev libhdf5-serial-dev liblmdb-dev vim-gtk libgflags-dev libgoogle-glog-dev libatlas-base-dev python-dev python-pip libtinyxml2-dev v4l-conf v4l-utils libgtk2.0-dev pkg-config exfat-fuse exfat-utils libprotobuf-dev protobuf-compiler unzip python-numpy python-scipy python-opencv python-matplotlib chromium-browser wget unzip ccache ntp ntpdate libflann-dev libpcl-dev libproj-dev htop can-utils
 
 sudo apt-get install --no-install-recommends -y libboost-all-dev
 
@@ -129,6 +129,24 @@ if [ "$jetson" = true ] ; then
         sudo apt-get install ntp # TODO work on this NIALL or OLIVIA
         # edit /etc/init.d/ntp to contain the line: <ntpd -gq> before all content already there.
         sudo cp ntp-client.conf /etc/ntp.conf  # edit /etc/ntp.conf to be a copy of ntp-client.conf in 2018Offseason
+
+		# Set up can0 network interface
+		cd
+		echo "auto can0" > can0
+		echo "iface can0 inet manual" >> can0
+		echo "  pre-up /sbin/ip link set can0 type can bitrate 1000000" >> can0
+		echo "  up /sbin/ifconfig can0 up" >> can0
+		echo "  down /sbin/ifconfig can0 down" >> can0
+		sudo mv can0 /etc/network/interfaces.d
+
+		sudo bash -c "echo \"# Modules for CAN interface\" >> /etc/modules"
+		sudo bash -c "echo can >> /etc/modules"
+		sudo bash -c "echo can_raw >> /etc/modules"
+		sudo bash -c "echo mttcan >> /etc/modules"
+
+		# This shouldn't be the least bit dangerous
+		sudo rm /etc/modprobe.d/blacklist-mttcan.conf 
+
 	fi
 
 	# Set up ssh host config (add port 5801) 
