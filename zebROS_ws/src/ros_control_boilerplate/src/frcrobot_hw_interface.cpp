@@ -2430,10 +2430,10 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 					ts.setStatusFramePeriod(status_frame, period);
 					ROS_INFO_STREAM("Updated joint " << joint_id << "=" << can_talon_srx_names_[joint_id] <<" status_frame " << i << "=" << static_cast<int>(period) << "mSec");
 				}
+
 			}
 		}*/
 
-		if (motion_profile_mode)
 		{
 #ifdef USE_TALON_MOTION_PROFILE
 			// Lock this so that the motion profile update
@@ -2592,6 +2592,7 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 					can_talons_mp_running_[joint_id]->store((in_mode == hardware_interface::TalonMode_MotionProfile) && (command == 1), std::memory_order_relaxed);
 				}
 
+#ifdef USE_TALON_MOTION_PROFILE
 				// If any of the talons are set to MotionProfile and
 				// command == 1 to start the profile, set 
 				// profile_is_live_ to true. If this is false
@@ -2602,17 +2603,7 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 					profile_is_live = true;
 					can_talons_mp_running_[joint_id]->store(true, std::memory_order_relaxed);
 				}
-
-				// If any of the talons are set to MotionProfile and
-				// command == 1 to start the profile, set 
-				// profile_is_live_ to true. If this is false
-				// for all of them, set profile_is_live_ to false.
-				if ((out_mode == ctre::phoenix::motorcontrol::ControlMode::MotionProfile) &&
-					(command == 1))
-				{
-					profile_is_live = true;
-					can_talons_mp_running_[joint_id]->store(true, std::memory_order_relaxed);
-				}
+#endif
 
 				//ROS_WARN_STREAM("set at: " << ts.getCANID() << " new mode: " << b1 << " command_changed: " << b2 << " cmd: " << command);
 			}

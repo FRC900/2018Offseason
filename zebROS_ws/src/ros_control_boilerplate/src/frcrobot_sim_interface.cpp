@@ -132,7 +132,7 @@ class TeleopJointsKeyboard
 		{
 			std::cout << "init " << std::endl;
 			// TODO: make this robot agonistic
-			joints_pub_ = nh_.advertise<ros_control_boilerplate::JoystickState>("/frcrobot/joystick_states", 1);
+			joints_pub_ = nh_.advertise<ros_control_boilerplate::JoystickState>("joystick_states", 1);
 		}
 
 		~TeleopJointsKeyboard()
@@ -526,9 +526,11 @@ void FRCRobotSimInterface::init(void)
 	ROS_WARN("Passes");
     ros::NodeHandle nh_;
 
-	sim_joy_thread_ = std::thread(&FRCRobotSimInterface::loop_joy, this);
+	// TODO : make this depend on joystick joints being defined
+	if (run_hal_robot_)
+		sim_joy_thread_ = std::thread(&FRCRobotSimInterface::loop_joy, this);
     cube_state_sub_ = nh_.subscribe("/frcrobot/cube_state_sim", 1, &FRCRobotSimInterface::cube_state_callback, this);
-    match_data_sub_ = nh_.subscribe("/frcrobot/match_data", 1, &FRCRobotSimInterface::match_data_callback, this);
+    match_data_sub_ = nh_.subscribe("match_data", 1, &FRCRobotSimInterface::match_data_callback, this);
 
 	ROS_WARN("fails here?1");
 	// Loop through the list of joint names
@@ -661,21 +663,21 @@ void FRCRobotSimInterface::read(ros::Duration &/*elapsed_time*/)
             }
         }
     }
-    for (size_t i = 0; i < num_digital_inputs_; i++)
-        {
-            //State should really be a bool - but we're stuck using
-            //ROS control code which thinks everything to and from
-            //hardware are doubles
-            if(digital_input_names_[i] == "intake_line_break_high") {
-                digital_input_state_[i] = (intake_high) ? 1 : 0;
-            }
-            if(digital_input_names_[i] == "intake_line_break_low") {
-                digital_input_state_[i] = (intake_low) ? 1 : 0;
-            }
-            if(digital_input_names_[i] == "intake_line_break") {
-                digital_input_state_[i] = (has_cube) ? 1 : 0;
-            }
-        }    
+	for (size_t i = 0; i < num_digital_inputs_; i++)
+	{
+		//State should really be a bool - but we're stuck using
+		//ROS control code which thinks everything to and from
+		//hardware are doubles
+		if(digital_input_names_[i] == "intake_line_break_high") {
+			digital_input_state_[i] = (intake_high) ? 1 : 0;
+		}
+		if(digital_input_names_[i] == "intake_line_break_low") {
+			digital_input_state_[i] = (intake_low) ? 1 : 0;
+		}
+		if(digital_input_names_[i] == "intake_line_break") {
+			digital_input_state_[i] = (has_cube) ? 1 : 0;
+		}
+	}    
 
     // Simulated state is updated in write, so just
 	// display it here for debugging
