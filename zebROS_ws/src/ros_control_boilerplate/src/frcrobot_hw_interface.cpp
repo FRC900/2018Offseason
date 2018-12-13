@@ -330,6 +330,10 @@ void FRCRobotHWInterface::customProfileSetPIDF(int    joint_id,
 	can_talons_[joint_id]->SelectProfileSlot(pid_slot, pidIdx);
 }
 
+// TODO : Think some more on how this will work.  Previous idea of making them
+// definable joints was good as well, but required some hard coding to
+// convert from name to an actual variable. This requires hard-coding here
+// but not in the read or write code.  Not sure which is better
 std::vector<ros_control_boilerplate::DummyJoint> FRCRobotHWInterface::getDummyJoints(void)
 {
 	std::vector<ros_control_boilerplate::DummyJoint> dummy_joints;
@@ -718,28 +722,26 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 											std::shared_ptr<std::atomic<bool>> mp_written,
 											std::shared_ptr<std::mutex> mutex)
 {
-	ros::Rate rate(75); // TODO : configure me from a file
+	ros::Rate rate(100); // TODO : configure me from a file or
+						 // be smart enough to run at the rate of the fastest status update?
 
-
-	// TODO : configure from file or from relevant
-	// control mode?
 	ros::Time last_status_1_time = ros::Time::now();
-	ros::Duration status_1_period = ros::Duration(.01);
+	ros::Duration status_1_period;
 
 	ros::Time last_status_2_time = ros::Time::now();
-	ros::Duration status_2_period = ros::Duration(.02);
+	ros::Duration status_2_period;
 
 	ros::Time last_status_4_time = ros::Time::now();
-	ros::Duration status_4_period = ros::Duration(.16);
+	ros::Duration status_4_period;
 
 	ros::Time last_status_10_time = ros::Time::now();
-	ros::Duration status_10_period = ros::Duration(.16);
+	ros::Duration status_10_period;
 
 	ros::Time last_status_13_time = ros::Time::now();
-	ros::Duration status_13_period = ros::Duration(.16);
+	ros::Duration status_13_period;
 
 	ros::Time last_sensor_collection_time = ros::Time::now();
-	ros::Duration sensor_collection_period = ros::Duration(.10);
+	ros::Duration sensor_collection_period;
 
 	double time_sum = 0.;
 	unsigned iteration_count = 0;
@@ -783,6 +785,12 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 			encoder_feedback = state->getEncoderFeedback();
 			encoder_ticks_per_rotation = state->getEncoderTicksPerRotation();
 			conversion_factor = state->getConversionFactor();
+			ros::Duration status_1_period = ros::Duration(state->getStatusFramePeriod(hardware_interface::Status_1_General));
+			ros::Duration status_2_period = ros::Duration(state->getStatusFramePeriod(hardware_interface::Status_2_Feedback0));
+			ros::Duration status_4_period = ros::Duration(state->getStatusFramePeriod(hardware_interface::Status_4_AinTempVbat));
+			ros::Duration status_10_period = ros::Duration(state->getStatusFramePeriod(hardware_interface::Status_10_MotionMagic));
+			ros::Duration status_13_period = ros::Duration(state->getStatusFramePeriod(hardware_interface::Status_13_Base_PIDF0));
+			ros::Duration sensor_collection_period = ros::Duration(.1); // TODO :fix me
 		}
 
 		// TODO : make this configurable
@@ -803,8 +811,8 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 #ifdef USE_TALON_MOTION_PROFILE
 		if (profile_is_live_.load(std::memory_order_relaxed))
 		{
-			// TODO - this should be if (!drivebase) 
-			// Don't bother reading status while running 
+			// TODO - this should be if (!drivebase)
+			// Don't bother reading status while running
 			// drive base motion profile code
 			if (can_id == 51 || can_id == 41) //All we care about are the arm and lift
 			{
@@ -890,6 +898,7 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 			motor_output_percent = talon->GetMotorOutputPercent();
 			safeTalonCall(talon->GetLastError(), "GetMotorOutputPercent");
 
+			// TODO : Check this
 			safeTalonCall(talon->GetFaults(faults), "GetFaults");
 
 			// Supposedly limit switch pin state
@@ -1619,6 +1628,11 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 			trts->setEncoderFeedback(ts.getEncoderFeedback());
 			trts->setEncoderTicksPerRotation(ts.getEncoderTicksPerRotation());
 			trts->setConversionFactor(ts.getConversionFactor());
+			for (int i = hardware_interface::Status_1_General; i < hardware_interface::Status_Last; i++)
+			{
+				const hardware_interface::StatusFrame status_frame = static_cast<hardware_interface::StatusFrame>(i);
+				trts->setStatusFramePeriod(status_frame, ts.getStatusFramePeriod(status_frame));
+			}
 
 			// Copy talon state values read in the read thread into the
 			// talon state shared globally with the rest of the hardware
