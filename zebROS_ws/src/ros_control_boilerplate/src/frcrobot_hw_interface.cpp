@@ -438,7 +438,8 @@ void FRCRobotHWInterface::init(void)
 				can_talons_.push_back(std::make_shared<ctre::phoenix::motorcontrol::can::TalonSRX>(can_talon_srx_can_ids_[i]));
 			else
 				// Add a null pointer as the can talon for this index - no
-				// actual local hardware identified for it so nothing to create
+				// actual local hardware identified for it so nothing to create.
+				// Just keep the indexes of all the various can_talon arrays in sync
 				can_talons_.push_back(nullptr);
 			talon_read_state_mutexes_.push_back(nullptr);
 			talon_read_thread_states_.push_back(nullptr);
@@ -791,11 +792,9 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 			ros::Duration status_10_period = ros::Duration(state->getStatusFramePeriod(hardware_interface::Status_10_MotionMagic));
 			ros::Duration status_13_period = ros::Duration(state->getStatusFramePeriod(hardware_interface::Status_13_Base_PIDF0));
 			ros::Duration sensor_collection_period = ros::Duration(.1); // TODO :fix me
+			if (!state->getEnableReadThread())
+				return;
 		}
-
-		// TODO : make this configurable
-		if (can_id == 31 || can_id == 32) // Don't read any status for intake motors
-			return;
 
 		// TODO : in main read() loop copy status from talon being followed
 		// into follower talon state?
@@ -1031,6 +1030,7 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 			}
 		}
 
+		// TODO : timing on this? Maybe make it related to MP point period?
 		if (talon_mode == hardware_interface::TalonMode_MotionProfile)
 		{
 			mp_top_level_buffer_count = talon->GetMotionProfileTopLevelBufferCount();
@@ -1633,6 +1633,7 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 				const hardware_interface::StatusFrame status_frame = static_cast<hardware_interface::StatusFrame>(i);
 				trts->setStatusFramePeriod(status_frame, ts.getStatusFramePeriod(status_frame));
 			}
+			trts->setEnableReadThread(ts.getEnableReadThread());
 
 			// Copy talon state values read in the read thread into the
 			// talon state shared globally with the rest of the hardware
@@ -2028,8 +2029,13 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 		if (!talon) // skip unintialized Talons
 			continue;
 
+
 		auto &ts = talon_state_[joint_id];
 		auto &tc = talon_command_[joint_id];
+
+		bool enable_read_thread;
+		if (tc.enableReadThreadChanged(enable_read_thread))
+			ts.setEnableReadThread(enable_read_thread);
 
 		if (tc.getCustomProfileRun())
 		{

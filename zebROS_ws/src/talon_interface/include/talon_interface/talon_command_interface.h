@@ -195,7 +195,10 @@ class TalonHWCommand
 			custom_profile_slot_(0),
 			custom_profile_next_slot_mutex_ptr_(std::make_shared<std::mutex>()),
 			custom_profile_hz_(50.0),
-			custom_profile_vectors_mutex_ptr_(std::make_shared<std::mutex>())
+			custom_profile_vectors_mutex_ptr_(std::make_shared<std::mutex>()),
+
+			enable_read_thread_(true),
+			enable_read_thread_changed_(false)
 		{
 			status_frame_periods_[Status_1_General] = 10;
 			status_frame_periods_changed_[Status_1_General] = true;
@@ -1688,6 +1691,25 @@ class TalonHWCommand
 			return custom_profile_points_[slot].size();
 		}
 
+		void setEnableReadThread(bool enable_read_thread)
+		{
+			enable_read_thread_ = enable_read_thread;
+			enable_read_thread_changed_ = true;
+		}
+		double getEnableReadThread(void) const
+		{
+			return enable_read_thread_;
+		}
+
+		bool enableReadThreadChanged(bool &enable_read_thread)
+		{
+			enable_read_thread = enable_read_thread_;
+			if (!enable_read_thread_changed_)
+				return false;
+			enable_read_thread_changed_ = false;
+			return true;
+		}
+
 	private:
 		double    command_; // motor setpoint - % vbus, velocity, position, etc
 		bool      command_changed_;
@@ -1815,6 +1837,9 @@ class TalonHWCommand
 		std::vector<std::vector<double>> custom_profile_total_time_;
 
 		std::vector<bool> custom_profile_points_changed_;
+
+		bool enable_read_thread_;
+		bool enable_read_thread_changed_;
 };
 
 // Handle - used by each controller to get, by name of the

@@ -288,7 +288,10 @@ class TalonHWState
 			faults_(0),
 			sticky_faults_(0),
 
-			conversion_factor_(1.0)
+			conversion_factor_(1.0),
+
+			// control of read thread
+			enable_read_thread_(true)
 		{
 			status_frame_periods_[Status_1_General] = 10;
 			status_frame_periods_[Status_2_Feedback0] = 20;
@@ -555,9 +558,9 @@ class TalonHWState
 		{
 			return conversion_factor_;
 		}
-		void setConversionFactor(double conversion_factor)
+		bool getEnableReadThread(void) const
 		{
-			conversion_factor_ = conversion_factor;
+			return enable_read_thread_;
 		}
 		void setSetpoint(double setpoint)
 		{
@@ -1075,6 +1078,14 @@ class TalonHWState
 		{
 			sticky_faults_ = sticky_faults;
 		}
+		void setConversionFactor(double conversion_factor)
+		{
+			conversion_factor_ = conversion_factor;
+		}
+		void setEnableReadThread(bool enable_read_thread)
+		{
+			enable_read_thread_ = enable_read_thread;
+		}
 
 	private:
 		double setpoint_;
@@ -1186,6 +1197,8 @@ class TalonHWState
 		unsigned int sticky_faults_;
 
 		double conversion_factor_;
+
+		bool enable_read_thread_;
 };
 
 // Handle - used by each controller to get, by name of the

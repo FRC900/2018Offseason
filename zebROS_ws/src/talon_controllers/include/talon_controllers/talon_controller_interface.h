@@ -84,7 +84,9 @@ class TalonCIParams
 
 			conversion_factor_(1.0),
 
-			custom_profile_hz_(20.0)
+			custom_profile_hz_(20.0),
+
+			enable_read_thread_(true)
 		{
 			status_frame_periods_[hardware_interface::Status_1_General] = 10;
 			status_frame_periods_[hardware_interface::Status_2_Feedback0] = 20;
@@ -541,7 +543,12 @@ class TalonCIParams
 			return true;
 		}
 
-		// TODO : Keep adding config items here
+		bool readTalonThread(ros::NodeHandle &n)
+		{
+			n.getParam("enable_read_thread", enable_read_thread_);
+			return true;
+		}
+
 		std::string joint_name_;
 		double p_[2];
 		double i_[2];
@@ -595,6 +602,8 @@ class TalonCIParams
 		double conversion_factor_;
 
 		double custom_profile_hz_;
+
+		bool enable_read_thread_;
 
 	private:
 		// Read a double named <param_type> from the array/map
@@ -707,7 +716,8 @@ class TalonControllerInterface
 				   params.readCurrentLimits(n) &&
 				   params.readMotionControl(n) &&
 				   params.readStatusFramePeriods(n) &&
-				   params.readCustomProfile(n);
+				   params.readCustomProfile(n) &&
+				   params.readTalonThread(n);
 		}
 
 		// Read params from config file and use them to
@@ -1359,6 +1369,8 @@ class TalonControllerInterface
 			talon->setConversionFactor(params.conversion_factor_);
 
 			talon->setCustomProfileHz(params.custom_profile_hz_);
+
+			talon->setEnableReadThread(params.enable_read_thread_);
 
 			// Save copy of params written to HW
 			// so they can be queried later?
