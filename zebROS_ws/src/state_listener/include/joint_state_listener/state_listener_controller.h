@@ -263,7 +263,7 @@ class IMUStateListenerController :
 
 	private:
 		ros::Subscriber sub_command_;
-		hardware_interface::ImuWriteableSensorHandle handle_;
+		hardware_interface::ImuWritableSensorHandle handle_;
 
 		// Real-time buffer holds the last command value read from the
 		// "command" topic.
@@ -386,7 +386,7 @@ class TalonStateListenerController :
 	private:
 		ros::Subscriber sub_command_;
 		std::vector<std::string> joint_names_;
-		std::vector<hardware_interface::TalonWriteableStateHandle> handles_;
+		std::vector<hardware_interface::TalonWritableStateHandle> handles_;
 
 		// Real-time buffer holds the last command value read from the
 		// "command" topic.

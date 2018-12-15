@@ -1,6 +1,7 @@
 #pragma once
 
 #include <hardware_interface/internal/hardware_resource_manager.h>
+#include <state_handle/state_handle.h>
 
 namespace hardware_interface
 {
@@ -55,61 +56,8 @@ class PDPHWState
 		double current_[16];
 };
 
-/* PDPHWState pdp_state_;
-pdp_state_.voltage_ = 4; //wrong and sad
-volts = 4;
-pdp_state_.setVoltage(4);
-volts = pdp_state_.getVoltage();*/
-
-class PDPStateHandle
-{
-	public:
-		PDPStateHandle(void) : state_(0) {}
-
-		PDPStateHandle(const std::string &name, const PDPHWState *state) :
-			name_(name),
-			state_(state)
-		{
-			if (!state)
-				throw HardwareInterfaceException("Cannot create PDP state handle '" + name + "'. State pointer is null.");
-		}
-		std::string getName(void) const {return name_;}
-
-		const PDPHWState *operator->() const
-		{
-			assert(state_);
-			return state_;
-		}
-
-	private:
-		std::string	name_;
-		const PDPHWState *state_;
-};
-
-class PDPWritableStateHandle
-{
-	public:
-		PDPWritableStateHandle(void) : state_(0) {}
-
-		PDPWritableStateHandle(const std::string &name, PDPHWState *state) :
-			name_(name),
-			state_(state)
-		{
-			if (!state)
-				throw HardwareInterfaceException("Cannot create writable PDP state handle '" + name + "'. State pointer is null.");
-		}
-		std::string getName(void) const {return name_;}
-
-		PDPHWState *operator->()
-		{
-			assert(state_);
-			return state_;
-		}
-
-	private:
-		std::string	name_;
-		PDPHWState *state_;
-};
+typedef StateHandle<const PDPHWState> PDPStateHandle;
+typedef StateHandle<PDPHWState> PDPWritableStateHandle;
 
 class PDPStateInterface: public HardwareResourceManager<PDPStateHandle> {};
 }

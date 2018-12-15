@@ -15,11 +15,11 @@
 namespace hardware_interface
 {
 	class RemoteJointInterface : public JointCommandInterface {};
-	class ImuWriteableSensorHandle: public ImuSensorHandle
+	class ImuWritableSensorHandle: public ImuSensorHandle
 	{
 		public:
-		ImuWriteableSensorHandle() : ImuSensorHandle() {}
-		ImuWriteableSensorHandle(const Data &data) : ImuSensorHandle(data) {}
+		ImuWritableSensorHandle() : ImuSensorHandle() {}
+		ImuWritableSensorHandle(const Data &data) : ImuSensorHandle(data) {}
 		void setFrameId(const std::string &frame_id)
 		{
 			frame_id_ = frame_id;
@@ -55,9 +55,9 @@ namespace hardware_interface
 			std::copy(lac, lac + 9, dst);
 		}
 	};
-	class RemoteImuSensorInterface  : public HardwareResourceManager<ImuWriteableSensorHandle,  ClaimResources> {};
-	class RemotePDPStateInterface   : public HardwareResourceManager<PDPWritableStateHandle,    ClaimResources> {};
-	class RemotePCMStateInterface   : public HardwareResourceManager<PCMWritableStateHandle,    ClaimResources> {};
-	class RemoteTalonStateInterface : public HardwareResourceManager<TalonWriteableStateHandle, ClaimResources> {};
+	class RemoteImuSensorInterface  : public HardwareResourceManager<ImuWritableSensorHandle,  ClaimResources> {};
+	class RemotePDPStateInterface   : public HardwareResourceManager<PDPWritableStateHandle,   ClaimResources> {};
+	class RemotePCMStateInterface   : public HardwareResourceManager<PCMWritableStateHandle,   ClaimResources> {};
+	class RemoteTalonStateInterface : public HardwareResourceManager<TalonWritableStateHandle, ClaimResources> {};
 }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <hardware_interface/internal/hardware_resource_manager.h>
+#include <state_handle/state_handle.h>
 
 namespace hardware_interface
 {
@@ -72,59 +73,7 @@ class PCMState
 		uint32_t solenoid_blacklist_;
 };
 
-// Match up a name with a pointer to PCMState data
-// Used by the controller_manager to give access to controllers
-// who want to access PCMState
-class PCMStateHandle
-{
-	public:
-		PCMStateHandle(void) : state_(0) {}
-
-		PCMStateHandle(const std::string &name, const PCMState *state) :
-			name_(name),
-			state_(state)
-		{
-			if (!state)
-				throw HardwareInterfaceException("Cannot create PCM state handle '" + name + "'. State pointer is null.");
-		}
-		std::string getName(void) const {return name_;}
-
-		const PCMState *operator->() const
-		{
-			assert(state_);
-			return state_;
-		}
-
-	private:
-		std::string		name_;
-		const PCMState *state_;
-};
-
-class PCMWritableStateHandle
-{
-	public:
-		PCMWritableStateHandle(void) : state_(0) {}
-
-		PCMWritableStateHandle(const std::string &name, PCMState *state) :
-			name_(name),
-			state_(state)
-		{
-			if (!state)
-				throw HardwareInterfaceException("Cannot create writable PCM state handle '" + name + "'. State pointer is null.");
-		}
-		std::string getName(void) const {return name_;}
-
-		PCMState *operator->()
-		{
-			assert(state_);
-			return state_;
-		}
-
-	private:
-		std::string	 name_;
-		PCMState    *state_;
-};
-
-
+typedef StateHandle<const PCMState> PCMStateHandle;
+typedef StateHandle<PCMState> PCMWritableStateHandle;
 class PCMStateInterface: public HardwareResourceManager<PCMStateHandle> {};
 } // namespace

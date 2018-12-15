@@ -538,7 +538,7 @@ void FRCRobotInterface::init()
 		talon_command_interface_.registerHandle(tch);
 		if (!can_talon_srx_local_updates_[i])
 		{
-			hardware_interface::TalonWriteableStateHandle twsh(can_talon_srx_names_[i], &talon_state_[i]); /// writing directly to state?
+			hardware_interface::TalonWritableStateHandle twsh(can_talon_srx_names_[i], &talon_state_[i]); /// writing directly to state?
 			talon_remote_state_interface_.registerHandle(twsh);
 		}
 	}
@@ -723,7 +723,7 @@ void FRCRobotInterface::init()
 
 		if (!navX_locals_[i])
 		{
-			hardware_interface::ImuWriteableSensorHandle ish(imu_data);
+			hardware_interface::ImuWritableSensorHandle ish(imu_data);
 			imu_remote_interface_.registerHandle(ish);
 		}
 
