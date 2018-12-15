@@ -24,7 +24,7 @@ hardware_interface:
        - {name: joystick, type: joystick, id: 0}
        - {name: joystick_rumble, type: rumble, rumble_port: 0}
        - {name: robot_code_ready_jetson, local: false, type: ready}
-       - {name: robot_code_ready_rio, local: true, type: ready} # Probably not really needed?
+       - {name: robot_code_ready_rio, local: true, type: ready}
          
 # Create controllers for each joint
 #

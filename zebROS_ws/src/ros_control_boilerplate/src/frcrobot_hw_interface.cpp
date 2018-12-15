@@ -117,7 +117,7 @@
 //	local_update = false, local_hardare = false -> listener to mirror updated state from local?
 //
 //		nothing is happening on the controller wrt the hardware other than wanting to keep current on status
-//		not sure how useful this might be, excpet in cases like digital in where update==hardware
+//		not sure how useful this might be, except in cases like digital in where update==hardware
 //		by definition
 //
 //	So !local_update implies add to remote Interface to run a listener
