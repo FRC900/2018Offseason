@@ -228,6 +228,16 @@ class TalonHWCommand
 			status_frame_periods_changed_[Status_12_Feedback1] = false;
 			status_frame_periods_changed_[Status_14_Turn_PIDF1] = false;
 			status_frame_periods_changed_[Status_15_FirmwareApiStatus] = false;
+
+			control_frame_periods_[Control_3_General] = control_3_general_default;
+			control_frame_periods_[Control_4_Advanced] = control_4_advanced_default;
+			control_frame_periods_[Control_5_FeedbackOutputOverride] = control_5_feedbackoutputoverride_default;
+			control_frame_periods_[Control_6_MotProfAddTrajPoint] = control_6_motprofaddtrajpoint_default;
+
+			control_frame_periods_changed_[Control_3_General] = false;
+			control_frame_periods_changed_[Control_4_Advanced] = false;
+			control_frame_periods_changed_[Control_5_FeedbackOutputOverride] = false;
+			control_frame_periods_changed_[Control_6_MotProfAddTrajPoint] = false;
 		}
 
 		// This gets the requested setpoint, not the
@@ -1318,6 +1328,41 @@ class TalonHWCommand
 			return false;
 		}
 
+		void setControlFramePeriod(ControlFrame control_frame, uint8_t period)
+		{
+			if ((control_frame >= Control_3_General) && (control_frame < Control_Last))
+			{
+				control_frame_periods_[control_frame] = period;
+				control_frame_periods_changed_[control_frame] = true;
+			}
+			else
+				ROS_ERROR("Invalid control_frame value passed to TalonHWCommand::setControlFramePeriod()");
+		}
+
+		uint8_t getControlFramePeriod(ControlFrame control_frame) const
+		{
+			if ((control_frame >= Control_3_General) && (control_frame < Control_Last))
+				return control_frame_periods_[control_frame];
+
+			ROS_ERROR("Invalid control_frame value passed to TalonHWCommand::setControlFramePeriod()");
+			return 0;
+		}
+
+		bool controlFramePeriodChanged(ControlFrame control_frame, uint8_t &period)
+		{
+			if ((control_frame >= Control_3_General) && (control_frame < Control_Last))
+			{
+				period = control_frame_periods_[control_frame];
+				if (!control_frame_periods_changed_[control_frame])
+					return false;
+				control_frame_periods_changed_[control_frame] = false;
+				return true;
+			}
+
+			ROS_ERROR("Invalid control_frame value passed to TalonHWCommand::setControlFramePeriod()");
+			return false;
+		}
+
 		void setMotionProfileTrajectoryPeriod(int msec)
 		{
 			if (msec != motion_profile_profile_trajectory_period_)
@@ -1798,6 +1843,9 @@ class TalonHWCommand
 		bool motion_profile_profile_trajectory_period_changed_;
 		std::array<uint8_t, Status_Last> status_frame_periods_;
 		std::array<bool, Status_Last> status_frame_periods_changed_;
+
+		std::array<uint8_t, Control_Last> control_frame_periods_;
+		std::array<bool, Control_Last> control_frame_periods_changed_;
 
 		bool clear_sticky_faults_;
 

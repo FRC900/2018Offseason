@@ -102,6 +102,11 @@ class TalonCIParams
 			status_frame_periods_[hardware_interface::Status_13_Base_PIDF0] = hardware_interface::status_13_base_pidf0_default;
 			status_frame_periods_[hardware_interface::Status_14_Turn_PIDF1] = hardware_interface::status_14_turn_pidf1_default;
 			status_frame_periods_[hardware_interface::Status_15_FirmwareApiStatus] = hardware_interface::status_15_firmwareapistatus_default;
+
+			control_frame_periods_[hardware_interface::Control_3_General] = hardware_interface::control_3_general_default;
+			control_frame_periods_[hardware_interface::Control_4_Advanced] = hardware_interface::control_4_advanced_default;
+			control_frame_periods_[hardware_interface::Control_5_FeedbackOutputOverride] = hardware_interface::control_5_feedbackoutputoverride_default;
+			control_frame_periods_[hardware_interface::Control_6_MotProfAddTrajPoint] = hardware_interface::control_6_motprofaddtrajpoint_default;
 		}
 
 		// Update params set by a dynamic reconfig config
@@ -183,6 +188,10 @@ class TalonCIParams
 			status_frame_periods_[hardware_interface::Status_14_Turn_PIDF1] = config.status_14_turn_pidf1_period;
 			status_frame_periods_[hardware_interface::Status_15_FirmwareApiStatus] = config.status_15_firmwareapistatus_period;
 
+			control_frame_periods_[hardware_interface::Control_3_General] = config.control_3_general_period;
+			control_frame_periods_[hardware_interface::Control_4_Advanced] = config.control_4_advanced_period;
+			control_frame_periods_[hardware_interface::Control_5_FeedbackOutputOverride] = config.control_5_feedbackoutputoverride_period;
+			control_frame_periods_[hardware_interface::Control_6_MotProfAddTrajPoint] = config.control_6_motprofaddtrajpoint_period;
 			conversion_factor_ = config.conversion_factor;
 
 			custom_profile_hz_ = config.custom_profile_hz;
@@ -262,8 +271,13 @@ class TalonCIParams
 			config.status_14_turn_pidf1_period = status_frame_periods_[hardware_interface::Status_14_Turn_PIDF1];
 			config.status_15_firmwareapistatus_period = status_frame_periods_[hardware_interface::Status_15_FirmwareApiStatus];
 
+			config.control_3_general_period = control_frame_periods_[hardware_interface::Control_3_General];
+			config.control_4_advanced_period = control_frame_periods_[hardware_interface::Control_4_Advanced];
+			config.control_5_feedbackoutputoverride_period = control_frame_periods_[hardware_interface::Control_5_FeedbackOutputOverride];
+			config.control_6_motprofaddtrajpoint_period = control_frame_periods_[hardware_interface::Control_6_MotProfAddTrajPoint];
+
 			config.conversion_factor = conversion_factor_;
-			config.custom_profile_hz =   custom_profile_hz_;
+			config.custom_profile_hz = custom_profile_hz_;
 			return config;
 		}
 
@@ -537,6 +551,16 @@ class TalonCIParams
 			return true;
 		}
 
+		bool readControlFramePeriods(ros::NodeHandle &n)
+		{
+			n.getParam("control_3_general_period", control_frame_periods_[hardware_interface::Control_3_General]);
+			n.getParam("control_4_advanced_period", control_frame_periods_[hardware_interface::Control_4_Advanced]);
+			n.getParam("control_5_feedbackoutputoverride_period", control_frame_periods_[hardware_interface::Control_5_FeedbackOutputOverride]);
+			n.getParam("control_6_motprofaddtrajpoint_period", control_frame_periods_[hardware_interface::Control_6_MotProfAddTrajPoint]);
+
+			return true;
+		}
+
 		bool readCustomProfile(ros::NodeHandle &n)
 		{
 			n.getParam("custom_profile_hz", custom_profile_hz_);
@@ -598,6 +622,7 @@ class TalonCIParams
 		double motion_acceleration_;
 		int    motion_profile_trajectory_period_;
 		std::array<int, hardware_interface::Status_Last> status_frame_periods_;
+		std::array<int, hardware_interface::Control_Last> control_frame_periods_;
 
 		double conversion_factor_;
 
@@ -716,6 +741,7 @@ class TalonControllerInterface
 				   params.readCurrentLimits(n) &&
 				   params.readMotionControl(n) &&
 				   params.readStatusFramePeriods(n) &&
+				   params.readControlFramePeriods(n) &&
 				   params.readCustomProfile(n) &&
 				   params.readTalonThread(n);
 		}
@@ -1051,6 +1077,23 @@ class TalonControllerInterface
 			talon_->setMotionProfileTrajectoryPeriod(params_.status_frame_periods_[status_frame]);
 		}
 
+		virtual void setControlFramePeriod(hardware_interface::ControlFrame control_frame, uint8_t period)
+		{
+			if ((control_frame < hardware_interface::Control_3_General) ||
+				(control_frame >= hardware_interface::Control_Last))
+			{
+				ROS_ERROR("Invalid control_frame value in TalonController::setControlFramePeriod()");
+				return;
+			}
+			if (period == params_.control_frame_periods_[control_frame])
+				return;
+			params_.control_frame_periods_[control_frame] = period;
+
+			syncDynamicReconfigure();
+
+			talon_->setMotionProfileTrajectoryPeriod(params_.control_frame_periods_[control_frame]);
+		}
+
 		virtual void setMotionProfileTrajectoryPeriod(int msec)
 		{
 			if (msec == params_.motion_profile_trajectory_period_)
@@ -1365,6 +1408,8 @@ class TalonControllerInterface
 			talon->setMotionProfileTrajectoryPeriod(params.motion_profile_trajectory_period_);
 			for (int i = hardware_interface::Status_1_General; i < hardware_interface::Status_Last; i++)
 				talon->setStatusFramePeriod(static_cast<hardware_interface::StatusFrame>(i), params.status_frame_periods_[i]);
+			for (int i = hardware_interface::Control_3_General; i < hardware_interface::Control_Last; i++)
+				talon->setControlFramePeriod(static_cast<hardware_interface::ControlFrame>(i), params.control_frame_periods_[i]);
 
 			talon->setConversionFactor(params.conversion_factor_);
 

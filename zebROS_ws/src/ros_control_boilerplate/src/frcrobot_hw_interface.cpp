@@ -414,18 +414,6 @@ void FRCRobotHWInterface::init(void)
 			//safeTalonCall(can_talons_[i]->ClearStickyFaults(timeoutMs), "ClearStickyFaults()");
 
 
-#if 0
-			for (int j = hardware_interface::Status_1_General; j < hardware_interface::Status_Last; j++)
-			{
-				auto status_frame = static_cast<hardware_interface::StatusFrame>(j);
-				ctre::phoenix::motorcontrol::StatusFrameEnhanced status_frame_enhanced;
-				if (convertStatusFrame(status_frame, status_frame_enhanced))
-				{
-					int period = can_talons_[i]->GetStatusFramePeriod(status_frame_enhanced, 200);
-					ROS_INFO_STREAM("Status frame period " << i << " = " << period);
-				}
-			}
-#endif
 			// TODO : if the talon doesn't initialize - maybe known
 			// by -1 from firmware version read - somehow tag
 			// the entry in can_talons_[] as uninitialized.
@@ -2460,6 +2448,23 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 			}
 		}*/
 
+		for (int i = hardware_interface::Control_3_General; i < hardware_interface::Control_Last; i++)
+		{
+			uint8_t period;
+			const hardware_interface::ControlFrame control_frame = static_cast<hardware_interface::ControlFrame>(i);
+			if (tc.controlFramePeriodChanged(control_frame, period) && (period != 0))
+			{
+				ctre::phoenix::motorcontrol::ControlFrame control_frame_phoenix;
+				if (convertControlFrame(control_frame, control_frame_phoenix))
+				{
+					talon->SetControlFramePeriod(control_frame_phoenix, period);
+					ts.setControlFramePeriod(control_frame, period);
+					ROS_INFO_STREAM("Updated joint " << joint_id << "=" << can_talon_srx_names_[joint_id] <<" control_frame " << i << "=" << static_cast<int>(period) << "mSec");
+				}
+
+			}
+		}
+
 		{
 #ifdef USE_TALON_MOTION_PROFILE
 			// Lock this so that the motion profile update
@@ -3086,53 +3091,79 @@ bool FRCRobotHWInterface::convertStatusFrame(const hardware_interface::StatusFra
 {
 	switch (input)
 	{
-	case hardware_interface::Status_1_General:
-		output = ctre::phoenix::motorcontrol::Status_1_General;
-		break;
-	case hardware_interface::Status_2_Feedback0:
-		output = ctre::phoenix::motorcontrol::Status_2_Feedback0;
-		break;
-	case hardware_interface::Status_3_Quadrature:
-		output = ctre::phoenix::motorcontrol::Status_3_Quadrature;
-		break;
-	case hardware_interface::Status_4_AinTempVbat:
-		output = ctre::phoenix::motorcontrol::Status_4_AinTempVbat;
-		break;
-	case hardware_interface::Status_6_Misc:
-		output = ctre::phoenix::motorcontrol::Status_6_Misc;
-		break;
-	case hardware_interface::Status_7_CommStatus:
-		output = ctre::phoenix::motorcontrol::Status_7_CommStatus;
-		break;
-	case hardware_interface::Status_8_PulseWidth:
-		output = ctre::phoenix::motorcontrol::Status_8_PulseWidth;
-		break;
-	case hardware_interface::Status_9_MotProfBuffer:
-		output = ctre::phoenix::motorcontrol::Status_9_MotProfBuffer;
-		break;
-	case hardware_interface::Status_10_MotionMagic:
-		output = ctre::phoenix::motorcontrol::Status_10_MotionMagic;
-		break;
-	case hardware_interface::Status_11_UartGadgeteer:
-		output = ctre::phoenix::motorcontrol::Status_11_UartGadgeteer;
-		break;
-	case hardware_interface::Status_12_Feedback1:
-		output = ctre::phoenix::motorcontrol::Status_12_Feedback1;
-		break;
-	case hardware_interface::Status_13_Base_PIDF0:
-		output = ctre::phoenix::motorcontrol::Status_13_Base_PIDF0;
-		break;
-	case hardware_interface::Status_14_Turn_PIDF1:
-		output = ctre::phoenix::motorcontrol::Status_14_Turn_PIDF1;
-		break;
-	case hardware_interface::Status_15_FirmwareApiStatus:
-		output = ctre::phoenix::motorcontrol::Status_15_FirmareApiStatus;
-		break;
-	default:
-		ROS_ERROR("Invalid input in convertStatusFrame");
-		return false;
+		case hardware_interface::Status_1_General:
+			output = ctre::phoenix::motorcontrol::Status_1_General;
+			break;
+		case hardware_interface::Status_2_Feedback0:
+			output = ctre::phoenix::motorcontrol::Status_2_Feedback0;
+			break;
+		case hardware_interface::Status_3_Quadrature:
+			output = ctre::phoenix::motorcontrol::Status_3_Quadrature;
+			break;
+		case hardware_interface::Status_4_AinTempVbat:
+			output = ctre::phoenix::motorcontrol::Status_4_AinTempVbat;
+			break;
+		case hardware_interface::Status_6_Misc:
+			output = ctre::phoenix::motorcontrol::Status_6_Misc;
+			break;
+		case hardware_interface::Status_7_CommStatus:
+			output = ctre::phoenix::motorcontrol::Status_7_CommStatus;
+			break;
+		case hardware_interface::Status_8_PulseWidth:
+			output = ctre::phoenix::motorcontrol::Status_8_PulseWidth;
+			break;
+		case hardware_interface::Status_9_MotProfBuffer:
+			output = ctre::phoenix::motorcontrol::Status_9_MotProfBuffer;
+			break;
+		case hardware_interface::Status_10_MotionMagic:
+			output = ctre::phoenix::motorcontrol::Status_10_MotionMagic;
+			break;
+		case hardware_interface::Status_11_UartGadgeteer:
+			output = ctre::phoenix::motorcontrol::Status_11_UartGadgeteer;
+			break;
+		case hardware_interface::Status_12_Feedback1:
+			output = ctre::phoenix::motorcontrol::Status_12_Feedback1;
+			break;
+		case hardware_interface::Status_13_Base_PIDF0:
+			output = ctre::phoenix::motorcontrol::Status_13_Base_PIDF0;
+			break;
+		case hardware_interface::Status_14_Turn_PIDF1:
+			output = ctre::phoenix::motorcontrol::Status_14_Turn_PIDF1;
+			break;
+		case hardware_interface::Status_15_FirmwareApiStatus:
+			output = ctre::phoenix::motorcontrol::Status_15_FirmareApiStatus;
+			break;
+		default:
+			ROS_ERROR("Invalid input in convertStatusFrame");
+			return false;
 	}
 	return true;
+}
+
+bool FRCRobotHWInterface::convertControlFrame(const hardware_interface::ControlFrame input, ctre::phoenix::motorcontrol::ControlFrame &output)
+{
+	switch (input)
+	{
+		case hardware_interface::Control_3_General:
+			output = ctre::phoenix::motorcontrol::Control_3_General;
+			break;
+		case hardware_interface::Control_4_Advanced:
+			output = ctre::phoenix::motorcontrol::Control_4_Advanced;
+			break;
+#if 0 // There's no SetControlFramePeriod which takes an enhanced ControlFrame, so this is out for now
+		case hardware_interface::Control_5_FeedbackOutputOverride:
+			output = ctre::phoenix::motorcontrol::Control_5_FeedbackOutputOverride_;
+			break;
+#endif
+		case hardware_interface::Control_6_MotProfAddTrajPoint:
+			output = ctre::phoenix::motorcontrol::Control_6_MotProfAddTrajPoint;
+			break;
+		default:
+			ROS_ERROR("Invalid input in convertControlFrame");
+			return false;
+	}
+	return true;
+
 }
 
 } // namespace

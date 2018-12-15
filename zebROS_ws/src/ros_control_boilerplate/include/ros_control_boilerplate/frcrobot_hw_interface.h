@@ -246,6 +246,8 @@ class FRCRobotHWInterface : public ros_control_boilerplate::FRCRobotInterface
 			ctre::phoenix::motorcontrol::VelocityMeasPeriod &output_v_m_period);
 		bool convertStatusFrame(const hardware_interface::StatusFrame input,
 			ctre::phoenix::motorcontrol::StatusFrameEnhanced &output);
+		bool convertControlFrame(const hardware_interface::ControlFrame input,
+			ctre::phoenix::motorcontrol::ControlFrame &output);
 
 		bool safeTalonCall(ctre::phoenix::ErrorCode error_code,
 				const std::string &talon_method_name);

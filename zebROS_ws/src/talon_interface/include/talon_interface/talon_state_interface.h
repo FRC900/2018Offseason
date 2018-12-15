@@ -132,6 +132,19 @@ static const uint8_t status_13_base_pidf0_default = 160;
 static const uint8_t status_14_turn_pidf1_default = 250;
 static const uint8_t status_15_firmwareapistatus_default = 160;
 
+enum ControlFrame
+{
+	Control_3_General,
+	Control_4_Advanced,
+	Control_5_FeedbackOutputOverride,
+	Control_6_MotProfAddTrajPoint,
+	Control_Last
+};
+static const uint8_t control_3_general_default = 0;
+static const uint8_t control_4_advanced_default = 0;
+static const uint8_t control_5_feedbackoutputoverride_default = 0;
+static const uint8_t control_6_motprofaddtrajpoint_default = 0;
+
 // Match up with CTRE Motion profile struct
 enum SetValueMotionProfile
 {
@@ -321,6 +334,11 @@ class TalonHWState
 			status_frame_periods_[Status_13_Base_PIDF0] = status_13_base_pidf0_default;
 			status_frame_periods_[Status_14_Turn_PIDF1] = status_14_turn_pidf1_default;
 			status_frame_periods_[Status_15_FirmwareApiStatus] = status_15_firmwareapistatus_default;
+
+			control_frame_periods_[Control_3_General] = control_3_general_default;
+			control_frame_periods_[Control_4_Advanced] = control_4_advanced_default;
+			control_frame_periods_[Control_5_FeedbackOutputOverride] = control_5_feedbackoutputoverride_default;
+			control_frame_periods_[Control_6_MotProfAddTrajPoint] = control_6_motprofaddtrajpoint_default;
 		}
 
 		double getSetpoint(void) const
@@ -878,6 +896,23 @@ class TalonHWState
 			return 0;
 		}
 
+		void setControlFramePeriod(ControlFrame control_frame, uint8_t period)
+		{
+			if ((control_frame >= Control_3_General) && (control_frame < Control_Last))
+				control_frame_periods_[control_frame] = period;
+			else
+				ROS_ERROR("Invalid control_frame value passed to TalonHWState::setControlFramePeriod()");
+		}
+
+		uint8_t getControlFramePeriod(ControlFrame control_frame) const
+		{
+			if ((control_frame >= Control_3_General) && (control_frame < Control_Last))
+				return control_frame_periods_[control_frame];
+
+			ROS_ERROR("Invalid control_frame value passed to TalonHWState::setControlFramePeriod()");
+			return 0;
+		}
+
 		void setMotionProfileTrajectoryPeriod(int msec)
 		{
 			motion_profile_trajectory_period_ = msec;
@@ -1206,6 +1241,7 @@ class TalonHWState
 		int motion_profile_trajectory_period_;
 
 		std::array<uint8_t, Status_Last> status_frame_periods_;
+		std::array<uint8_t, Control_Last> control_frame_periods_;
 
 		unsigned int faults_;
 		unsigned int sticky_faults_;
