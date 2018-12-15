@@ -1308,11 +1308,9 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 		static double time_sum_nt = 0.;
 		static double time_sum_joystick = 0.;
 		static double time_sum_match_data = 0.;
-		static double time_sum_rcs = 0.;
 		static unsigned iteration_count_nt = 0;
 		static unsigned iteration_count_joystick = 0;
 		static unsigned iteration_count_match_data = 0;
-		static unsigned iteration_count_rcs = 0;
 
 		const ros::Time time_now_t = ros::Time::now();
 		const double match_data_publish_rate = 1.1;
@@ -1564,8 +1562,14 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 			((double)end_time.tv_nsec - (double)start_timespec.tv_nsec) / 1000000000.;
 		iteration_count_match_data += 1;
 
-		start_timespec = end_time;
 
+		ROS_INFO_STREAM_THROTTLE(2, "hw_keepalive nt = " << time_sum_nt / iteration_count_nt
+				<< " joystick = " << time_sum_joystick / iteration_count_joystick
+				<< " match_data = " << time_sum_match_data / iteration_count_match_data);
+	}
+
+	if (run_hal_robot_)
+	{
 		int32_t status = 0;
 		robot_controller_state_.SetFPGAVersion(HAL_GetFPGAVersion(&status));
 		robot_controller_state_.SetFPGARevision(HAL_GetFPGARevision(&status));
@@ -1601,16 +1605,6 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 		robot_controller_state_.SetCANTxFullCount(tx_full_count);
 		robot_controller_state_.SetCANReceiveErrorCount(receive_error_count);
 		robot_controller_state_.SetCANTransmitErrorCount(transmit_error_count);
-		clock_gettime(CLOCK_MONOTONIC, &end_time);
-		time_sum_rcs +=
-			((double)end_time.tv_sec -  (double)start_timespec.tv_sec) +
-			((double)end_time.tv_nsec - (double)start_timespec.tv_nsec) / 1000000000.;
-		iteration_count_rcs += 1;
-
-		ROS_INFO_STREAM_THROTTLE(2, "hw_keepalive nt = " << time_sum_nt / iteration_count_nt
-				<< " joystick = " << time_sum_joystick / iteration_count_joystick
-				<< " match_data = " << time_sum_match_data / iteration_count_match_data
-				<< " rcs = " << time_sum_rcs / iteration_count_rcs);
 	}
 
 	for (std::size_t joint_id = 0; joint_id < num_can_talon_srxs_; ++joint_id)
