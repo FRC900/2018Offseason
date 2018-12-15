@@ -413,6 +413,19 @@ void FRCRobotHWInterface::init(void)
 			// Clear sticky faults
 			//safeTalonCall(can_talons_[i]->ClearStickyFaults(timeoutMs), "ClearStickyFaults()");
 
+
+#if 0
+			for (int j = hardware_interface::Status_1_General; j < hardware_interface::Status_Last; j++)
+			{
+				auto status_frame = static_cast<hardware_interface::StatusFrame>(j);
+				ctre::phoenix::motorcontrol::StatusFrameEnhanced status_frame_enhanced;
+				if (convertStatusFrame(status_frame, status_frame_enhanced))
+				{
+					int period = can_talons_[i]->GetStatusFramePeriod(status_frame_enhanced, 200);
+					ROS_INFO_STREAM("Status frame period " << i << " = " << period);
+				}
+			}
+#endif
 			// TODO : if the talon doesn't initialize - maybe known
 			// by -1 from firmware version read - somehow tag
 			// the entry in can_talons_[] as uninitialized.
@@ -742,12 +755,16 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 	ros::Time last_status_4_time = ros::Time::now();
 	ros::Duration status_4_period;
 
+	ros::Time last_status_9_time = ros::Time::now();
+	ros::Duration status_9_period;
+
 	ros::Time last_status_10_time = ros::Time::now();
 	ros::Duration status_10_period;
 
 	ros::Time last_status_13_time = ros::Time::now();
 	ros::Duration status_13_period;
 
+	// TODO = not sure about this timing
 	ros::Time last_sensor_collection_time = ros::Time::now();
 	ros::Duration sensor_collection_period;
 
@@ -796,6 +813,7 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 			ros::Duration status_1_period = ros::Duration(state->getStatusFramePeriod(hardware_interface::Status_1_General));
 			ros::Duration status_2_period = ros::Duration(state->getStatusFramePeriod(hardware_interface::Status_2_Feedback0));
 			ros::Duration status_4_period = ros::Duration(state->getStatusFramePeriod(hardware_interface::Status_4_AinTempVbat));
+			ros::Duration status_9_period = ros::Duration(state->getStatusFramePeriod(hardware_interface::Status_9_MotProfBuffer));
 			ros::Duration status_10_period = ros::Duration(state->getStatusFramePeriod(hardware_interface::Status_10_MotionMagic));
 			ros::Duration status_13_period = ros::Duration(state->getStatusFramePeriod(hardware_interface::Status_13_Base_PIDF0));
 			ros::Duration sensor_collection_period = ros::Duration(.1); // TODO :fix me
@@ -973,11 +991,11 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 			(talon_mode == hardware_interface::TalonMode_MotionProfile) ||
 			(talon_mode == hardware_interface::TalonMode_MotionMagic))
 		{
-			const double closed_loop_scale = getConversionFactor(encoder_ticks_per_rotation, encoder_feedback, talon_mode)* conversion_factor;
-
 			// PIDF0 Status 13 - 160 mSec default
 			if ((last_status_13_time + status_13_period) < ros_time_now)
 			{
+				const double closed_loop_scale = getConversionFactor(encoder_ticks_per_rotation, encoder_feedback, talon_mode)* conversion_factor;
+
 				closed_loop_error = talon->GetClosedLoopError(pidIdx) * closed_loop_scale;
 				safeTalonCall(talon->GetLastError(), "GetClosedLoopError");
 
@@ -1016,29 +1034,28 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 		double active_trajectory_position;
 		double active_trajectory_velocity;
 		double active_trajectory_heading;
-		int    mp_top_level_buffer_count;
-		if ((talon_mode == hardware_interface::TalonMode_MotionProfile) ||
-			(talon_mode == hardware_interface::TalonMode_MotionMagic))
+		// Targets Status 10 - 160 mSec default
+		if (((talon_mode == hardware_interface::TalonMode_MotionProfile) ||
+			 (talon_mode == hardware_interface::TalonMode_MotionMagic))  &&
+			((last_status_10_time + status_10_period) < ros_time_now) )
 		{
-			// Targets Status 10 - 160 mSec default
-			if ((last_status_10_time + status_10_period) < ros_time_now)
-			{
-				active_trajectory_position = talon->GetActiveTrajectoryPosition() * radians_scale;
-				safeTalonCall(talon->GetLastError(), "GetActiveTrajectoryPosition");
+			active_trajectory_position = talon->GetActiveTrajectoryPosition() * radians_scale;
+			safeTalonCall(talon->GetLastError(), "GetActiveTrajectoryPosition");
 
-				active_trajectory_velocity = talon->GetActiveTrajectoryVelocity() * radians_per_second_scale;
-				safeTalonCall(talon->GetLastError(), "GetActiveTrajectoryVelocity");
+			active_trajectory_velocity = talon->GetActiveTrajectoryVelocity() * radians_per_second_scale;
+			safeTalonCall(talon->GetLastError(), "GetActiveTrajectoryVelocity");
 
-				active_trajectory_heading = talon->GetActiveTrajectoryHeading() * 2. * M_PI / 360.; //returns in degrees
-				safeTalonCall(talon->GetLastError(), "GetActiveTrajectoryHeading");
+			active_trajectory_heading = talon->GetActiveTrajectoryHeading() * 2. * M_PI / 360.; //returns in degrees
+			safeTalonCall(talon->GetLastError(), "GetActiveTrajectoryHeading");
 
-				update_status_10 = true;
-				last_status_10_time = ros_time_now;
-			}
+			update_status_10 = true;
+			last_status_10_time = ros_time_now;
 		}
 
-		// TODO : timing on this? Maybe make it related to MP point period?
-		if (talon_mode == hardware_interface::TalonMode_MotionProfile)
+		bool update_status_9 = false;
+		int  mp_top_level_buffer_count;
+		if ((talon_mode == hardware_interface::TalonMode_MotionProfile) &&
+			(last_status_9_time + status_9_period) < ros_time_now)
 		{
 			mp_top_level_buffer_count = talon->GetMotionProfileTopLevelBufferCount();
 			ctre::phoenix::motion::MotionProfileStatus talon_status;
@@ -1055,7 +1072,8 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 			internal_status.profileSlotSelect1 = talon_status.profileSlotSelect1;
 			internal_status.outputEnable = static_cast<hardware_interface::SetValueMotionProfile>(talon_status.outputEnable);
 			internal_status.timeDurMs = talon_status.timeDurMs;
-			update_mp_status = true;
+			update_status_9 = true;
+			last_status_9_time = ros_time_now;
 		}
 
 		// SensorCollection - 100msec default
@@ -1082,7 +1100,7 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 			// the middle of a write
 			std::lock_guard<std::mutex> l(*mutex);
 
-			if (update_mp_status)
+			if (update_mp_status || update_status_9)
 				state->setMotionProfileStatus(internal_status);
 
 			if (update_status_1)

@@ -88,20 +88,20 @@ class TalonCIParams
 
 			enable_read_thread_(true)
 		{
-			status_frame_periods_[hardware_interface::Status_1_General] = 10;
-			status_frame_periods_[hardware_interface::Status_2_Feedback0] = 20;
-			status_frame_periods_[hardware_interface::Status_3_Quadrature] = 160;
-			status_frame_periods_[hardware_interface::Status_4_AinTempVbat] = 160;
-			status_frame_periods_[hardware_interface::Status_6_Misc] = 0;
-			status_frame_periods_[hardware_interface::Status_7_CommStatus] = 0;
-			status_frame_periods_[hardware_interface::Status_8_PulseWidth] = 160;
-			status_frame_periods_[hardware_interface::Status_9_MotProfBuffer] = 0;
-			status_frame_periods_[hardware_interface::Status_10_MotionMagic] = 160;
-			status_frame_periods_[hardware_interface::Status_11_UartGadgeteer] = 0;
-			status_frame_periods_[hardware_interface::Status_12_Feedback1] = 0;
-			status_frame_periods_[hardware_interface::Status_13_Base_PIDF0] = 160;
-			status_frame_periods_[hardware_interface::Status_14_Turn_PIDF1] = 0;
-			status_frame_periods_[hardware_interface::Status_15_FirmwareApiStatus] = 0;
+			status_frame_periods_[hardware_interface::Status_1_General] = hardware_interface::status_1_general_default;
+			status_frame_periods_[hardware_interface::Status_2_Feedback0] = hardware_interface::status_2_feedback0_default;
+			status_frame_periods_[hardware_interface::Status_3_Quadrature] = hardware_interface::status_3_quadrature_default;
+			status_frame_periods_[hardware_interface::Status_4_AinTempVbat] = hardware_interface::status_4_aintempvbat_default;
+			status_frame_periods_[hardware_interface::Status_6_Misc] = hardware_interface::status_6_misc_default;
+			status_frame_periods_[hardware_interface::Status_7_CommStatus] = hardware_interface::status_7_commstatus_default;
+			status_frame_periods_[hardware_interface::Status_8_PulseWidth] = hardware_interface::status_8_pulsewidth_default;
+			status_frame_periods_[hardware_interface::Status_9_MotProfBuffer] = hardware_interface::status_9_motprofbuffer_default;
+			status_frame_periods_[hardware_interface::Status_10_MotionMagic] = hardware_interface::status_10_motionmagic_default;
+			status_frame_periods_[hardware_interface::Status_11_UartGadgeteer] = hardware_interface::status_11_uartgadgeteer_default;
+			status_frame_periods_[hardware_interface::Status_12_Feedback1] = hardware_interface::status_12_feedback1_default;
+			status_frame_periods_[hardware_interface::Status_13_Base_PIDF0] = hardware_interface::status_13_base_pidf0_default;
+			status_frame_periods_[hardware_interface::Status_14_Turn_PIDF1] = hardware_interface::status_14_turn_pidf1_default;
+			status_frame_periods_[hardware_interface::Status_15_FirmwareApiStatus] = hardware_interface::status_15_firmwareapistatus_default;
 		}
 
 		// Update params set by a dynamic reconfig config

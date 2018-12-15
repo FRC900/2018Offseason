@@ -117,6 +117,20 @@ enum StatusFrame
 	Status_15_FirmwareApiStatus,
 	Status_Last
 };
+static const uint8_t status_1_general_default = 10;
+static const uint8_t status_2_feedback0_default = 20;
+static const uint8_t status_3_quadrature_default = 160;
+static const uint8_t status_4_aintempvbat_default = 160;
+static const uint8_t status_6_misc_default = 0;
+static const uint8_t status_7_commstatus_default = 0;
+static const uint8_t status_8_pulsewidth_default = 160;
+static const uint8_t status_9_motprofbuffer_default = 50;
+static const uint8_t status_10_motionmagic_default = 160;
+static const uint8_t status_11_uartgadgeteer_default = 250;
+static const uint8_t status_12_feedback1_default = 250;
+static const uint8_t status_13_base_pidf0_default = 160;
+static const uint8_t status_14_turn_pidf1_default = 250;
+static const uint8_t status_15_firmwareapistatus_default = 160;
 
 // Match up with CTRE Motion profile struct
 enum SetValueMotionProfile
@@ -293,20 +307,20 @@ class TalonHWState
 			// control of read thread
 			enable_read_thread_(true)
 		{
-			status_frame_periods_[Status_1_General] = 10;
-			status_frame_periods_[Status_2_Feedback0] = 20;
-			status_frame_periods_[Status_3_Quadrature] = 160;
-			status_frame_periods_[Status_4_AinTempVbat] = 160;
-			status_frame_periods_[Status_6_Misc] = 0;
-			status_frame_periods_[Status_7_CommStatus] = 0;
-			status_frame_periods_[Status_8_PulseWidth] = 160;
-			status_frame_periods_[Status_9_MotProfBuffer] = 0;
-			status_frame_periods_[Status_10_MotionMagic] = 160;
-			status_frame_periods_[Status_11_UartGadgeteer] = 0;
-			status_frame_periods_[Status_12_Feedback1] = 0;
-			status_frame_periods_[Status_13_Base_PIDF0] = 160;
-			status_frame_periods_[Status_14_Turn_PIDF1] = 0;
-			status_frame_periods_[Status_15_FirmwareApiStatus] = 0;
+			status_frame_periods_[Status_1_General] = status_1_general_default;
+			status_frame_periods_[Status_2_Feedback0] = status_2_feedback0_default;
+			status_frame_periods_[Status_3_Quadrature] = status_3_quadrature_default;
+			status_frame_periods_[Status_4_AinTempVbat] = status_4_aintempvbat_default;
+			status_frame_periods_[Status_6_Misc] = status_6_misc_default;
+			status_frame_periods_[Status_7_CommStatus] = status_7_commstatus_default;
+			status_frame_periods_[Status_8_PulseWidth] = status_8_pulsewidth_default;
+			status_frame_periods_[Status_9_MotProfBuffer] = status_9_motprofbuffer_default;
+			status_frame_periods_[Status_10_MotionMagic] = status_10_motionmagic_default;
+			status_frame_periods_[Status_11_UartGadgeteer] = status_11_uartgadgeteer_default;
+			status_frame_periods_[Status_12_Feedback1] = status_12_feedback1_default;
+			status_frame_periods_[Status_13_Base_PIDF0] = status_13_base_pidf0_default;
+			status_frame_periods_[Status_14_Turn_PIDF1] = status_14_turn_pidf1_default;
+			status_frame_periods_[Status_15_FirmwareApiStatus] = status_15_firmwareapistatus_default;
 		}
 
 		double getSetpoint(void) const
