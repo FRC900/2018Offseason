@@ -23,9 +23,4 @@
 			output="screen" args="spawn talon9_controller talon_state_controller joint_state_controller do2_controller joint_state_listener_controller pdp_state_controller pcm_state_controller robot_code_ready_controller" />
 	</group>
 
-    <!-- RIO Nodes -->
-    <machine name="roboRIO" address="10.9.0.2" env-loader="/home/admin/2018Offseason/zebROS_ws/ROSJetsonMaster.sh" user="admin" password="admin" default="true"/>
-    <include file="$(find ros_control_boilerplate)/launch/robot_in_a_box_rio.launch" pass_all_args="true"/>
-	
-
 </launch>
