@@ -156,12 +156,15 @@ namespace frcrobot_control
 const int pidIdx = 0; //0 for primary closed-loop, 1 for cascaded closed-loop
 const int timeoutMs = 0; //If nonzero, function will wait for config success and report an error if it times out. If zero, no blocking or checking is performed
 
+// Constructor. Pass appropriate params to base class constructor,
+// initialze robot_ pointer to NULL
 FRCRobotHWInterface::FRCRobotHWInterface(ros::NodeHandle &nh, urdf::Model *urdf_model)
 	: ros_control_boilerplate::FRCRobotInterface(nh, urdf_model)
 	, robot_(nullptr)
 {
 }
 
+// Clean up whatever we've created in init()
 FRCRobotHWInterface::~FRCRobotHWInterface()
 {
 	motion_profile_thread_.join();
@@ -187,9 +190,6 @@ FRCRobotHWInterface::~FRCRobotHWInterface()
 		pcm_thread_[i].join();
 	for (size_t i = 0; i < num_pdps_; i++)
 		pdp_thread_[i].join();
-
-	if (run_hal_robot_)
-		robot_controller_state_thread_.join();
 }
 
 /*
@@ -236,7 +236,7 @@ void FRCRobotHWInterface::process_motion_profile_buffer_thread(double hz)
 				// have points to write from their top-level buffer
 				//ROS_INFO_STREAM("top count: " << can_talons_[i]->GetMotionProfileTopLevelBufferCount());
 				//ROS_WARN_STREAM("id: " << i << " top size: " << mp_status.topBufferCnt << " running: " << (*can_talons_mp_running_)[i].load(std::memory_order_relaxed));
-				if ((mp_status.topBufferCnt && mp_status.btmBufferCnt < 127) ||  
+				if ((mp_status.topBufferCnt && mp_status.btmBufferCnt < 127) ||
 					can_talons_mp_running_[i]->load(std::memory_order_relaxed))
 				{
 					if (!set_frame_period[i])
@@ -357,11 +357,11 @@ void FRCRobotHWInterface::init(void)
 	// used by both the real and sim interfaces
 	FRCRobotInterface::init();
 
-	// Make sure to initialize WPIlib code before creating
-	// a CAN Talon object to avoid NIFPGA: Resource not initialized
-	// errors? See https://www.chiefdelphi.com/forums/showpost.php?p=1640943&postcount=3
 	if (run_hal_robot_)
 	{
+		// Make sure to initialize WPIlib code before creating
+		// a CAN Talon object to avoid NIFPGA: Resource not initialized
+		// errors? See https://www.chiefdelphi.com/forums/showpost.php?p=1640943&postcount=3
 		robot_.reset(new ROSIterativeRobot());
 		realtime_pub_match_data_.reset(new realtime_tools::RealtimePublisher<ros_control_boilerplate::MatchSpecificData>(nh_, "match_data", 1));
 		realtime_pub_nt_.reset(new realtime_tools::RealtimePublisher<ros_control_boilerplate::AutoMode>(nh_, "autonomous_mode", 1));
@@ -378,6 +378,8 @@ void FRCRobotHWInterface::init(void)
 	}
 	else
 	{
+		// This is for non Rio-based robots.  Call init for the wpilib HAL code
+		// we've "borrowed" before using them
 		//hal::InitializeCAN();
 		hal::init::InitializeCANAPI();
 		hal::init::InitializeCompressor();
@@ -431,7 +433,7 @@ void FRCRobotHWInterface::init(void)
 		else
 		{
 			// Need to have a CAN talon object created on the Rio
-			// for them to be enabled.  Don't want to do anything with
+			// for that talon to be enabled.  Don't want to do anything with
 			// them, though, so the local flags should be set to false
 			// which means both reads and writes will be skipped
 			if (run_hal_robot_)
@@ -460,6 +462,8 @@ void FRCRobotHWInterface::init(void)
 			nidec_brushlesses_.push_back(std::make_shared<frc::NidecBrushless>(nidec_brushless_pwm_channels_[i], nidec_brushless_dio_channels_[i]));
 			nidec_brushlesses_[i]->SetInverted(nidec_brushless_inverts_[i]);
 		}
+		else
+			nidec_brushlesses_.push_back(nullptr);
 	}
 	for (size_t i = 0; i < num_digital_inputs_; i++)
 	{
@@ -633,6 +637,8 @@ void FRCRobotHWInterface::init(void)
 		else
 			compressors_.push_back(HAL_kInvalidHandle);
 	}
+
+	// No real init needed here, just report the config loaded for them
 	for (size_t i = 0; i < num_rumbles_; i++)
 		ROS_INFO_STREAM_NAMED("frcrobot_hw_interface",
 							  "Loading joint " << i << "=" << rumble_names_[i] <<
@@ -647,7 +653,6 @@ void FRCRobotHWInterface::init(void)
 							  " local = " << pdp_locals_[i] <<
 							  " as PDP");
 
-		// 2019 version of PDP stuff
 		if (pdp_locals_[i])
 		{
 			if (!HAL_CheckPDPModule(pdp_modules_[i]))
@@ -666,11 +671,10 @@ void FRCRobotHWInterface::init(void)
 				}
 				else
 				{
-					HAL_Report(HALUsageReporting::kResourceType_PDP, pdp_modules_[i]);
-
 					pdp_read_thread_mutexes_.push_back(std::make_shared<std::mutex>());
 					pdp_thread_.push_back(std::thread(&FRCRobotHWInterface::pdp_read_thread, this,
 										  pdps_[i], pdp_read_thread_state_[i], pdp_read_thread_mutexes_[i]));
+					HAL_Report(HALUsageReporting::kResourceType_PDP, pdp_modules_[i]);
 				}
 			}
 		}
@@ -678,6 +682,7 @@ void FRCRobotHWInterface::init(void)
 			pdps_.push_back(HAL_kInvalidHandle);
 	}
 
+	// TODO : better support for multiple joysticks?
 	bool started_pub = false;
 	for (size_t i = 0; i < num_joysticks_; i++)
 	{
@@ -712,12 +717,14 @@ void FRCRobotHWInterface::init(void)
 		motion_profile_mutexes_.push_back(std::make_shared<std::mutex>());
 	motion_profile_thread_ = std::thread(&FRCRobotHWInterface::process_motion_profile_buffer_thread, this, 100.);
 
-	if (run_hal_robot_)
-		robot_controller_state_thread_ = std::thread(&FRCRobotHWInterface::robot_controller_state_read_thread, this);
-
 	ROS_INFO_NAMED("frcrobot_hw_interface", "FRCRobotHWInterface Ready.");
 }
 
+// Each talon gets their own read thread. The thread loops at a fixed rate
+// reading all state from that talon. The state is copied to a shared buffer
+// at the end of each iteration of the loop.
+// The code tries to only read status when we expect there to be new
+// data given the update rate of various CAN messages.
 void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motorcontrol::can::TalonSRX> talon,
 											std::shared_ptr<hardware_interface::TalonHWState> state,
 											std::shared_ptr<std::atomic<bool>> mp_written,
@@ -1150,6 +1157,11 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 	}
 }
 
+// The PDP reads happen in their own thread. This thread
+// loops at 20Hz to match the update rate of PDP CAN
+// status messages.  Each iteration, data read from the
+// PDP is copied to a state buffer shared with the main read
+// thread.
 void FRCRobotHWInterface::pdp_read_thread(int32_t pdp,
 		std::shared_ptr<hardware_interface::PDPHWState> state,
 		std::shared_ptr<std::mutex> mutex)
@@ -1198,73 +1210,11 @@ void FRCRobotHWInterface::pdp_read_thread(int32_t pdp,
 	}
 }
 
-
-void FRCRobotHWInterface::robot_controller_state_read_thread(void)
-{
-	ros::Rate r(20); // TODO : Tune me?
-	hardware_interface::RobotControllerState rcs;
-	int32_t status = 0;
-	double time_sum = 0.;
-	unsigned iteration_count = 0;
-	while (ros::ok())
-	{
-		struct timespec start_time;
-		clock_gettime(CLOCK_MONOTONIC, &start_time);
-#ifdef USE_TALON_MOTION_PROFILE
-		if (!profile_is_live_.load(std::memory_order_relaxed) &&
-			!writing_points_.load(std::memory_order_relaxed))
-#endif
-		{
-			rcs.SetFPGAVersion(HAL_GetFPGAVersion(&status));
-			rcs.SetFPGARevision(HAL_GetFPGARevision(&status));
-			rcs.SetFPGATime(HAL_GetFPGATime(&status));
-			rcs.SetUserButton(HAL_GetFPGAButton(&status));
-			rcs.SetIsSysActive(HAL_GetSystemActive(&status));
-			rcs.SetIsBrownedOut(HAL_GetBrownedOut(&status));
-			rcs.SetInputVoltage(HAL_GetVinVoltage(&status));
-			rcs.SetInputCurrent(HAL_GetVinCurrent(&status));
-			rcs.SetVoltage3V3(HAL_GetUserVoltage3V3(&status));
-			rcs.SetCurrent3V3(HAL_GetUserCurrent3V3(&status));
-			rcs.SetEnabled3V3(HAL_GetUserActive3V3(&status));
-			rcs.SetFaultCount3V3(HAL_GetUserCurrentFaults3V3(&status));
-			rcs.SetVoltage5V(HAL_GetUserVoltage5V(&status));
-			rcs.SetCurrent5V(HAL_GetUserCurrent5V(&status));
-			rcs.SetEnabled5V(HAL_GetUserActive5V(&status));
-			rcs.SetFaultCount5V(HAL_GetUserCurrentFaults5V(&status));
-			rcs.SetVoltage6V(HAL_GetUserVoltage6V(&status));
-			rcs.SetCurrent6V(HAL_GetUserCurrent6V(&status));
-			rcs.SetEnabled6V(HAL_GetUserActive6V(&status));
-			rcs.SetFaultCount6V(HAL_GetUserCurrentFaults6V(&status));
-			float percent_bus_utilization;
-			uint32_t bus_off_count;
-			uint32_t tx_full_count;
-			uint32_t receive_error_count;
-			uint32_t transmit_error_count;
-			HAL_CAN_GetCANStatus(&percent_bus_utilization, &bus_off_count,
-					&tx_full_count, &receive_error_count,
-					&transmit_error_count, &status);
-
-			rcs.SetCANPercentBusUtilization(percent_bus_utilization);
-			rcs.SetCANBusOffCount(bus_off_count);
-			rcs.SetCANTxFullCount(tx_full_count);
-			rcs.SetCANReceiveErrorCount(receive_error_count);
-			rcs.SetCANTransmitErrorCount(transmit_error_count);
-			{
-				std::lock_guard<std::mutex> l(robot_controller_state_mutex_);
-				shared_robot_controller_state_ = rcs;
-			}
-		}
-		struct timespec end_time;
-		clock_gettime(CLOCK_MONOTONIC, &end_time);
-		time_sum +=
-			((double)end_time.tv_sec -  (double)start_time.tv_sec) +
-			((double)end_time.tv_nsec - (double)start_time.tv_nsec) / 1000000000.;
-		iteration_count += 1;
-		ROS_INFO_STREAM_THROTTLE(2, "robot_controller_read = " << time_sum / iteration_count);
-		r.sleep();
-	}
-}
-
+// The PCM state reads happen in their own thread. This thread
+// loops at 20Hz to match the update rate of PCM CAN
+// status messages.  Each iteration, data read from the
+// PCM is copied to a state buffer shared with the main read
+// thread.
 void FRCRobotHWInterface::pcm_read_thread(HAL_CompressorHandle pcm, int32_t pcm_id,
 										  std::shared_ptr<hardware_interface::PCMState> state,
 										  std::shared_ptr<std::mutex> mutex)
@@ -1352,9 +1302,11 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 		static double time_sum_nt = 0.;
 		static double time_sum_joystick = 0.;
 		static double time_sum_match_data = 0.;
+		static double time_sum_rcs = 0.;
 		static unsigned iteration_count_nt = 0;
 		static unsigned iteration_count_joystick = 0;
 		static unsigned iteration_count_match_data = 0;
+		static unsigned iteration_count_rcs = 0;
 
 		const ros::Time time_now_t = ros::Time::now();
 		const double match_data_publish_rate = 1.1;
@@ -1600,16 +1552,59 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 				game_specific_message_seen_ = false;
 			}
 		}
-
 		clock_gettime(CLOCK_MONOTONIC, &end_time);
 		time_sum_match_data +=
 			((double)end_time.tv_sec -  (double)start_timespec.tv_sec) +
 			((double)end_time.tv_nsec - (double)start_timespec.tv_nsec) / 1000000000.;
 		iteration_count_match_data += 1;
 
+		start_timespec = end_time;
+
+		int32_t status = 0;
+		robot_controller_state_.SetFPGAVersion(HAL_GetFPGAVersion(&status));
+		robot_controller_state_.SetFPGARevision(HAL_GetFPGARevision(&status));
+		robot_controller_state_.SetFPGATime(HAL_GetFPGATime(&status));
+		robot_controller_state_.SetUserButton(HAL_GetFPGAButton(&status));
+		robot_controller_state_.SetIsSysActive(HAL_GetSystemActive(&status));
+		robot_controller_state_.SetIsBrownedOut(HAL_GetBrownedOut(&status));
+		robot_controller_state_.SetInputVoltage(HAL_GetVinVoltage(&status));
+		robot_controller_state_.SetInputCurrent(HAL_GetVinCurrent(&status));
+		robot_controller_state_.SetVoltage3V3(HAL_GetUserVoltage3V3(&status));
+		robot_controller_state_.SetCurrent3V3(HAL_GetUserCurrent3V3(&status));
+		robot_controller_state_.SetEnabled3V3(HAL_GetUserActive3V3(&status));
+		robot_controller_state_.SetFaultCount3V3(HAL_GetUserCurrentFaults3V3(&status));
+		robot_controller_state_.SetVoltage5V(HAL_GetUserVoltage5V(&status));
+		robot_controller_state_.SetCurrent5V(HAL_GetUserCurrent5V(&status));
+		robot_controller_state_.SetEnabled5V(HAL_GetUserActive5V(&status));
+		robot_controller_state_.SetFaultCount5V(HAL_GetUserCurrentFaults5V(&status));
+		robot_controller_state_.SetVoltage6V(HAL_GetUserVoltage6V(&status));
+		robot_controller_state_.SetCurrent6V(HAL_GetUserCurrent6V(&status));
+		robot_controller_state_.SetEnabled6V(HAL_GetUserActive6V(&status));
+		robot_controller_state_.SetFaultCount6V(HAL_GetUserCurrentFaults6V(&status));
+		float percent_bus_utilization;
+		uint32_t bus_off_count;
+		uint32_t tx_full_count;
+		uint32_t receive_error_count;
+		uint32_t transmit_error_count;
+		HAL_CAN_GetCANStatus(&percent_bus_utilization, &bus_off_count,
+				&tx_full_count, &receive_error_count,
+				&transmit_error_count, &status);
+
+		robot_controller_state_.SetCANPercentBusUtilization(percent_bus_utilization);
+		robot_controller_state_.SetCANBusOffCount(bus_off_count);
+		robot_controller_state_.SetCANTxFullCount(tx_full_count);
+		robot_controller_state_.SetCANReceiveErrorCount(receive_error_count);
+		robot_controller_state_.SetCANTransmitErrorCount(transmit_error_count);
+		clock_gettime(CLOCK_MONOTONIC, &end_time);
+		time_sum_rcs +=
+			((double)end_time.tv_sec -  (double)start_timespec.tv_sec) +
+			((double)end_time.tv_nsec - (double)start_timespec.tv_nsec) / 1000000000.;
+		iteration_count_rcs += 1;
+
 		ROS_INFO_STREAM_THROTTLE(2, "hw_keepalive nt = " << time_sum_nt / iteration_count_nt
 				<< " joystick = " << time_sum_joystick / iteration_count_joystick
-				<< " match_data = " << time_sum_match_data / iteration_count_match_data);
+				<< " match_data = " << time_sum_match_data / iteration_count_match_data
+				<< " rcs = " << time_sum_rcs / iteration_count_rcs);
 	}
 
 	for (std::size_t joint_id = 0; joint_id < num_can_talon_srxs_; ++joint_id)
@@ -1778,12 +1773,6 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 			std::lock_guard<std::mutex> l(*pdp_read_thread_mutexes_[i]);
 			pdp_state_[i] = *pdp_read_thread_state_[i];
 		}
-	}
-
-	if (run_hal_robot_)
-	{
-		std::lock_guard<std::mutex> l(robot_controller_state_mutex_);
-		robot_controller_state_ = shared_robot_controller_state_;
 	}
 
 	struct timespec end_time;
@@ -2029,7 +2018,6 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 		if (!talon) // skip unintialized Talons
 			continue;
 
-
 		auto &ts = talon_state_[joint_id];
 		auto &tc = talon_command_[joint_id];
 
@@ -2142,7 +2130,7 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 				ts.setClosedLoopPeakOutput(closed_loop_peak_output, slot);
 				ts.setClosedLoopPeriod(closed_loop_period, slot);
 			}
- 
+
 			bool aux_pid_polarity;
 			if (tc.auxPidPolarityChanged(aux_pid_polarity))
 			{
@@ -2556,7 +2544,7 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 			const bool b2 = tc.commandChanged(command);
 			const bool b3 = tc.demand1Changed(demand1_type_internal, demand1_value);
 
-			// TODO : undo this
+			// TODO : unconditionally use the 4-param version of Set()
 			//ROS_INFO_STREAM("b1 = " << b1 << " b2 = " << b2 << " b3 = " << b3);
 			if (b1 || b2 || b3 || ros::Time::now().toSec() - can_talon_srx_run_profile_stop_time_[joint_id] < .2)
 			{
@@ -2614,7 +2602,7 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 
 #ifdef USE_TALON_MOTION_PROFILE
 				// If any of the talons are set to MotionProfile and
-				// command == 1 to start the profile, set 
+				// command == 1 to start the profile, set
 				// profile_is_live_ to true. If this is false
 				// for all of them, set profile_is_live_ to false.
 				if ((out_mode == ctre::phoenix::motorcontrol::ControlMode::MotionProfile) &&
@@ -2624,8 +2612,6 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 					can_talons_mp_running_[joint_id]->store(true, std::memory_order_relaxed);
 				}
 #endif
-
-				//ROS_WARN_STREAM("set at: " << ts.getCANID() << " new mode: " << b1 << " command_changed: " << b2 << " cmd: " << command);
 			}
 
 #ifdef USE_TALON_MOTION_PROFILE
@@ -2696,7 +2682,6 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 	start_time = end_time;
 	}
 	last_robot_enabled = match_data_enabled_ != 0;
-
 
 #ifdef USE_TALON_MOTION_PROFILE
 	profile_is_live_.store(profile_is_live, std::memory_order_relaxed);
@@ -2827,6 +2812,7 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 		}
 	}
 
+	// TODO : what to do about this?
 	for (size_t i = 0; i < num_dummy_joints_; i++)
 	{
 		if (dummy_joint_locals_[i])

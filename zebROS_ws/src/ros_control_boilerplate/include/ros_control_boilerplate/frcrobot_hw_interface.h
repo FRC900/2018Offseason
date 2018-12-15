@@ -313,11 +313,6 @@ class FRCRobotHWInterface : public ros_control_boilerplate::FRCRobotInterface
 		std::shared_ptr<realtime_tools::RealtimePublisher<ros_control_boilerplate::AutoMode>> realtime_pub_nt_;
 		std::shared_ptr<realtime_tools::RealtimePublisher<std_msgs::Float64>> realtime_pub_error_;
 
-		hardware_interface::RobotControllerState shared_robot_controller_state_;
-		std::mutex robot_controller_state_mutex_;
-		std::thread robot_controller_state_thread_;
-		void robot_controller_state_read_thread();
-
 		// Used to throttle match data publishing time to something
 		// reasonable rather than 50Hz. Given that match data only
 		// updates once a second (after game-specific data is published)

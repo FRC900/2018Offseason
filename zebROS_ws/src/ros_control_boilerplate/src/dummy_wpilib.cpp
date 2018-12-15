@@ -468,7 +468,6 @@ void frc::AnalogInput::InitSendable(SendableBuilder& builder)
 	ROS_ERROR("Called frc::AnalogInput::InitSendable(SendableBuilder& builder) on unsupported platform");
 }
 
-
 #include <frc/DigitalInput.h>
 frc::DigitalInput::DigitalInput(int)
 {
@@ -1366,79 +1365,79 @@ double HAL_GetVinVoltage(int32_t* status)
 {
 	ROS_ERROR("Called HAL_GetVinVoltage() on unsupported platform");
 	*status = 0;
-  return -1;
+	return -1;
 }
 double HAL_GetVinCurrent(int32_t* status)
 {
 	ROS_ERROR("Called HAL_GetVinCurrent() on unsupported platform");
 	*status = 0;
-  return -1;
+	return -1;
 }
 double HAL_GetUserVoltage6V(int32_t* status)
 {
 	ROS_ERROR("Called HAL_GetUserVoltage6V() on unsupported platform");
 	*status = 0;
-  return -1;
+	return -1;
 }
 double HAL_GetUserCurrent6V(int32_t* status)
 {
 	ROS_ERROR("Called HAL_GetUserCurrent6V() on unsupported platform");
 	*status = 0;
-  return -1;
+	return -1;
 }
 HAL_Bool HAL_GetUserActive6V(int32_t* status)
 {
 	ROS_ERROR("Called HAL_GetUserActive6V() on unsupported platform");
 	*status = 0;
-  return false;
+	return false;
 }
 int32_t HAL_GetUserCurrentFaults6V(int32_t* status)
 {
 	ROS_ERROR("Called HAL_GetUserCurrentFaults6V() on unsupported platform");
 	*status = 0;
-  return -1;
+	return -1;
 }
 double HAL_GetUserVoltage5V(int32_t* status)
 {
 	ROS_ERROR("Called HAL_GetUserVoltage5V() on unsupported platform");
 	*status = 0;
-  return -1;
+	return -1;
 }
 double HAL_GetUserCurrent5V(int32_t* status)
 {
 	ROS_ERROR("Called HAL_GetUserCurrent5V() on unsupported platform");
 	*status = 0;
-  return -1;
+	return -1;
 }
 HAL_Bool HAL_GetUserActive5V(int32_t* status)
 {
 	ROS_ERROR("Called HAL_GetUserActive5V() on unsupported platform");
 	*status = 0;
-  return false;
+	return false;
 }
 int32_t HAL_GetUserCurrentFaults5V(int32_t* status)
 {
 	ROS_ERROR("Called HAL_GetUserCurrentFaults5V() on unsupported platform");
 	*status = 0;
-  return -1;
+	return -1;
 }
 double HAL_GetUserVoltage3V3(int32_t* status)
 {
 	ROS_ERROR("Called HAL_GetUserVoltage3V3() on unsupported platform");
 	*status = 0;
-  return -1;
+	return -1;
 }
 double HAL_GetUserCurrent3V3(int32_t* status)
 {
 	ROS_ERROR("Called HAL_GetUserCurrent3V3() on unsupported platform");
 	*status = 0;
-  return -1;
+	return -1;
 }
 HAL_Bool HAL_GetUserActive3V3(int32_t* status)
 {
 	ROS_ERROR("Called HAL_GetUserActive3V3() on unsupported platform");
 	*status = 0;
-  return false;
+	return false;
 }
 int32_t HAL_GetUserCurrentFaults3V3(int32_t* status)
 {
