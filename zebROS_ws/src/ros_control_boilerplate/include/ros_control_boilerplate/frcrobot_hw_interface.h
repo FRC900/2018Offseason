@@ -57,7 +57,7 @@
 #include <frc/NidecBrushless.h>
 #include <frc/DigitalInput.h>
 #include <frc/DigitalOutput.h>
-#include <frc/SafePWM.h>
+#include <frc/PWMSpeedController.h>
 #include <frc/Solenoid.h>
 #include <frc/DoubleSolenoid.h>
 #include <frc/Compressor.h>
@@ -282,7 +282,7 @@ class FRCRobotHWInterface : public ros_control_boilerplate::FRCRobotInterface
 		std::vector<std::shared_ptr<frc::NidecBrushless>> nidec_brushlesses_;
 		std::vector<std::shared_ptr<frc::DigitalInput>> digital_inputs_;
 		std::vector<std::shared_ptr<frc::DigitalOutput>> digital_outputs_;
-		std::vector<std::shared_ptr<frc::SafePWM>> PWMs_;
+		std::vector<std::shared_ptr<frc::PWM>> PWMs_;
 		std::vector<HAL_SolenoidHandle> solenoids_;
 		std::vector<DoubleSolenoidHandle> double_solenoids_;
 		std::vector<std::shared_ptr<AHRS>> navXs_;

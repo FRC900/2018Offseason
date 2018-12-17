@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(ros_control_boilerplate)
 
 include ("../cmake_modules/CMakeOpt.cmake")
+add_definitions(--std=c++14)
 
 find_package(catkin REQUIRED COMPONENTS
   cmake_modules
@@ -122,7 +123,6 @@ include_directories(
 	${WPI_SYSROOT}/include
 	${WPI_SYSROOT}/include/navx
 )
-set (ALLWPILIB ../../../allwpilib)
 
 # Base regardless of OS type
 set (WPI_BASE_LIB_DIR   ${WPI_SYSROOT}/lib/wpilib/linux)
@@ -182,6 +182,10 @@ set (CTRE_USER_LIBS
 	${CTRE_LIB_DIR}/libCTRE_PhoenixCCI.a
 )
 
+set (ALLWPILIB ../../../allwpilib)
+# Used to find HALInitializer from wpilib internal repo
+include_directories(${ALLWPILIB}/hal/src/main/native/athena)
+
 # Add socketcan library to everything but the Rio
 # This adds code to use linux CAN sockets to talk to
 # the CAN bus for the Jetson
@@ -192,17 +196,9 @@ if (NOT "${ARM_PREFIX}" STREQUAL "arm-frc2019-linux-gnueabi")
 		${CTRE_LIB_DIR}/libCTRE_PhoenixCanutils.a
 	)
 
-	# For now, use 2019beta includes only for this code to line up with the
-	# 2019 beta sources we pull in below. Eventually sync this up when 
-	# everything moves to 2019 code
-	include_directories(
-		$ENV{HOME}/frc2019/roborio/arm-frc2019-linux-gnueabi/include/wpilib
-		$ENV{HOME}/frc2019/roborio/arm-frc2019-linux-gnueabi/include
-		$ENV{HOME}/frc2019/roborio/arm-frc2019-linux-gnueabi/include/navx
-	)
-	add_definitions(--std=c++14)
 	set (FRCROBOT_HW_MAIN_SRCS ${FRCROBOT_HW_MAIN_SRCS} 
-		src/dummy_wpilib.cpp
+		src/dummy_wpilib_common.cpp
+		src/dummy_wpilib_hw.cpp
 		${ALLWPILIB}/hal/src/main/native/athena/Compressor.cpp
 		${ALLWPILIB}/hal/src/main/native/athena/CANAPI.cpp
 		${ALLWPILIB}/hal/src/main/native/athena/HALInitializer.cpp
@@ -213,14 +209,60 @@ if (NOT "${ARM_PREFIX}" STREQUAL "arm-frc2019-linux-gnueabi")
 		${ALLWPILIB}/hal/src/main/native/athena/ctre/CtreCanNode.cpp
 		${ALLWPILIB}/hal/src/main/native/cpp/handles/HandlesInternal.cpp
 	)
-#else()
-#set (FRCROBOT_HW_MAIN_SRCS ${FRCROBOT_HW_MAIN_SRCS} 
-#src/rio_wpilib.cpp # Temp until 2019 code ready?
-#)
-endif()
 
-# Used to find HALInitializer from wpilib internal repo
-include_directories(${ALLWPILIB}/hal/src/main/native/athena)
+	add_executable(frcrobot_phoenixsim_main
+		src/frcrobot_phoenixsim_interface.cpp
+		src/frcrobot_hw_main.cpp
+		src/frcrobot_hw_interface.cpp
+		src/frc_robot_interface.cpp
+		src/generic_hw_control_loop.cpp
+		src/dummy_wpilib_common.cpp
+		src/dummy_wpilib_phoenixsim.cpp
+		${ALLWPILIB}/hal/src/main/native/sim/CAN.cpp
+		${ALLWPILIB}/hal/src/main/native/sim/CANAPI.cpp
+		${ALLWPILIB}/hal/src/main/native/sim/Compressor.cpp
+		${ALLWPILIB}/hal/src/main/native/sim/Constants.cpp
+		${ALLWPILIB}/hal/src/main/native/sim/Counter.cpp
+		${ALLWPILIB}/hal/src/main/native/sim/DriverStation.cpp
+		${ALLWPILIB}/hal/src/main/native/sim/Extensions.cpp
+		${ALLWPILIB}/hal/src/main/native/sim/HAL.cpp
+		${ALLWPILIB}/hal/src/main/native/sim/HALInitializer.cpp
+		${ALLWPILIB}/hal/src/main/native/sim/MockHooks.cpp
+		${ALLWPILIB}/hal/src/main/native/sim/Notifier.cpp
+		${ALLWPILIB}/hal/src/main/native/sim/PDP.cpp
+		${ALLWPILIB}/hal/src/main/native/sim/Power.cpp
+		${ALLWPILIB}/hal/src/main/native/sim/Solenoid.cpp
+		${ALLWPILIB}/hal/src/main/native/sim/Threads.cpp
+		${ALLWPILIB}/hal/src/main/native/cpp/cpp/fpga_clock.cpp
+		${ALLWPILIB}/hal/src/main/native/cpp/handles/HandlesInternal.cpp
+		${ALLWPILIB}/hal/src/main/native/sim/mockdata/CanDataInternal.cpp
+		${ALLWPILIB}/hal/src/main/native/sim/mockdata/DriverStationData.cpp
+		${ALLWPILIB}/hal/src/main/native/sim/mockdata/PDPData.cpp
+		${ALLWPILIB}/hal/src/main/native/sim/mockdata/PCMData.cpp
+		${ALLWPILIB}/hal/src/main/native/sim/mockdata/RoboRioData.cpp
+		${ALLWPILIB}/wpiutil/src/main/native/cpp/timestamp.cpp
+		${ALLWPILIB}/wpiutil/src/main/native/cpp/llvm/raw_ostream.cpp
+		${ALLWPILIB}/wpiutil/src/main/native/cpp/llvm/Hashing.cpp
+		${ALLWPILIB}/wpiutil/src/main/native/cpp/llvm/NativeFormatting.cpp
+		${ALLWPILIB}/wpiutil/src/main/native/cpp/llvm/Path.cpp
+		${ALLWPILIB}/wpiutil/src/main/native/cpp/llvm/StringRef.cpp
+		${ALLWPILIB}/wpiutil/src/main/native/cpp/llvm/Twine.cpp
+		)
+
+	target_link_libraries(frcrobot_phoenixsim_main
+		${catkin_LIBRARIES}
+		${PLATFORM_SPECIFIC_LIBS}
+		${CTRE_USER_LIBS}
+		)
+	## Add cmake target dependencies of the executable
+	## same as for the library above. This is needed to force
+	## talon controller messages to be built before the
+	## talon controller code tries to use them
+	add_dependencies(frcrobot_phoenixsim_main
+		${${PROJECT_NAME}_EXPORTED_TARGETS}
+		${catkin_EXPORTED_TARGETS}
+		)
+endif()
 
 add_executable(frcrobot_hw_main ${FRCROBOT_HW_MAIN_SRCS})
 
@@ -240,6 +282,7 @@ add_dependencies(frcrobot_hw_main
   ${${PROJECT_NAME}_EXPORTED_TARGETS}
   ${catkin_EXPORTED_TARGETS}
 )
+
 ## Install ------------------------------------------------------------
 
 # Install executables

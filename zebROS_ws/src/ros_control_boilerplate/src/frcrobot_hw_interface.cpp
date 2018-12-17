@@ -126,27 +126,6 @@
 // The only cases which make sense are local_update = local_hardware, since the value can only be
 // updated by reading the hardware itself.  There, just use a "local" flag.
 //
-// From wpilib HAL.cpp
-/*----------------------------------------------------------------------------*/
-/* Copyright (c) 2016-2018 FIRST. All Rights Reserved.                        */
-/* Open Source Software - may be modified and shared by FRC teams. The code   */
-/* must be accompanied by the FIRST BSD license file in the root directory of */
-/* the project.                                                               */
-/*----------------------------------------------------------------------------*/
-#include "hal/handles/HandlesInternal.h"
-extern "C" {
-
-/**
- * @deprecated Uses module numbers
- */
-HAL_PortHandle HAL_GetPortWithModule(int32_t module, int32_t channel) {
-  // Dont allow a number that wouldn't fit in a uint8_t
-  if (channel < 0 || channel >= 255) return HAL_kInvalidHandle;
-  if (module < 0 || module >= 255) return HAL_kInvalidHandle;
-  return hal::createPortHandle(channel, module);
-}
-} // extern "C"
-
 namespace frcrobot_control
 {
 // Dummy vars are used to create joints which are accessed via variable name
@@ -504,7 +483,7 @@ void FRCRobotHWInterface::init(void)
 
 		if (pwm_local_hardwares_[i])
 		{
-			PWMs_.push_back(std::make_shared<frc::SafePWM>(pwm_pwm_channels_[i]));
+			PWMs_.push_back(std::make_shared<frc::PWM>(pwm_pwm_channels_[i]));
 			PWMs_[i]->SetSafetyEnabled(true);
 		}
 		else
