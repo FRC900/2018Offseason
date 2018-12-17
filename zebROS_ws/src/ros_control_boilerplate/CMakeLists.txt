@@ -208,6 +208,14 @@ if (NOT "${ARM_PREFIX}" STREQUAL "arm-frc2019-linux-gnueabi")
 		${ALLWPILIB}/hal/src/main/native/athena/ctre/PCM.cpp
 		${ALLWPILIB}/hal/src/main/native/athena/ctre/CtreCanNode.cpp
 		${ALLWPILIB}/hal/src/main/native/cpp/handles/HandlesInternal.cpp
+		${ALLWPILIB}/wpiutil/src/main/native/cpp/memory.cpp
+		${ALLWPILIB}/wpiutil/src/main/native/cpp/llvm/raw_ostream.cpp
+		${ALLWPILIB}/wpiutil/src/main/native/cpp/llvm/Hashing.cpp
+		${ALLWPILIB}/wpiutil/src/main/native/cpp/llvm/NativeFormatting.cpp
+		${ALLWPILIB}/wpiutil/src/main/native/cpp/llvm/Path.cpp
+		${ALLWPILIB}/wpiutil/src/main/native/cpp/llvm/SmallVector.cpp
+		${ALLWPILIB}/wpiutil/src/main/native/cpp/llvm/StringRef.cpp
+		${ALLWPILIB}/wpiutil/src/main/native/cpp/llvm/Twine.cpp
 	)
 
 	add_executable(frcrobot_phoenixsim_main
@@ -218,6 +226,8 @@ if (NOT "${ARM_PREFIX}" STREQUAL "arm-frc2019-linux-gnueabi")
 		src/generic_hw_control_loop.cpp
 		src/dummy_wpilib_common.cpp
 		src/dummy_wpilib_phoenixsim.cpp
+		${ALLWPILIB}/hal/src/main/native/cpp/cpp/fpga_clock.cpp
+		${ALLWPILIB}/hal/src/main/native/cpp/handles/HandlesInternal.cpp
 		${ALLWPILIB}/hal/src/main/native/sim/CAN.cpp
 		${ALLWPILIB}/hal/src/main/native/sim/CANAPI.cpp
 		${ALLWPILIB}/hal/src/main/native/sim/Compressor.cpp
@@ -233,18 +243,18 @@ if (NOT "${ARM_PREFIX}" STREQUAL "arm-frc2019-linux-gnueabi")
 		${ALLWPILIB}/hal/src/main/native/sim/Power.cpp
 		${ALLWPILIB}/hal/src/main/native/sim/Solenoid.cpp
 		${ALLWPILIB}/hal/src/main/native/sim/Threads.cpp
-		${ALLWPILIB}/hal/src/main/native/cpp/cpp/fpga_clock.cpp
-		${ALLWPILIB}/hal/src/main/native/cpp/handles/HandlesInternal.cpp
 		${ALLWPILIB}/hal/src/main/native/sim/mockdata/CanDataInternal.cpp
 		${ALLWPILIB}/hal/src/main/native/sim/mockdata/DriverStationData.cpp
-		${ALLWPILIB}/hal/src/main/native/sim/mockdata/PDPData.cpp
 		${ALLWPILIB}/hal/src/main/native/sim/mockdata/PCMData.cpp
+		${ALLWPILIB}/hal/src/main/native/sim/mockdata/PDPData.cpp
 		${ALLWPILIB}/hal/src/main/native/sim/mockdata/RoboRioData.cpp
+		${ALLWPILIB}/wpiutil/src/main/native/cpp/memory.cpp
 		${ALLWPILIB}/wpiutil/src/main/native/cpp/timestamp.cpp
 		${ALLWPILIB}/wpiutil/src/main/native/cpp/llvm/raw_ostream.cpp
 		${ALLWPILIB}/wpiutil/src/main/native/cpp/llvm/Hashing.cpp
 		${ALLWPILIB}/wpiutil/src/main/native/cpp/llvm/NativeFormatting.cpp
 		${ALLWPILIB}/wpiutil/src/main/native/cpp/llvm/Path.cpp
+		${ALLWPILIB}/wpiutil/src/main/native/cpp/llvm/SmallVector.cpp
 		${ALLWPILIB}/wpiutil/src/main/native/cpp/llvm/StringRef.cpp
 		${ALLWPILIB}/wpiutil/src/main/native/cpp/llvm/Twine.cpp
 		)
