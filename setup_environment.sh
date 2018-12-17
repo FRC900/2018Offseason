@@ -320,6 +320,30 @@ if [ "$jetson" = true ] ; then
 	rm /home/ubuntu/cci-5.10.0-linuxx86-64.zip
 
     cd /home/ubuntu
+	wget http://devsite.ctr-electronics.com/maven/release/com/ctre/frcbeta/phoenix/firmware-sim/0.1.0/firmware-sim-0.1.0-headers.zip
+	cd /home/ubuntu/frc2019/roborio/arm-frc2019-linux-gnueabi/include/ctre
+	unzip -o /home/ubuntu/firmware-sim-0.1.0-headers.zip
+	rm /home/ubuntu/firmware-sim-0.1.0-headers.zip
+
+    cd /home/ubuntu
+	wget http://devsite.ctr-electronics.com/maven/release/com/ctre/frcbeta/phoenix/firmware-sim/0.1.0/firmware-sim-0.1.0-linuxaarch64.zip
+	cd /home/ubuntu/frc2019/roborio/arm-frc2019-linux-gnueabi/lib/ctre
+	unzip -o /home/ubuntu/firmware-sim-0.1.0-linuxaarch64.zip
+	rm /home/ubuntu/firmware-sim-0.1.0-linuxaarch64.zip
+
+    cd /home/ubuntu
+	wget http://devsite.ctr-electronics.com/maven/release/com/ctre/frcbeta/phoenix/firmware-sim/0.1.0/firmware-sim-0.1.0-linuxarmhf.zip
+	cd /home/ubuntu/frc2019/roborio/arm-frc2019-linux-gnueabi/lib/ctre
+	unzip -o /home/ubuntu/firmware-sim-0.1.0-linuxarmhf.zip
+	rm /home/ubuntu/firmware-sim-0.1.0-linuxarmhf.zip
+
+    cd /home/ubuntu
+	wget http://devsite.ctr-electronics.com/maven/release/com/ctre/frcbeta/phoenix/firmware-sim/0.1.0/firmware-sim-0.1.0-linuxathena.zip
+	cd /home/ubuntu/frc2019/roborio/arm-frc2019-linux-gnueabi/lib/ctre
+	unzip -o /home/ubuntu/firmware-sim-0.1.0-linuxathena.zip
+	rm /home/ubuntu/firmware-sim-0.1.0-linuxathena.zip
+
+    cd /home/ubuntu
 	wget http://devsite.ctr-electronics.com/maven/release/com/ctre/frcbeta/phoenix/firmware-sim/0.1.0/firmware-sim-0.1.0-linuxx86-64.zip
 	cd /home/ubuntu/frc2019/roborio/arm-frc2019-linux-gnueabi/lib/ctre
 	unzip -o /home/ubuntu/firmware-sim-0.1.0-linuxx86-64.zip
