@@ -14,24 +14,14 @@
 #
 # Grab using maven?
 
-# Install navX-MXP libraries - get from maven?
-#cd
-#wget https://www.kauailabs.com/public_files/navx-mxp/navx-mxp-libs.zip
-#mkdir navx
-#cd navx
-#unzip ../navx-mxp-libs.zip
-#rsync -a roborio/cpp/ $HOME/wpilib/user/cpp/
-#cd ..
-#rm -rf navx navx-mxp-libs.zip
-
 # Install wpilib env
 # Extract maven zip files into lib/wpilib & include/wpilib
 mkdir -p $HOME/frc2019/roborio/arm-frc2019-linux-gnueabi/include/wpilib
 cd $HOME/frc2019/roborio/arm-frc2019-linux-gnueabi/include/wpilib
-find ../../../../maven/ -name \*head\*zip | xargs -n1 unzip
+find ../../../../maven/ -name \*head\*zip | xargs -n1 unzip -o
 mkdir -p $HOME/frc2019/roborio/arm-frc2019-linux-gnueabi/lib/wpilib
 cd $HOME/frc2019/roborio/arm-frc2019-linux-gnueabi/lib/wpilib
-find ../../../../maven/ -name \*athena\*zip | xargs -n1 unzip
+find ../../../../maven/ -name \*athena\*zip | xargs -n1 unzip -o
 
 # Same for CTRE headers
 http://devsite.ctr-electronics.com/maven/release/com/ctre/phoenix
@@ -75,7 +65,6 @@ cd
 sudo rm -rf poco-1.7.9p1.tar.gz poco-1.7.9p1
 
 #Hack in a cmake file for Eigen3
-# TODO - sed magic to change /usr to $HOME/frc2019/roborio/arm-frc2019-linux-gnueabi/usr in Eigen3Config.cmake
 mkdir -p $HOME/frc2019/roborio/arm-frc2019-linux-gnueabi/usr/lib/cmake/eigen3
 sed -e 's_/usr_\$ENV{HOME}/frc2019/roborio/arm-frc2019-linux-gnueabi/usr_' < /usr/lib/cmake/eigen3/Eigen3Config.cmake > $HOME/frc2019/roborio/arm-frc2019-linux-gnueabi/usr/lib/cmake/eigen3/Eigen3Config.cmake
 
@@ -116,26 +105,6 @@ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$HOME/2018Offseason/zebR
 make -j8 install
 cd
 sudo rm -rf tinyxml_2_6_2.zip tinyxml
-
-# Build and install google flags library - now available as an ipk file
-#cd
-#wget https://github.com/gflags/gflags/archive/v2.2.1.tar.gz
-#tar -xzvf v2.2.1.tar.gz
-#cd gflags-2.2.1
-#cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$HOME/2018Offseason/zebROS_ws/rostoolchain.cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr/arm-frc-linux-gnueabi  -DCMAKE_POSITION_INDEPENDENT_CODE=ON .
-#make -j4 install
-#cd
-#sudo rm -rf v2.2.1.tar.gz gflags-2.2.1
-
-# Build and install google logging libraries - also available as ipk?
-#cd
-#wget https://github.com/google/glog/archive/v0.3.5.tar.gz
-#tar -xzvf v0.3.5.tar.gz
-#cd glog-0.3.5/
-#CFLAGS="-O2 -fPIC -mcpu=cortex-a9 -mfpu=neon" CXXFLAGS="-O2 -fPIC -mcpu=cortex-a9 -mfpu=neon" LDFLAGS="-fPIC" ./configure --host=arm-frc-linux-gnueabi --prefix=/usr/arm-frc-linux-gnueabi/usr/local
-#make -j8 install
-#cd
-#sudo rm -rf v0.3.5.tar.gz glog-0.3.5
 
 # Build and install qhull libraries
 cd
