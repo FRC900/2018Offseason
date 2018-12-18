@@ -4,6 +4,8 @@
 #include <ctre/phoenix/cci/Platform_CCI.h> // c_SimCreate
 #include <ctre/phoenix/cci/Unmanaged_CCI.h> // c_FeedEnable
 
+#include <HALInitializer.h>
+
 namespace frcrobot_control
 {
 FRCRobotPhoenixSimInterface::FRCRobotPhoenixSimInterface(ros::NodeHandle &nh, urdf::Model *urdf_model)
@@ -23,6 +25,7 @@ void FRCRobotPhoenixSimInterface::init(void)
 	// this may not be necessary anymore
 	ros::Duration(1.0).sleep();
 
+	hal::init::InitializeHAL();
 	FRCRobotHWInterface::init();
 }
 
@@ -31,6 +34,8 @@ void FRCRobotPhoenixSimInterface::init(void)
 // of the underlying motor sim
 void FRCRobotPhoenixSimInterface::write(ros::Duration &elapsed_time)
 {
+	ros::Duration(0.01).sleep();
+	c_FeedEnable(500);
 	FRCRobotHWInterface::write(elapsed_time);
 
 	// Update the motor connected to each Talon here?

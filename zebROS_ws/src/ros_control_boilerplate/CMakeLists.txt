@@ -317,8 +317,10 @@ file(GLOB
 
 	target_link_libraries(frcrobot_phoenixsim_main
 		${catkin_LIBRARIES}
-		${PLATFORM_SPECIFIC_LIBS}
-		${CTRE_USER_LIBS}
+		${CTRE_LIB_DIR}/libCTRE_Phoenix.a
+		${CTRE_LIB_DIR}/libCTRE_PhoenixCCI.a
+		${CTRE_LIB_DIR}/libCTRE_PhoenixCanutils.a
+		${CTRE_LIB_DIR}/libCTRE_PhoenixPlatform_sim.a
 		)
 	## Add cmake target dependencies of the executable
 	## same as for the library above. This is needed to force
@@ -328,6 +330,15 @@ file(GLOB
 		${${PROJECT_NAME}_EXPORTED_TARGETS}
 		${catkin_EXPORTED_TARGETS}
 		)
+
+	# Install executable on the off chance you'd ever
+	# want to run sim on the RoboRIO
+	install(TARGETS
+	  frcrobot_phoenixsim_main
+	  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+	  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+	)
+
 endif()
 
 add_executable(frcrobot_hw_main ${FRCROBOT_HW_MAIN_SRCS})
@@ -409,14 +420,6 @@ install(TARGETS
 )
 )
 endif()
-
-## Install ------------------------------------------------------------
-install(TARGETS
-  frcrobot_sim_main
-    
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
 
 # Install header files
 install(DIRECTORY 
