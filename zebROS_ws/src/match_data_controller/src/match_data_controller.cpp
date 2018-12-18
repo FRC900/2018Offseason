@@ -101,4 +101,4 @@ void MatchStateController::stopping(const ros::Time & )
 {}
 }
 
-PLUGINLIB_EXPORT_CLASS( match_data_controller::MatchStateController, controller_interface::ControllerBase)}
+PLUGINLIB_EXPORT_CLASS( match_data_controller::MatchStateController, controller_interface::ControllerBase)
