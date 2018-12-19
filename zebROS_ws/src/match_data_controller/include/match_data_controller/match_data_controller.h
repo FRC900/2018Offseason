@@ -12,7 +12,7 @@
 
 namespace match_data__controller
 {
-class MatchDataController: public controller_interface::Controller<hardware_interface::MatchDataInterface>
+class MatchDataController: public controller_interface::Controller<hardware_interface::MatchData>
 {
 	public:
 		MatchDataController() : publish_rate_(15.0) {}

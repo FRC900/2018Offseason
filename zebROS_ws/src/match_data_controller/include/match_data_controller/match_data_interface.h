@@ -28,7 +28,8 @@ class MatchState
 			operator_control_(true),
 			test_(false),
 
-			battery_voltage_(0.0),
+			battery_voltage_(0.0)
+		{}		
 
 		//access and set
 		int getMatchTimeRemaining(void) const		{return match_time_remaining_;}
@@ -47,7 +48,7 @@ class MatchState
 		bool isAutonomous(void) const			{return autonomous_;}
 		bool isFMSAttached(void) const			{return fms_attached_;}
 		bool isOperatorControl(void) const		{return operator_control_;}
-		bool isTest(void) const				{return test_}
+		bool isTest(void) const				{return test_;}
 
 		double getBatteryVoltage(void) const		{return battery_voltage_;}
 		

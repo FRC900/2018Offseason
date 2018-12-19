@@ -241,6 +241,8 @@ class FRCRobotInterface : public hardware_interface::RobotHW
 		std::vector<double> navX_state_;	
 		std::vector<double> compressor_state_;
 		hardware_interface::PDPHWState pdp_state_;
+
+		hardware_interface::MatchData match_data_;
 	
 		// Each entry in the vector is an array. That array holds
 		// the data returned from one particular imu
