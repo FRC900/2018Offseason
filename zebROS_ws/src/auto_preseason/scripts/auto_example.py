@@ -297,7 +297,7 @@ def main():
                                 transitions={'succeeded':'TestHasCube', 'aborted':'Exit', 'preempted':'Exit'})
         smach.StateMachine.add('Party',
                                 SimpleActionState('/frcrobot/party_as',
-                                            SingleExitAction),
+                                            PathAction, goal=goalTurnExchange), #placeholder goal
                                 transitions={'succeeded':'Exit', 'aborted':'Exit', 'preempted':'Exit'})
 
     # Create and start the introspection server
