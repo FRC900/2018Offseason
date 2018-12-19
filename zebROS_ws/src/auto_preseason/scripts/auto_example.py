@@ -20,32 +20,44 @@ class Init(smach.State):
             return 'failure'
         return 'success'
 
-
 # define state Bar
 class TestHasCube(smach.State):
+    streaklen = 0 #how many times has it done same output in a row
+    streaktype = True #what kind of streak is it on, true means has cube
+    sensor_index = -1
+
     def __init__(self):
         smach.State.__init__(self, outcomes=['testTrue', 'testFalse'])
 
         #set up subscriber to receive sensor data
         self.sub = rospy.Subscriber('/frcrobot/joint_states',JointState,self.callback)
-        
+
         self.test_result = "default"  #initialize variable to store received msgs
 
     def callback(self,msg):
-        sensor_index = 0
-        for i in range(len(msg.position)):
-            if msg.name[i] == "intake_line_break":
-                sensor_index = i
+        if self.sensor_index == -1:
+            for i in range(len(msg.position)):
+                if msg.name[i] == "intake_line_break":
+                    self.sensor_index = i
 
-        self.test_result = msg.position[sensor_index]
+        currentBreak = msg.position[sensor_index]==1.0
 
+        if self.streaktype == currentBreak:
+            self.streaklen += 1
+        else:
+            self.streaklen = 0
+            self.streaktype = currentBreak
     def execute(self, userdata):
-        rospy.loginfo("testhascube "+str(self.test_result))
-        
-        if self.test_result == 1.0: #line_break_sensor:
+        while self.streaklen < 10:
+            rospy.loginfo("testhascube line break reports: "+str(self.streaktype)+" for "str(self.streaklen)+"
+ times in a row")
+        if self.streaktype: #line_break_sensor:
+            rospy.sleep(3.0)
             return 'testTrue'
         else:
             return 'testFalse'
+
+
 
 class TestAtCenterC(smach.State):
     def __init__(self):
