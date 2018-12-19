@@ -23,7 +23,7 @@ ssh -p 22 admin@$1 'opkg install libcurl4 lz4 libboost-filesystem1.63.0 libboost
 ssh -p 22 admin@$1 'opkg clean'
 ssh -p 22 admin@$1 'opkg install libbz2 cmake libxml2 libgnutls-bin libgnutls-openssl27'
 ssh -p 22 admin@$1 'opkg clean'
-ssh -p 22 admin@$1 'opkg install libgnutls30 libgnutlsxx28 nettle libgmp10 libgmpxx4 libz1 git make'
+ssh -p 22 admin@$1 'opkg install libgnutls30 libgnutlsxx28 nettle libgmp10 libgmpxx4 libz1 make'
 ssh -p 22 admin@$1 'opkg clean'
 ssh -p 22 admin@$1 'opkg install python-setuptools python3-docutils'
 ssh -p 22 admin@$1 'opkg clean'
@@ -43,10 +43,9 @@ ssh -p 22 admin@$1 'cd / && tar -xjf ~/roscore_roborio_2018.tar.bz2'
 scp -P 22 ~/2018Offseason/os_detect.py admin@$1:/usr/lib/python2.7/site-packages/rospkg/
 ssh -p 22 admin@$1 'rm ~/roscore_roborio_2018.tar.bz2'
 
-# Try to simulate what the cross-build environment
-# looks like 
-ssh -p 22 admin@$1 'mkdir -p /home/ubuntu/frc2019'
-ssh -p 22 admin@$1 'ln -s / /home/ubuntu/frc2019/arm-frc2019-linux-gnueabi'
+# Try to simulate what the cross-build environment looks like 
+ssh -p 22 admin@$1 'mkdir -p /home/ubuntu/frc2019/roborio'
+ssh -p 22 admin@$1 'ln -s / /home/ubuntu/frc2019/roborio/arm-frc2019-linux-gnueabi'
 # TODO -is this needed?
 ssh -p 22 admin@$1 'ln -s /usr/include /include'
 
@@ -73,7 +72,7 @@ ssh -p 22 admin@$1 'echo bq32000 0x68 | tee /sys/class/i2c-adapter/i2c-2/new_dev
 # Copy wpilib to roborio
 ssh -p 22 admin@$1 mkdir wpilib
 cd ~/frc2019/roborio/arm-frc2019-linux-gnueabi/lib/wpilib/linux/athena/shared
-scp -P 22 *.so *.so.3.2 admin@$1:wpilib
+scp -P 22 *.so *.so.3.? admin@$1:wpilib
 
 scp -P 22 ~/2018Offseason/setupClock admin@$1:/etc/init.d/setupClock
 ssh -p 22 admin@$1 'chmod +x /etc/init.d/setupClock'
