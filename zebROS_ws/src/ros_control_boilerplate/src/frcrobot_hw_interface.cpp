@@ -2404,7 +2404,7 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 	time_idx += 1;
 	start_time = end_time;
 
-		/*for (int i = hardware_interface::Status_1_General; i < hardware_interface::Status_Last; i++)
+		for (int i = hardware_interface::Status_1_General; i < hardware_interface::Status_Last; i++)
 		{
 			uint8_t period;
 			const hardware_interface::StatusFrame status_frame = static_cast<hardware_interface::StatusFrame>(i);
@@ -2419,7 +2419,7 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 				}
 
 			}
-		}*/
+		}
 
 		for (int i = hardware_interface::Control_3_General; i < hardware_interface::Control_Last; i++)
 		{
