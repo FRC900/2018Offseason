@@ -783,7 +783,7 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 			ros::Duration status_9_period = ros::Duration(state->getStatusFramePeriod(hardware_interface::Status_9_MotProfBuffer));
 			ros::Duration status_10_period = ros::Duration(state->getStatusFramePeriod(hardware_interface::Status_10_MotionMagic));
 			ros::Duration status_13_period = ros::Duration(state->getStatusFramePeriod(hardware_interface::Status_13_Base_PIDF0));
-			ros::Duration sensor_collection_period = ros::Duration(.1); // TODO :fix me
+			ros::Duration sensor_collection_period = ros::Duration(.1); // TODO : fix me
 			if (!state->getEnableReadThread())
 				return;
 		}
@@ -961,7 +961,7 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 			// PIDF0 Status 13 - 160 mSec default
 			if ((last_status_13_time + status_13_period) < ros_time_now)
 			{
-				const double closed_loop_scale = getConversionFactor(encoder_ticks_per_rotation, encoder_feedback, talon_mode)* conversion_factor;
+				const double closed_loop_scale = getConversionFactor(encoder_ticks_per_rotation, encoder_feedback, talon_mode) * conversion_factor;
 
 				closed_loop_error = talon->GetClosedLoopError(pidIdx) * closed_loop_scale;
 				safeTalonCall(talon->GetLastError(), "GetClosedLoopError");
@@ -1068,7 +1068,10 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 			std::lock_guard<std::mutex> l(*mutex);
 
 			if (update_mp_status || update_status_9)
+			{
 				state->setMotionProfileStatus(internal_status);
+				state->setMotionProfileTopLevelBufferCount(mp_top_level_buffer_count);
+			}
 
 			if (update_status_1)
 			{
@@ -1120,9 +1123,9 @@ void FRCRobotHWInterface::talon_read_thread(std::shared_ptr<ctre::phoenix::motor
 					state->setActiveTrajectoryPosition(active_trajectory_position);
 					state->setActiveTrajectoryVelocity(active_trajectory_velocity);
 					state->setActiveTrajectoryHeading(active_trajectory_heading);
-					state->setMotionProfileTopLevelBufferCount(mp_top_level_buffer_count);
 				}
 			}
+
 			state->setFaults(faults.ToBitfield());
 
 			if (update_sensor_collection)
@@ -1627,6 +1630,7 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 			ts.setActiveTrajectoryVelocity(trts->getActiveTrajectoryVelocity());
 			ts.setActiveTrajectoryHeading(trts->getActiveTrajectoryHeading());
 			ts.setMotionProfileTopLevelBufferCount(trts->getMotionProfileTopLevelBufferCount());
+			ts.setMotionProfileStatus(trts->getMotionProfileStatus());
 			ts.setFaults(trts->getFaults());
 			ts.setForwardLimitSwitch(trts->getForwardLimitSwitch());
 			ts.setReverseLimitSwitch(trts->getReverseLimitSwitch());
@@ -1768,7 +1772,8 @@ double FRCRobotHWInterface::getConversionFactor(int encoder_ticks_per_rotation,
 						hardware_interface::FeedbackDevice encoder_feedback,
 						hardware_interface::TalonMode talon_mode)
 {
-	if(talon_mode == hardware_interface::TalonMode_Position)
+	if((talon_mode == hardware_interface::TalonMode_Position) ||
+	   (talon_mode == hardware_interface::TalonMode_MotionMagic)) // TODO - maybe motion profile as well?
 	{
 		switch (encoder_feedback)
 		{
@@ -2453,8 +2458,8 @@ void FRCRobotHWInterface::write(ros::Duration &elapsed_time)
 				if (tc.motionCruiseChanged(motion_cruise_velocity, motion_acceleration))
 				{
 					//converted from rad/sec to native units
-					safeTalonCall(talon->ConfigMotionCruiseVelocity((motion_cruise_velocity / radians_per_second_scale), timeoutMs),"ConfigMotionCruiseVelocity(");
-					safeTalonCall(talon->ConfigMotionAcceleration((motion_acceleration / radians_per_second_scale), timeoutMs),"ConfigMotionAcceleration(");
+					safeTalonCall(talon->ConfigMotionCruiseVelocity(motion_cruise_velocity / radians_per_second_scale, timeoutMs),"ConfigMotionCruiseVelocity(");
+					safeTalonCall(talon->ConfigMotionAcceleration(motion_acceleration / radians_per_second_scale, timeoutMs),"ConfigMotionAcceleration(");
 
 					ts.setMotionCruiseVelocity(motion_cruise_velocity);
 					ts.setMotionAcceleration(motion_acceleration);

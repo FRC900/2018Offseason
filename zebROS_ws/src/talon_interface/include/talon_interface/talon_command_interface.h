@@ -1297,8 +1297,11 @@ class TalonHWCommand
 		{
 			if ((status_frame >= Status_1_General) && (status_frame < Status_Last))
 			{
-				status_frame_periods_[status_frame] = period;
-				status_frame_periods_changed_[status_frame] = true;
+				if (status_frame_periods_[status_frame] != period)
+				{
+					status_frame_periods_[status_frame] = period;
+					status_frame_periods_changed_[status_frame] = true;
+				}
 			}
 			else
 				ROS_ERROR("Invalid status_frame value passed to TalonHWCommand::setStatusFramePeriod()");
@@ -1332,8 +1335,11 @@ class TalonHWCommand
 		{
 			if ((control_frame >= Control_3_General) && (control_frame < Control_Last))
 			{
-				control_frame_periods_[control_frame] = period;
-				control_frame_periods_changed_[control_frame] = true;
+				if (control_frame_periods_[control_frame] != period)
+				{
+					control_frame_periods_[control_frame] = period;
+					control_frame_periods_changed_[control_frame] = true;
+				}
 			}
 			else
 				ROS_ERROR("Invalid control_frame value passed to TalonHWCommand::setControlFramePeriod()");

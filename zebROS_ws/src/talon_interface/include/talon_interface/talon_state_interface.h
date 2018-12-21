@@ -140,6 +140,7 @@ enum ControlFrame
 	Control_6_MotProfAddTrajPoint,
 	Control_Last
 };
+// TODO : what should these defaults be?
 static const uint8_t control_3_general_default = 0;
 static const uint8_t control_4_advanced_default = 0;
 static const uint8_t control_5_feedbackoutputoverride_default = 0;
