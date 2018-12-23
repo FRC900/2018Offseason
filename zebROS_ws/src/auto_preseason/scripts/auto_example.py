@@ -23,8 +23,10 @@ class Init(smach.State):
 
 # define state Bar
 class TestHasCube(smach.State):
-    streaklen = 0 #how many times has it done same output in a row
-    streaktype = True #what kind of streak is it on, true means has cube
+    #define linebreak debouncing variables
+    streaklen = 0 #how many times has the linebreak had same output in a row
+    streaktype = True #what kind of streak is it on, true means has cube, false means doesn't have cube
+
     sensor_index = -1
 
     def __init__(self):
@@ -32,26 +34,29 @@ class TestHasCube(smach.State):
 
         #set up subscriber to receive sensor data
         self.sub = rospy.Subscriber('/frcrobot/joint_states',JointState,self.callback)
-
+         
         self.test_result = "default"  #initialize variable to store received msgs
-
+        
     def callback(self,msg):
+        #if we didn't get the index of the linebreak previously, find it
         if self.sensor_index == -1:
             for i in range(len(msg.position)):
                 if msg.name[i] == "intake_line_break":
                     self.sensor_index = i
 
-        currentBreak = msg.position[sensor_index]==1.0
-
+        currentBreak = msg.position[self.sensor_index]==1.0
+        
         if self.streaktype == currentBreak:
             self.streaklen += 1
         else:
             self.streaklen = 0
             self.streaktype = currentBreak
+    
     def execute(self, userdata):
-        while self.streaklen < 10:
-            rospy.loginfo("testhascube line break reports: "+str(self.streaktype)+" for "str(self.streaklen)+"
- times in a row")
+        while self.streaklen < linebreak_debounce_iterations and not rospy.is_shutdown(): #linebreak_debounce_iterations defined in main()
+            rospy.loginfo("testhascube line break reports: "+str(self.streaktype)+" for "+str(self.streaklen)+" times in a row")
+            rospy.sleep(.1) #sleep so we don't break the computer if nothing is publishing to the /frcrobot/joint_states topic - would make this an infinite loop; slow it down
+
         if self.streaktype: #line_break_sensor:
             rospy.sleep(3.0)
             return 'testTrue'
@@ -151,6 +156,10 @@ class Exit(smach.State):
 
 def main():
     rospy.init_node('smach_example_state_machine')
+    
+    #get params
+    global linebreak_debounce_iterations #needs to be global so that TestHasCube() can read it
+    linebreak_debounce_iterations = rospy.get_param("actionlib_intake_params/linebreak_debounce_iterations")
 
     # Create a SMACH state machine
     sm = smach.StateMachine(outcomes=['exited'])
