@@ -49,13 +49,15 @@
 
 		<node name="point_gen" pkg="swerve_point_generator" type="point_gen" output="screen" />
 	
-		<node name="map_server" pkg="map_server" type="map_server" args="$(find controller_node)/maps/2018FRC_field.yaml" output="screen" if="$(arg static_map)">
+		<!--node name="map_server" pkg="map_server" type="map_server" args="$(find controller_node)/maps/2018FRC_field.yaml" output="screen" if="$(arg static_map)">
 			<param name="frame_id" value="/map"/>
-		</node>
+		</node-->
 
-                <node name="base_trajectory_node" pkg="base_trajectory" type="base_trajectory_node" output="screen" > </node> 
-                <node name="robot_visualize" pkg="robot_visualizer" type="robot_visualize" output="screen" />
-                <node name="profile_follow" pkg="robot_visualizer" type="profile_follow" output="screen" />
+		<node name="base_trajectory_node" pkg="base_trajectory" type="base_trajectory_node" output="screen" > </node> 
+        <node name="robot_visualize" pkg="robot_visualizer" type="robot_visualize" output="screen" />
+        <node name="profile_follow" pkg="robot_visualizer" type="profile_follow" output="screen" />
+		
+		<node name="smach" pkg="auto_preseason" type="auto_example.py" output-"screen"/>
 	</group>
 
     <!-- Heartbeat Nodes -->
