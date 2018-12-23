@@ -10,7 +10,7 @@
 #include <pluginlib/class_list_macros.h>
 #include <sensor_msgs/JointState.h>
 
-namespace match_data__controller
+namespace match_data_controller
 {
 class MatchDataController: public controller_interface::Controller<hardware_interface::MatchData>
 {
