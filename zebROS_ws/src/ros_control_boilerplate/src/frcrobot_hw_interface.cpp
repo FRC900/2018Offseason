@@ -208,7 +208,7 @@ void FRCRobotHWInterface::process_motion_profile_buffer_thread(double hz)
 				std::lock_guard<std::mutex> l(*motion_profile_mutexes_[i]);
 
 				const hardware_interface::TalonMode talon_mode = talon_state_[i].getTalonMode();
-				if (talon_mode == hardware_interface::TalonMMode_Follower)
+				if (talon_mode == hardware_interface::TalonMode_Follower)
 					continue;
 				const hardware_interface::MotionProfileStatus mp_status = talon_state_[i].getMotionProfileStatus();
 				// Only write to non-follow, non-disabled talons that
