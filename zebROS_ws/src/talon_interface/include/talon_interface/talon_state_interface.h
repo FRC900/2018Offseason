@@ -87,8 +87,6 @@ enum LimitSwitchNormal
 	LimitSwitchNormal_Last
 };
 
-
-
 enum VelocityMeasurementPeriod {
 	Period_1Ms = 1,
 	Period_2Ms = 2,
@@ -98,6 +96,26 @@ enum VelocityMeasurementPeriod {
 	Period_25Ms = 25,
 	Period_50Ms = 50,
 	Period_100Ms = 100,
+};
+
+enum StatusFrame
+{
+	Status_1_General,
+	Status_2_Feedback0,
+	Status_3_Quadrature,
+	Status_4_AinTempVbat,
+	Status_6_Misc,
+	Status_7_CommStatus,
+	Status_8_PulseWidth,
+	Status_9_MotProfBuffer,
+	Status_10_MotionMagic,
+	Status_10_Targets = Status_10_MotionMagic,
+	Status_11_UartGadgeteer,
+	Status_12_Feedback1,
+	Status_13_Base_PIDF0,
+	Status_14_Turn_PIDF1,
+	Status_15_FirmwareApiStatus,
+	Status_Last
 };
 
 // Match up with CTRE Motion profile struct
@@ -142,7 +160,7 @@ struct CustomProfileStatus
 	bool running;
 	int slotRunning;
 	std::vector<int> remainingPoints;
-	double remainingTime;	//Should this be a ROS duration? 
+	double remainingTime;	//Should this be a ROS duration?
 							//Note: will be set based on slotRunning
 	bool outOfPoints;
 	CustomProfileStatus():
@@ -194,6 +212,10 @@ class TalonHWState
 			integral_accumulator_(0.0),
 			error_derivative_(0.0),
 			closed_loop_target_(0.0),
+			p_term_(0.0),
+			i_term_(0.0),
+			d_term_(0.0),
+			f_term_(0.0),
 			active_trajectory_position_(0.0),
 			active_trajectory_velocity_(0.0),
 			active_trajectory_heading_(0.0),
@@ -260,7 +282,6 @@ class TalonHWState
 			// motion profiling
 			motion_profile_top_level_buffer_count_(0),
 			motion_profile_top_level_buffer_full_(false),
-			motion_control_frame_period_(20), // Guess at 50Hz?
 			motion_profile_trajectory_period_(0),
 
 			// faults
@@ -269,8 +290,22 @@ class TalonHWState
 
 			conversion_factor_(1.0)
 		{
+			status_frame_periods_[Status_1_General] = 10;
+			status_frame_periods_[Status_2_Feedback0] = 20;
+			status_frame_periods_[Status_3_Quadrature] = 160;
+			status_frame_periods_[Status_4_AinTempVbat] = 160;
+			status_frame_periods_[Status_6_Misc] = 0;
+			status_frame_periods_[Status_7_CommStatus] = 0;
+			status_frame_periods_[Status_8_PulseWidth] = 160;
+			status_frame_periods_[Status_9_MotProfBuffer] = 0;
+			status_frame_periods_[Status_10_MotionMagic] = 160;
+			status_frame_periods_[Status_11_UartGadgeteer] = 0;
+			status_frame_periods_[Status_12_Feedback1] = 0;
+			status_frame_periods_[Status_13_Base_PIDF0] = 160;
+			status_frame_periods_[Status_14_Turn_PIDF1] = 0;
+			status_frame_periods_[Status_15_FirmwareApiStatus] = 0;
 		}
-		
+
 		double getSetpoint(void) const
 		{
 			return setpoint_;
@@ -418,6 +453,22 @@ class TalonHWState
 		{
 			return closed_loop_target_;
 		}
+		double getPTerm(void) const
+		{
+			return p_term_;
+		}
+		double getITerm(void) const
+		{
+			return i_term_;
+		}
+		double getDTerm(void) const
+		{
+			return d_term_;
+		}
+		double getFTerm(void) const
+		{
+			return f_term_;
+		}
 		double getActiveTrajectoryPosition(void) const
 		{
 			return active_trajectory_position_;
@@ -487,7 +538,7 @@ class TalonHWState
 		{
 			return feedback_coefficient_;
 		}
-		int getEncoderTicksPerRotation(void) 	const
+		int getEncoderTicksPerRotation(void) const
 		{
 			return encoder_ticks_per_rotation_;
 		}
@@ -507,7 +558,7 @@ class TalonHWState
 		void setConversionFactor(double conversion_factor)
 		{
 			conversion_factor_ = conversion_factor;
-		}		
+		}
 		void setSetpoint(double setpoint)
 		{
 			setpoint_ = setpoint;
@@ -792,14 +843,24 @@ class TalonHWState
 		{
 			return motion_profile_status_;
 		}
-		void setMotionControlFramePeriod(int msec)
+
+		void setStatusFramePeriod(StatusFrame status_frame, uint8_t period)
 		{
-			motion_control_frame_period_ = msec;
+			if ((status_frame >= Status_1_General) && (status_frame < Status_Last))
+				status_frame_periods_[status_frame] = period;
+			else
+				ROS_ERROR("Invalid status_frame value passed to TalonHWState::setStatusFramePeriod()");
 		}
-		int getMotionControlFramePeriod(void) const
+
+		uint8_t getStatusFramePeriod(StatusFrame status_frame) const
 		{
-			return motion_control_frame_period_;
+			if ((status_frame >= Status_1_General) && (status_frame < Status_Last))
+				return status_frame_periods_[status_frame];
+
+			ROS_ERROR("Invalid status_frame value passed to TalonHWState::setStatusFramePeriod()");
+			return 0;
 		}
+
 		void setMotionProfileTrajectoryPeriod(int msec)
 		{
 			motion_profile_trajectory_period_ = msec;
@@ -812,10 +873,10 @@ class TalonHWState
 		{
 			return custom_profile_status_;
 		}
-		void setCustomProfileStatus(const CustomProfileStatus &status) 
+		void setCustomProfileStatus(const CustomProfileStatus &status)
 		{
 			custom_profile_status_ = status;
-		}		
+		}
 		void setPidfP(double pidf_p, size_t index)
 		{
 			if ((index == 0) || (index == 1))
@@ -899,6 +960,22 @@ class TalonHWState
 		void setClosedLoopTarget(double closed_loop_target)
 		{
 			closed_loop_target_ = closed_loop_target;
+		}
+		void setPTerm(double p_term)
+		{
+			p_term_ = p_term;
+		}
+		void setITerm(double i_term)
+		{
+			i_term_ = i_term;
+		}
+		void setDTerm(double d_term)
+		{
+			d_term_ = d_term;
+		}
+		void setFTerm(double f_term)
+		{
+			f_term_ = f_term;
 		}
 		void setActiveTrajectoryPosition(double active_trajectory_position)
 		{
@@ -1012,8 +1089,8 @@ class TalonHWState
 		double pidf_i_[2];
 		double pidf_d_[2];
 		double pidf_f_[2];
-		int   pidf_izone_[2];
-		int   allowable_closed_loop_error_[2];
+		int    pidf_izone_[2];
+		int    allowable_closed_loop_error_[2];
 		double max_integral_accumulator_[2];
 		double closed_loop_peak_output_[2];
 		int    closed_loop_period_[2];
@@ -1022,20 +1099,25 @@ class TalonHWState
 		double integral_accumulator_;
 		double error_derivative_;
 		double closed_loop_target_;
+		double p_term_;
+		double i_term_;
+		double d_term_;
+		double f_term_;
 		double active_trajectory_position_;
 		double active_trajectory_velocity_;
 		double active_trajectory_heading_;
-		bool forward_limit_switch_closed_;
-		bool reverse_limit_switch_closed_;
-		bool forward_softlimit_hit_;
-		bool reverse_softlimit_hit_;
-		TalonMode talon_mode_;
+		bool   forward_limit_switch_closed_;
+		bool   reverse_limit_switch_closed_;
+		bool   forward_softlimit_hit_;
+		bool   reverse_softlimit_hit_;
+
+		TalonMode  talon_mode_;
 		DemandType demand1_type_;
-		double demand1_value_;
+		double     demand1_value_;
 
 		int can_id_;
 
-		int slot_;
+		int  slot_;
 		bool invert_;
 		bool sensor_phase_;
 
@@ -1096,8 +1178,9 @@ class TalonHWState
 		bool motion_profile_top_level_buffer_full_;
 		MotionProfileStatus motion_profile_status_;
 		CustomProfileStatus custom_profile_status_;
-		int motion_control_frame_period_;
 		int motion_profile_trajectory_period_;
+
+		std::array<uint8_t, Status_Last> status_frame_periods_;
 
 		unsigned int faults_;
 		unsigned int sticky_faults_;

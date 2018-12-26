@@ -34,6 +34,7 @@
   <depend>elevator_controller</depend>
   <depend>message_runtime</depend>
   <depend>match_data_controller</depend>
+  <depend>robot_controller_interface</depend>
 
   <export>
   </export>

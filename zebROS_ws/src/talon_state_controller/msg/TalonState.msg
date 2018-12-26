@@ -46,8 +46,8 @@ int32[] pid_allowable_closed_loop_error0
 float64[] pid_max_integral_accumulator0
 float64[] pid_closed_loop_peak_output0
 int32[]   pid_closed_loop_period0
-float64[] pid_i1
 float64[] pid_p1
+float64[] pid_i1
 float64[] pid_d1
 float64[] pid_f1
 int32[] pid_izone1
@@ -62,6 +62,10 @@ float64[] closed_loop_error
 float64[] integral_accumulator
 float64[] error_derivative
 float64[] closed_loop_target
+float64[] p_term
+float64[] i_term
+float64[] d_term
+float64[] f_term
 float64[] active_trajectory_position
 float64[] active_trajectory_velocity
 float64[] active_trajectory_heading
@@ -113,7 +117,20 @@ int32[]   motion_profile_status_profile_slot_select0
 int32[]   motion_profile_status_profile_slot_select1
 string[]  motion_profile_status_output_enable
 int32[]   motion_profile_time_dur_ms
-float64[] motion_profile_control_frame_period
+uint8[]   status_1_general_period
+uint8[]   status_2_feedback0_period
+uint8[]   status_3_quadrature_period
+uint8[]   status_4_aintempvbat_period
+uint8[]   status_6_misc_period
+uint8[]   status_7_commstatus_period
+uint8[]   status_8_pulsewidth_period
+uint8[]   status_9_motprofbuffer_period
+uint8[]   status_10_motionmagic_period
+uint8[]   status_11_uartgadgeteer_period
+uint8[]   status_12_feedback1_period
+uint8[]   status_13_base_pidf0_period
+uint8[]   status_14_turn_pidf1_period
+uint8[]   status_15_firmwareapistatus_period
 float64[] motion_profile_trajectory_period
 string[]  faults
 string[]  sticky_faults
@@ -121,4 +138,3 @@ float64[] conversion_factor
 talon_state_controller/CustomProfileStatus[] custom_profile_status
 bool[]    water_game
 
-#TODO: add custom profile status struct by breaking it up etc.

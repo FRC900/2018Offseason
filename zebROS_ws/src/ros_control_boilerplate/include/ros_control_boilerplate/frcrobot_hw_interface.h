@@ -56,9 +56,11 @@
 #include <DoubleSolenoid.h>
 #include <AHRS.h>
 #include <Compressor.h>
-#include "LiveWindow/LiveWindow.h"
-#include "SmartDashboard/SmartDashboard.h"
+#include <LiveWindow/LiveWindow.h>
+#include <SmartDashboard/SmartDashboard.h>
 #include <std_msgs/Float64.h>
+
+#include <robot_controller_interface/robot_controller_interface.hpp>
 
 namespace frcrobot_control
 {
@@ -179,7 +181,7 @@ class FRCRobotHWInterface : public ros_control_boilerplate::FRCRobotInterface
 
 		void process_motion_profile_buffer_thread(double hz);
 		void customProfileSetMode(int joint_id,
-				 				  hardware_interface::TalonMode mode,
+								  hardware_interface::TalonMode mode,
 								  double setpoint,
 								  hardware_interface::DemandType demandtype,
 								  double demandvalue) override;
@@ -214,10 +216,12 @@ class FRCRobotHWInterface : public ros_control_boilerplate::FRCRobotInterface
 			const hardware_interface::LimitSwitchNormal input_ls,
 			ctre::phoenix::motorcontrol::LimitSwitchNormal &output_ls);
 		bool convertVelocityMeasurementPeriod(
-			const hardware_interface::VelocityMeasurementPeriod input_v_m_p, 
+			const hardware_interface::VelocityMeasurementPeriod input_v_m_p,
 			ctre::phoenix::motorcontrol::VelocityMeasPeriod &output_v_m_period);
+		bool convertStatusFrame(const hardware_interface::StatusFrame input,
+			ctre::phoenix::motorcontrol::StatusFrameEnhanced &output);
 
-		bool safeTalonCall(ctre::phoenix::ErrorCode error_code, 
+		bool safeTalonCall(ctre::phoenix::ErrorCode error_code,
 				const std::string &talon_method_name);
 
 		std::atomic<bool> stop_arm_;
@@ -251,6 +255,8 @@ class FRCRobotHWInterface : public ros_control_boilerplate::FRCRobotInterface
 		std::thread motion_profile_thread_;
 
 		PowerDistributionPanel pdp_joint_;
+		hardware_interface::RobotControllerState shared_robot_controller_state_;
+		std::mutex robot_controller_state_mutex_;
 
 		ROSIterativeRobot robot_;
 };  // class

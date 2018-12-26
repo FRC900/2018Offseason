@@ -540,6 +540,7 @@ void FRCRobotSimInterface::init(void)
 	// to initialize each Talon with various params
 	// set for that motor controller in config files.
 	// TODO : assert can_talon_srx_names_.size() == can_talon_srx_can_ids_.size()
+
 	for (size_t i = 0; i < can_talon_srx_names_.size(); i++)
 	{
 		ROS_INFO_STREAM_NAMED("frcrobot_sim_interface",
@@ -636,6 +637,9 @@ void FRCRobotSimInterface::read(ros::Duration &/*elapsed_time*/)
             if(digital_input_names_[i] == "intake_line_break_low") {
                 digital_input_state_[i] = (intake_low) ? 1 : 0; 
             }
+            if(digital_input_names_[i] == "intake_line_break") {
+                digital_input_state_[i] = (has_cube) ? 1 : 0;
+            }
         }    
 
     // Simulated state is updated in write, so just
@@ -663,7 +667,7 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 
 	// Is match data reporting the robot enabled now?
 	const bool robot_enabled = match_data_enabled_.load(std::memory_order_relaxed);
-	
+
 	for (std::size_t joint_id = 0; joint_id < num_can_talon_srxs_; ++joint_id)
 	{
 		auto &ts = talon_state_[joint_id];
@@ -672,7 +676,7 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 		if(talon_command_[joint_id].getCustomProfileRun())
 		{
 			can_talon_srx_run_profile_stop_time_[joint_id] = ros::Time::now().toSec();
-			continue; //Don't mess with talons running in custom profile mode		
+			continue; //Don't mess with talons running in custom profile mode
 		}
 		// If commanded mode changes, copy it over
 		// to current state
@@ -910,6 +914,17 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 			ts.setCurrentLimitEnable(enable);
 		}
 
+		for (int i = hardware_interface::Status_1_General; i < hardware_interface::Status_Last; i++)
+		{
+			uint8_t period;
+			const hardware_interface::StatusFrame status_frame = static_cast<hardware_interface::StatusFrame>(i);
+			if (tc.statusFramePeriodChanged(status_frame, period) && (period != 0))
+			{
+				ts.setStatusFramePeriod(status_frame, period);
+				ROS_INFO_STREAM("Updated joint " << joint_id << "=" << can_talon_srx_names_[joint_id] <<" status_frame " << i << "=" << static_cast<int>(period) << "mSec");
+			}
+		}
+
 		if (motion_profile_mode)
 		{
 			double motion_cruise_velocity;
@@ -919,15 +934,6 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 				ROS_INFO_STREAM("Updated joint " << joint_id << "=" << can_talon_srx_names_[joint_id] <<" cruise velocity / acceleration");
 				ts.setMotionCruiseVelocity(motion_cruise_velocity);
 				ts.setMotionAcceleration(motion_acceleration);
-			}
-
-			// Do this before rest of motion profile stuff
-			// so it takes effect before starting a buffer?
-			int motion_control_frame_period;
-			if (tc.motionControlFramePeriodChanged(motion_control_frame_period))
-			{
-				ROS_INFO_STREAM("Updated joint " << joint_id << "=" << can_talon_srx_names_[joint_id] <<" motion control frame period");
-				ts.setMotionControlFramePeriod(motion_control_frame_period);
 			}
 
 			int motion_profile_trajectory_period;
@@ -1000,6 +1006,16 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 		{
 			ts.setSpeed(0); // Don't know how to simulate decel, so just pretend we are stopped
 		}
+		else if (simulate_mode == hardware_interface::TalonMode_PercentOutput)
+		{
+			double percent;
+
+			if (tc.commandChanged(percent))
+				ts.setSetpoint(percent);
+
+			ts.setPosition(ts.getPosition() + percent*2*M_PI * elapsed_time.toSec());
+			ts.setSpeed(percent*2*M_PI);
+		}
 
 		if (tc.clearStickyFaultsChanged())
 			ROS_INFO_STREAM("Cleared joint " << joint_id << "=" << can_talon_srx_names_[joint_id] <<" sticky_faults");
@@ -1018,8 +1034,8 @@ void FRCRobotSimInterface::write(ros::Duration &elapsed_time)
 		if (converted_command != digital_output_state_[i])
 		{
 			digital_output_state_[i] = converted_command;
-			ROS_INFO_STREAM("DIO " << digital_output_names_[i] << 
-					"at channel" <<  digital_output_dio_channels_[i] << 
+			ROS_INFO_STREAM("DIO " << digital_output_names_[i] <<
+					"at channel" <<  digital_output_dio_channels_[i] <<
 					" set to " << converted_command);
 		}
 	}

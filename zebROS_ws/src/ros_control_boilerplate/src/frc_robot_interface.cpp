@@ -42,7 +42,7 @@
 namespace ros_control_boilerplate
 {
 FRCRobotInterface::FRCRobotInterface(ros::NodeHandle &nh, urdf::Model *urdf_model) :
-   	  name_("generic_hw_interface")
+	  name_("generic_hw_interface")
 	, nh_(nh)
 	, num_can_talon_srxs_(0)
 	, num_nidec_brushlesses_(0)
@@ -650,6 +650,8 @@ void FRCRobotInterface::init()
 
 	hardware_interface::MatchStateHandle msh("match_name", &match_data_);
 	match_state_interface_.registerHandle(msh);
+	hardware_interface::RobotControllerStateHandle rcsh("robot_controller_name", &robot_controller_state_);
+	robot_controller_state_interface_.registerHandle(rcsh);
 
 	// Add a flag which indicates we should signal
 	// the driver station that robot code is initialized
@@ -677,6 +679,7 @@ void FRCRobotInterface::init()
 	registerInterface(&imu_interface_);
 	registerInterface(&pdp_state_interface_);
         registerInterface(&match_state_interface_);
+	registerInterface(&robot_controller_state_interface_);
 
 	ROS_INFO_STREAM_NAMED(name_, "FRCRobotInterface Ready.");
 }
@@ -904,7 +907,7 @@ void FRCRobotInterface::custom_profile_thread(int joint_id)
 			int end;
 			status.outOfPoints = true;
 			double time_since_start = ros::Time::now().toSec() - time_start;
-			for(; start < saved_points[slot].size(); start++)
+			for(; start < (int)saved_points[slot].size(); start++)
 			{
 				//Find the point just greater than time since start	
 				if(saved_times[slot][start] > time_since_start)
@@ -974,7 +977,7 @@ void FRCRobotInterface::custom_profile_thread(int joint_id)
 
 		for(size_t i = 0; i < saved_points.size(); i++)
 		{
-			if(i == status.slotRunning)
+			if((int)i == status.slotRunning)
 			{
 				status.remainingPoints[i] = talon_command_[joint_id].getCustomProfileCount(i) - points_run;
 				if(talon_command_[joint_id].getCustomProfileTimeCount(i) > 0)
@@ -1038,7 +1041,7 @@ std::string FRCRobotInterface::printCommandHelper()
 	return ss.str();
 }
 
-void FRCRobotInterface::loadURDF(ros::NodeHandle &nh, std::string param_name)
+void FRCRobotInterface::loadURDF(ros::NodeHandle &/*nh*/, std::string /*param_name*/)
 {
 	return;
 #if 0

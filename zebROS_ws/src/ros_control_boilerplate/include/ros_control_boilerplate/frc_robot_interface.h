@@ -52,6 +52,7 @@
 #include <talon_interface/talon_command_interface.h>
 #include "pdp_state_controller/pdp_state_interface.h"
 #include "match_data_controller/match_data_interface.h"
+#include "robot_controller_interface/robot_controller_interface.hpp"
 
 namespace ros_control_boilerplate
 {
@@ -133,34 +134,35 @@ class FRCRobotInterface : public hardware_interface::RobotHW
 		hardware_interface::TalonCommandInterface  talon_command_interface_;
 
 		hardware_interface::ImuSensorInterface imu_interface_;
+		hardware_interface::RobotControllerStateInterface robot_controller_state_interface_;
 
 		void custom_profile_thread(int joint_id);
 		void custom_profile_set_talon(hardware_interface::TalonMode mode, double setpoint, double fTerm, int joint_id, int pidSlot, bool zeroPos, double start_run, int &pid_slot);
 
-		// These are overridden in hw_interface to actually 
+		// These are overridden in hw_interface to actually
 		// write to talon HW
-		virtual void customProfileSetMode(int joint_id,
-				 						  hardware_interface::TalonMode mode,
-										  double setpoint,
-										  hardware_interface::DemandType demandtype,
-										  double demandvalue)
+		virtual void customProfileSetMode(int /*joint_id*/,
+										  hardware_interface::TalonMode /*mode*/,
+										  double /*setpoint*/,
+										  hardware_interface::DemandType /*demandtype*/,
+										  double /*demandvalue*/)
 		{
 		}
 
-		virtual void customProfileSetSensorPosition(int joint_id, double position)
+		virtual void customProfileSetSensorPosition(int /*joint_id*/, double /*position*/)
 		{
 		}
-		virtual void customProfileSetPIDF(int    joint_id,
-										  int    pid_slot,
-										  double p,
-										  double i,
-										  double d,
-										  double f,
-										  int    iz,
-										  int    allowable_closed_loop_error,
-										  double max_integral_accumulator,
-										  double closed_loop_peak_output,
-										  int    closed_loop_period)
+		virtual void customProfileSetPIDF(int    /*joint_id*/,
+										  int    /*pid_slot*/,
+										  double /*p*/,
+										  double /*i*/,
+										  double /*d*/,
+										  double /*f*/,
+										  int    /*iz*/,
+										  int    /*allowable_closed_loop_error*/,
+										  double /*max_integral_accumulator*/,
+										  double /*closed_loop_peak_output*/,
+										  int    /*closed_loop_period*/)
 		{
 		}
 
@@ -240,11 +242,12 @@ class FRCRobotInterface : public hardware_interface::RobotHW
 		std::vector<double> solenoid_state_;
 		std::vector<double> double_solenoid_state_;
 		std::vector<double> rumble_state_; //No actual data
-		std::vector<double> navX_state_;	
+		std::vector<double> navX_state_;
 		std::vector<double> compressor_state_;
 		hardware_interface::PDPHWState pdp_state_;
 		hardware_interface::MatchHWState match_data_;
-	
+		hardware_interface::RobotControllerState robot_controller_state_;
+
 		// Each entry in the vector is an array. That array holds
 		// the data returned from one particular imu
 		std::vector<std::array<double,4>> imu_orientations_; // x,y,z,w
@@ -253,7 +256,7 @@ class FRCRobotInterface : public hardware_interface::RobotHW
 		std::vector<std::array<double,9>> imu_angular_velocity_covariances_;
 		std::vector<std::array<double,3>> imu_linear_accelerations_; // x,y,z
 		std::vector<std::array<double,9>> imu_linear_acceleration_covariances_;
-			
+
 		std::vector<double> analog_input_state_;
 		// Same as above, but for pending commands to be
 		// written to the hardware

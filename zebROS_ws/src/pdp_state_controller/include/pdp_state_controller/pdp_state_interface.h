@@ -56,6 +56,12 @@ class PDPHWState
 
 };
 
+/* PDPHWState pdp_state_;
+pdp_state_.voltage_ = 4; //wrong and sad
+volts = 4;
+pdp_state_.setVoltage(4);
+volts = pdp_state_.getVoltage();*/
+
 class PDPStateHandle
 {
 	public:

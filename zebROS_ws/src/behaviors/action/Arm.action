@@ -1,0 +1,9 @@
+#goal
+int8 arm_position
+bool intake_cube
+float64 intake_timeout
+---
+#result
+bool success
+---
+#feedback

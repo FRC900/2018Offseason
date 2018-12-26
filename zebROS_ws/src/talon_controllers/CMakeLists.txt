@@ -14,9 +14,9 @@ find_package(catkin REQUIRED COMPONENTS
   dynamic_reconfigure
 )
 
-generate_dynamic_reconfigure_options( cfg/TalonConfig.cfg)
+generate_dynamic_reconfigure_options(cfg/TalonConfig.cfg)
 
-add_message_files(FILES CloseLoopControllerMsg.msg)
+add_service_files(FILES PidfSlot.srv)
 generate_messages(DEPENDENCIES talon_controllers)
 
 # Declare catkin package
@@ -52,7 +52,10 @@ target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 # Install
 install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  PATTERN *~ EXCLUDE
+  PATTERN *.sw? EXCLUDE
+  )
 
 install(TARGETS ${PROJECT_NAME}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
