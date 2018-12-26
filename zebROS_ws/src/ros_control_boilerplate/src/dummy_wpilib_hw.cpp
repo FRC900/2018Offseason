@@ -217,10 +217,6 @@ bool frc::DriverStation::IsNewControlData() const
 	ROS_ERROR("Called DriverStation::IsNewControlData() const on unsupported platform");
 	return false;
 }
-void frc::DriverStation::WaitForData()
-{
-	ROS_ERROR("Called DriverStation::WaitForData() on unsupported platform");
-}
 
 #include <frc/ErrorBase.h>
 frc::ErrorBase::ErrorBase()
