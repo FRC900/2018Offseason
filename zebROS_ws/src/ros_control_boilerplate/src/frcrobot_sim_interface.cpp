@@ -526,7 +526,7 @@ void FRCRobotSimInterface::match_data_callback(const match_state_controller::Mat
 	match_data_.setEnabled(match_data.Enabled);
 	match_data_.setDisabled(match_data.Disabled);
 	match_data_.setAutonomous(match_data.Autonomous);
-	match_data_.setFMSAttached(match_data.FMSAttatched);
+	match_data_.setFMSAttached(match_data.FMSAttached);
 	match_data_.setOperatorControl(match_data.OperatorControl);
 	match_data_.setTest(match_data.Test);
 	match_data_.setBatteryVoltage(match_data.BatteryVoltage);

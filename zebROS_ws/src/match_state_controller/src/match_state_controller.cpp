@@ -1,4 +1,5 @@
 #include "match_state_controller/match_state_controller.h"
+#include <pluginlib/class_list_macros.h>
 
 namespace match_state_controller
 {
@@ -40,7 +41,7 @@ namespace match_state_controller
 	     m.Enabled = false;
 	     m.Disabled = false;
 	     m.Autonomous = false;
-		 m.FMSAttatched = false;
+		 m.FMSAttached = false;
 	     m.OperatorControl = false;
 	     m.Test = false;
 	     m.BatteryVoltage = 0.0;
@@ -48,7 +49,6 @@ namespace match_state_controller
 	     match_state_ = hw->getHandle(match_name);
 
 	     return true;
-
 	 }
 
     void MatchStateController::starting(const ros::Time &time)
@@ -83,7 +83,7 @@ namespace match_state_controller
 				m.Enabled = ms->isEnabled();
 				m.Disabled = ms->isDisabled();
 				m.Autonomous = ms->isAutonomous();
-				m.FMSAttatched = ms->isFMSAttached();
+				m.FMSAttached = ms->isFMSAttached();
 				m.OperatorControl = ms->isOperatorControl();
 				m.Test = ms->isTest();
 				m.BatteryVoltage = ms->getBatteryVoltage();

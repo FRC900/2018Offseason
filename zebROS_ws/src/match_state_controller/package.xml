@@ -50,20 +50,22 @@
   <!--   <doc_depend>doxygen</doc_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>roscpp</build_depend>
-  <build_depend>rospy</build_depend>
   <build_depend>std_msgs</build_depend>
   <build_depend>realtime_tools</build_depend>
+  <build_depend>state_handle</build_depend>
+  <build_depend>hardware_interface</build_depend>
   <build_export_depend>roscpp</build_export_depend>
-  <build_export_depend>rospy</build_export_depend>
   <build_export_depend>std_msgs</build_export_depend>
+  <build_export_depend>state_handle</build_export_depend>
+  <build_export_depend>hardware_interface</build_export_depend>
   <exec_depend>roscpp</exec_depend>
-  <exec_depend>rospy</exec_depend>
   <exec_depend>std_msgs</exec_depend>
-
+  <depend>pluginlib</depend>
+  <depend>controller_interface</depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <!-- Other tools can request additional information be placed here -->
-
+	<controller_interface plugin="${prefix}/match_state_controller_plugins.xml"/>
   </export>
 </package>

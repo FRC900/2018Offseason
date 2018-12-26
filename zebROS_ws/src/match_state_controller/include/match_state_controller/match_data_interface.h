@@ -1,6 +1,7 @@
 #pragma once
 
 #include <hardware_interface/internal/hardware_resource_manager.h>
+#include <state_handle/state_handle.h>
 
 namespace hardware_interface
 {
@@ -29,11 +30,11 @@ class MatchHWState
 			test_(false),
 
 			battery_voltage_(0.0)
-		{}		
+		{}
 
 		//access and set
 		int getMatchTimeRemaining(void) const		{return match_time_remaining_;}
-		
+
 		std::string getAllianceData(void) const		{return alliance_data_;}
 		std::string getEventName(void) const		{return event_name_;}
 
@@ -51,14 +52,12 @@ class MatchHWState
 		bool isTest(void) const				{return test_;}
 
 		double getBatteryVoltage(void) const		{return battery_voltage_;}
-		
-		
-		
+
 		void setMatchTimeRemaining(int match_time_remaining)		{match_time_remaining_ = match_time_remaining;}
 
 		void setAllianceData(std::string alliance_data)			{alliance_data_ = alliance_data;}
 		void setEventName(std::string event_name)			{event_name_ = event_name;}
-	
+
 		void setAllianceColor(int alliance_color)			{alliance_color_ = alliance_color;}
 		void setMatchType(int match_type)				{match_type_ = match_type;}
 		void setDriverStationLocation(int driver_station_location)	{driver_station_location_ = driver_station_location;}
@@ -70,7 +69,7 @@ class MatchHWState
 		void setAutonomous(bool autonomous)				{autonomous_ = autonomous;}
 		void setFMSAttached(bool fms_attached)				{fms_attached_ = fms_attached;}
 		void setOperatorControl(bool operator_control)			{operator_control_ = operator_control;}
-		void setTest(bool test) 					{test_ = test;}
+		void setTest(bool test)					{test_ = test;}
 
 		void setBatteryVoltage(double battery_voltage)			{battery_voltage_ = battery_voltage;}
 	private:
@@ -94,34 +93,10 @@ class MatchHWState
 		bool test_;
 
 		double battery_voltage_;
-
 };
 
-class MatchStateHandle
-{
-	public:
-		MatchStateHandle(void) : state_(0) {}
-
-		MatchStateHandle(const std::string &name, const MatchHWState *state) : 
-			name_(name),
-			state_(state)
-		{
-			if (!state)
-				throw HardwareInterfaceException("Cannot create Match state handle '" + name + "'. State pointer is null.");
-		}
-
-		std::string getName(void) const {return name_;}
-
-		const MatchHWState *operator->() const
-		{
-			assert(state_);
-			return state_;
-		}
-
-	private:
-		std::string 	name_;
-		const MatchHWState *state_;
-};
+typedef StateHandle<const MatchHWState> MatchStateHandle;
+typedef StateHandle<MatchHWState> MatchStateWritableHandle;
 
 class MatchStateInterface: public HardwareResourceManager<MatchStateHandle> {};
 }

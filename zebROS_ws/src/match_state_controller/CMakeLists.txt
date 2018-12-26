@@ -8,11 +8,14 @@ add_compile_options(-std=c++11)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  rospy
   roscpp
   std_msgs
-  message_generation
   realtime_tools
+  hardware_interface
+  controller_interface
+  message_generation
+  state_handle
+  pluginlib
 )
 
 ## System dependencies are found with CMake's conventions
@@ -106,7 +109,7 @@ add_message_files(
 catkin_package(
    INCLUDE_DIRS include
 #  LIBRARIES match_state_controller
-  CATKIN_DEPENDS roscpp rospy std_msgs message_runtime
+  CATKIN_DEPENDS roscpp std_msgs hardware_interface state_handle message_runtime pluginlib
 #  DEPENDS system_lib
 )
 
@@ -116,10 +119,10 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-include_directories(
- include/
-  ${catkin_INCLUDE_DIRS}
-)
+#include_directories(
+#include/
+#${catkin_INCLUDE_DIRS}
+#)
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
@@ -201,8 +204,6 @@ include_directories(
 include_directories(
   include/
   ${catkin_INCLUDE_DIRS}
-  #  $ENV{HOME}/wpilib/cpp/current/include
-  #  $ENV{HOME}/wpilib/user/cpp/include
 )
 
 add_library(match_state_controller src/match_state_controller.cpp)

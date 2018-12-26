@@ -80,6 +80,10 @@ joint_state_listener_controller:
     type:      state_listener_controller/JointStateListenerController
     topic:     /frcrobot_rio/joint_states
 
+match_state_listener_controller:
+    type:      state_listener_controller/MatchStateListenerController
+    topic:     /frcrobot_rio/match_data
+
 do2_controller:
     type: position_controllers/JointPositionController
     joint: do2

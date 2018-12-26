@@ -14,7 +14,7 @@ int8 replayNumber
 bool Enabled
 bool Disabled
 bool Autonomous
-bool FMSAttatched
+bool FMSAttached
 bool OperatorControl
 bool Test
 

@@ -152,6 +152,7 @@ class FRCRobotInterface : public hardware_interface::RobotHW
 		hardware_interface::RemotePCMStateInterface	  pcm_remote_state_interface_;
 
 		hardware_interface::MatchStateInterface       match_state_interface_;
+		hardware_interface::RemoteMatchStateInterface match_remote_state_interface_;
 
 		hardware_interface::JointCommandInterface  joint_command_interface_;
 		hardware_interface::PositionJointInterface joint_position_interface_;

@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   hardware_interface
   roscpp
   sensor_msgs
+  match_state_controller
   pcm_state_interface
   pdp_state_interface
   talon_interface
@@ -107,7 +108,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
  INCLUDE_DIRS include
 #  LIBRARIES remote_hardware_interface
-  CATKIN_DEPENDS hardware_interface roscpp sensor_msgs pcm_state_interface pdp_state_interface
+  CATKIN_DEPENDS hardware_interface roscpp sensor_msgs match_state_controller pcm_state_interface pdp_state_interface
 #  DEPENDS system_lib
 )
 

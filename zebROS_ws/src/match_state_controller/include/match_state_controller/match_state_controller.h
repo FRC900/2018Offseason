@@ -6,7 +6,6 @@
 #include <boost/shared_ptr.hpp>
 #include <match_state_controller/match_data_interface.h>
 #include "match_state_controller/MatchSpecificData.h"
-#include <pluginlib/class_list_macros.h>
 
 namespace match_state_controller
 {
@@ -17,11 +16,11 @@ class MatchStateController: public controller_interface::Controller<hardware_int
 
 		virtual bool init(hardware_interface::MatchStateInterface *hw,
 						ros::NodeHandle					&root_nh,
-						ros::NodeHandle					&controller_nh);
+						ros::NodeHandle					&controller_nh) override;
 
-		virtual void starting(const ros::Time &time);
-		virtual void update(const ros::Time &time, const ros::Duration & );
-		virtual void stopping(const ros::Time &time);
+		virtual void starting(const ros::Time &time) override;
+		virtual void update(const ros::Time &time, const ros::Duration & ) override;
+		virtual void stopping(const ros::Time &time) override;
 
 	private:
 		hardware_interface::MatchStateHandle match_state_;

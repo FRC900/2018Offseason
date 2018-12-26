@@ -8,6 +8,7 @@
 #include "remote_hardware_interface/remote_joint_interface.h"
 #include "pdp_state_controller/PDPData.h"
 #include "talon_state_controller/TalonState.h"
+#include "match_state_controller/MatchSpecificData.h"
 
 namespace state_listener_controller
 {
@@ -169,15 +170,8 @@ class PDPStateListenerController :
 
 		virtual void update(const ros::Time & /*time*/, const ros::Duration & /*period*/) override
 		{
-			const hardware_interface::PDPHWState data = *command_buffer_.readFromRT();
-
-			handle_->setVoltage(data.getVoltage());
-			handle_->setTemperature(data.getTemperature());
-			handle_->setTotalCurrent(data.getTotalCurrent());
-			handle_->setTotalPower(data.getTotalPower());
-			handle_->setTotalEnergy(data.getTotalEnergy());
-			for (size_t channel = 0; channel <= 15; channel++)
-				handle_->setCurrent(data.getCurrent(channel), channel);
+			// Quick way to do a shallow copy of the entire HW state
+			*(handle_.operator->()) = *command_buffer_.readFromRT();
 		}
 
 	private:
@@ -203,6 +197,90 @@ class PDPStateListenerController :
 			for (size_t channel = 0; channel <= 15; channel++)
 				data.setCurrent(msg->current[channel], channel);
 			command_buffer_.writeFromNonRT(data);
+		}
+};
+
+class MatchStateListenerController :
+	public controller_interface::Controller<hardware_interface::RemoteMatchStateInterface>
+{
+	public:
+		MatchStateListenerController() {}
+		~MatchStateListenerController()
+		{
+			sub_command_.shutdown();
+		}
+
+		virtual bool init(hardware_interface::RemoteMatchStateInterface *hw, ros::NodeHandle &n) override
+		{
+			// Read list of hw, make a list, grab handles for them, plus allocate storage space
+			auto joint_names = hw->getNames();
+			if (joint_names.size() == 0)
+			{
+				ROS_ERROR("Match State Listener Controller : no remote match joints defined. Don't run this on a roboRio");
+			}
+			ROS_INFO_STREAM("Match State Listener Controller got joint " << joint_names[0]);
+			handle_ = hw->getHandle(joint_names[0]);
+
+			std::string topic;
+
+			// get topic to subscribe to
+			if (!n.getParam("topic", topic))
+			{
+				ROS_ERROR("Parameter 'topic' not set");
+				return false;
+			}
+
+			sub_command_ = n.subscribe<match_state_controller::MatchSpecificData>(topic, 1, &MatchStateListenerController::commandCB, this);
+			return true;
+		}
+
+		virtual void starting(const ros::Time & /*time*/) override
+		{
+		}
+		virtual void stopping(const ros::Time & /*time*/) override
+		{
+			//handles_.release();
+		}
+
+		virtual void update(const ros::Time & /*time*/, const ros::Duration & /*period*/) override
+		{
+			// Quick way to do a shallow copy of the entire HW state
+			*(handle_.operator->()) = *command_buffer_.readFromRT();
+		}
+
+	private:
+		ros::Subscriber sub_command_;
+		hardware_interface::MatchStateWritableHandle handle_;
+
+		// Real-time buffer holds the last command value read from the
+		// "command" topic.
+		realtime_tools::RealtimeBuffer<hardware_interface::MatchHWState> command_buffer_;
+
+		// Iterate through each desired joint state.  If it is found in
+		// the message, save the value here in the realtime buffer.
+		// // TODO : figure out how to hack this to use a ConstPtr type instead
+		virtual void commandCB(const match_state_controller::MatchSpecificDataConstPtr &msg)
+		{
+			hardware_interface::MatchHWState data;
+			data.setMatchTimeRemaining(msg->matchTimeRemaining);
+
+			data.setAllianceData(msg->allianceData);
+			data.setEventName(msg->eventName);
+
+			data.setAllianceColor(msg->allianceColor);
+			data.setMatchType(msg->matchType);
+			data.setDriverStationLocation(msg->driverStationLocation);
+			data.setMatchNumber(msg->matchNumber);
+			data.setReplayNumber(msg->replayNumber);
+
+			data.setEnabled(msg->Enabled);
+			data.setDisabled(msg->Disabled);
+			data.setAutonomous(msg->Autonomous);
+			data.setFMSAttached(msg->FMSAttached);
+			data.setOperatorControl(msg->OperatorControl);
+			data.setTest(msg->Test);
+
+			data.setBatteryVoltage(msg->BatteryVoltage);
 		}
 };
 
