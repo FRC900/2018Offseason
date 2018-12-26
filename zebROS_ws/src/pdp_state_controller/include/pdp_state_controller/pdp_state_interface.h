@@ -66,7 +66,7 @@ class PDPStateHandle
 			state_(state)
 		{
 			if (!state)
-				throw HardwareInterfaceException("Cannot create Talon state handle '" + name + "'. State pointer is null.");
+				throw HardwareInterfaceException("Cannot create PDP state handle '" + name + "'. State pointer is null.");
 		}
 		std::string getName(void) const {return name_;}
 

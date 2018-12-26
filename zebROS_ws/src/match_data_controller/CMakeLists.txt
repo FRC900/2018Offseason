@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(match_data_controller)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -200,8 +200,8 @@ include_directories(
 include_directories(
   include/
   ${catkin_INCLUDE_DIRS}
-  $ENV{HOME}/wpilib/cpp/current/include
-  $ENV{HOME}/wpilib/user/cpp/include
+  #  $ENV{HOME}/wpilib/cpp/current/include
+  #  $ENV{HOME}/wpilib/user/cpp/include
 )
 
 add_library(match_data_controller src/match_data_controller.cpp)

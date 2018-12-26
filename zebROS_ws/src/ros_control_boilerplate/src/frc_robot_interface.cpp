@@ -648,8 +648,8 @@ void FRCRobotInterface::init()
 	hardware_interface::PDPStateHandle psh("pdp_name", &pdp_state_);
 	pdp_state_interface_.registerHandle(psh);
 
-	hardware_interface::MatchStateHandle psh("match_name", &match_data_);
-	match_data_interface_.registerHandle(psh);
+	hardware_interface::MatchStateHandle msh("match_name", &match_data_);
+	match_state_interface_.registerHandle(msh);
 
 	// Add a flag which indicates we should signal
 	// the driver station that robot code is initialized
@@ -676,6 +676,7 @@ void FRCRobotInterface::init()
 	registerInterface(&joint_effort_interface_); // empty for now
 	registerInterface(&imu_interface_);
 	registerInterface(&pdp_state_interface_);
+        registerInterface(&match_state_interface_);
 
 	ROS_INFO_STREAM_NAMED(name_, "FRCRobotInterface Ready.");
 }

@@ -46,7 +46,7 @@
 #include "ros_control_boilerplate/AutoMode.h"
 #include "ros_control_boilerplate/frcrobot_hw_interface.h"
 #include "ros_control_boilerplate/JoystickState.h"
-#include "ros_control_boilerplate/MatchSpecificData.h"
+#include "match_state_controller/MatchSpecificData.h"
 #include "ros_control_boilerplate/PDPData.h"
 
 #include <geometry_msgs/Twist.h>
@@ -1069,15 +1069,23 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 			pdp_state_.setCurrent(pdp_joint_.GetCurrent(channel), channel);
 		}
 
-		match_state_.seteventName(DriverStation::GetInstance()getEventName());
-		match_state_.setreplayNumber(DriverStation::GetInstance()getReplayNumber());
-		match_state_.setFMSAttached(DriverStation::GetInstance()IsFMSAttached());
-		match_state_.setOperatorControl(DriverStation::GetInstance()IsOperatorControl());
-		match_state_.setTest(DriverStation::GetInstance()IsTest());
-		match_state_.setBatteryVoltage(Driverstation::GetInstance()GetBatteryVoltage());
-		{
-			match_state.setCurrent(DriverStation::GetInstance()GetCurrent(channel), channel);
-		}
+                match_data_.setMatchTimeRemaining(DriverStation::GetInstance().GetMatchTime());
+                match_data_.setAllianceData(DriverStation::GetInstance().GetGameSpecificMessage());
+                match_data_.setEventName(DriverStation::GetInstance().GetEventName());
+
+                match_data_.setAllianceColor(DriverStation::GetInstance().GetAlliance());
+                match_data_.setMatchType(DriverStation::GetInstance().GetMatchType());
+                match_data_.setDriverStationLocation(DriverStation::GetInstance().GetLocation());
+                match_data_.setMatchNumber(DriverStation::GetInstance().GetMatchNumber());
+		match_data_.setReplayNumber(DriverStation::GetInstance().GetReplayNumber());
+
+                match_data_.setEnabled(DriverStation::GetInstance().IsEnabled());
+                match_data_.setDisabled(DriverStation::GetInstance().IsDisabled());
+                match_data_.setAutonomous(DriverStation::GetInstance().IsAutonomous());
+		match_data_.setFMSAttached(DriverStation::GetInstance().IsFMSAttached());
+		match_data_.setOperatorControl(DriverStation::GetInstance().IsOperatorControl());
+		match_data_.setTest(DriverStation::GetInstance().IsTest());
+		match_data_.setBatteryVoltage(Driverstation::GetInstance().GetBatteryVoltage());
 	}
 
 }

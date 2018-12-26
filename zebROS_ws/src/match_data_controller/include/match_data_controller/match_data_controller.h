@@ -9,13 +9,15 @@
 #include <match_data_controller/match_data_interface.h>
 #include <pluginlib/class_list_macros.h>
 #include <sensor_msgs/JointState.h>
+#include "match_data_controller/match_data_interface.h"
+#include "match_data_controller/MatchSpecificData.h"
 
 namespace match_data_controller
 {
-class MatchDataController: public controller_interface::Controller<hardware_interface::MatchData>
+class MatchStateController: public controller_interface::Controller<hardware_interface::MatchStateInterface>
 {
 	public:
-		MatchDataController() : publish_rate_(15.0) {}
+		MatchStateController() : publish_rate_(15.0) {}
 
 		virtual bool init(hardware_interface::MatchStateInterface *hw,
 			

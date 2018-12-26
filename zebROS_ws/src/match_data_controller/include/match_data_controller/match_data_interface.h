@@ -6,10 +6,10 @@ namespace hardware_interface
 {
 
 //holds match data
-class MatchState
+class MatchHWState
 {
 	public:
-		MatchState(void) :
+		MatchHWState(void) :
 			match_time_remaining_(0),
 
 			alliance_data_(""),
@@ -73,7 +73,6 @@ class MatchState
 		void setTest(bool test) 					{test_ = test;}
 
 		void setBatteryVoltage(double battery_voltage)			{battery_voltage_ = battery_voltage;}
-
 	private:
 
 		int match_time_remaining_;
@@ -103,7 +102,7 @@ class MatchStateHandle
 	public:
 		MatchStateHandle(void) : state_(0) {}
 
-		MatchStateHandle(const std::string &name, const MatchState *state) : 
+		MatchStateHandle(const std::string &name, const MatchHWState *state) : 
 			name_(name),
 			state_(state)
 		{
@@ -113,7 +112,7 @@ class MatchStateHandle
 
 		std::string getName(void) const {return name_;}
 
-		const MatchState *operator->() const
+		const MatchHWState *operator->() const
 		{
 			assert(state_);
 			return state_;
@@ -121,7 +120,7 @@ class MatchStateHandle
 
 	private:
 		std::string 	name_;
-		const MatchState *state_;
+		const MatchHWState *state_;
 };
 
 class MatchStateInterface: public HardwareResourceManager<MatchStateHandle> {};

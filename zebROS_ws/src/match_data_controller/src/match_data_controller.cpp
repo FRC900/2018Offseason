@@ -1,4 +1,5 @@
 #include "match_data_controller/match_data_controller.h"
+#include "match_data_controller/match_data_interface.h"
 #include "match_data_controller/MatchSpecificData.h"
 #include <cstddef>
 #include <algorithm>
@@ -7,9 +8,8 @@ namespace match_data_controller
 {
 
     bool MatchStateController::init(hardware_interface::MatchStateInterface *hw,
-
 	    ros::NodeHandle 					&root_nh,
-	    ros::NodeHandle 					&controller_nh),
+	    ros::NodeHandle 					&controller_nh)
 
 	 {
 	     ROS_INFO_STREAM_NAMED("match_data_controller", "init is running");
@@ -37,18 +37,18 @@ namespace match_data_controller
 
 	     m.matchTimeRemaining = 0.0;
 	     m.allianceData = "";
-	     m.getEventName = "";
+	     m.eventName = "";
 	     m.allianceColor = 0.0;
 	     m.matchType = 0.0;
 	     m.driverStationLocation = 0.0;
 	     m.matchNumber = 0.0;
-	     m.getReplayNumber = 0.0;
-	     m.isEnabled = false;
-	     m.isDisabled = false;
-	     m.isAutonomous = false:
-		 m.isFMSAttatched = false;
-	     m.isOperatorControl = false;
-	     m.isTest = false;
+	     m.replayNumber = 0.0;
+	     m.Enabled = false;
+	     m.Disabled = false;
+	     m.Autonomous = false;
+             m.FMSAttatched = false;
+	     m.OperatorControl = false;
+	     m.Test = false;
 	     m.BatteryVoltage = 0.0;
 
 	     match_data_ = hw->getHandle(match_name);
@@ -86,12 +86,12 @@ namespace match_data_controller
 		m.driverStationLocation = ps->getDriverStationLocation();
 		m.matchNumber = ps->getMatchNumber();
 		m.replayNumber = ps->getReplayNumber();
-		m.Enabled = ps->getEnabled();
-		m.Disabled = ps->getDisabled();
-		m.Autonomous = ps->getAutonomous();
-		m.FMSAttatched = ps->getFMSAttatched();
-		m.OperatorControl = ps->getOperatorControl();
-		m.Test = ps->getTest();
+		m.Enabled = ps->isEnabled();
+		m.Disabled = ps->isDisabled();
+		m.Autonomous = ps->isAutonomous();
+		m.FMSAttatched = ps->isFMSAttached();
+		m.OperatorControl = ps->isOperatorControl();
+		m.Test = ps->isTest();
 		m.BatteryVoltage = ps->getBatteryVoltage();
 
 		realtime_pub_->unlockAndPublish();
