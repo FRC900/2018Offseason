@@ -1283,10 +1283,8 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 	{
 		static double time_sum_nt = 0.;
 		static double time_sum_joystick = 0.;
-		static double time_sum_match_data = 0.;
 		static unsigned iteration_count_nt = 0;
 		static unsigned iteration_count_joystick = 0;
-		static unsigned iteration_count_match_data = 0;
 
 		const ros::Time time_now_t = ros::Time::now();
 		const double nt_publish_rate = 10;
@@ -1490,41 +1488,72 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 			((double)end_time.tv_nsec - (double)start_timespec.tv_nsec) / 1000000000.;
 		iteration_count_joystick += 1;
 
-		start_timespec = end_time;
-
-		match_data_.setMatchTimeRemaining(DriverStation::GetInstance().GetMatchTime());
-		match_data_.setAllianceData(DriverStation::GetInstance().GetGameSpecificMessage());
-		match_data_.setEventName(DriverStation::GetInstance().GetEventName());
-
-		match_data_.setAllianceColor(DriverStation::GetInstance().GetAlliance());
-		match_data_.setMatchType(DriverStation::GetInstance().GetMatchType());
-		match_data_.setDriverStationLocation(DriverStation::GetInstance().GetLocation());
-		match_data_.setMatchNumber(DriverStation::GetInstance().GetMatchNumber());
-		match_data_.setReplayNumber(DriverStation::GetInstance().GetReplayNumber());
-
-		match_data_.setEnabled(DriverStation::GetInstance().IsEnabled());
-		match_data_.setDisabled(DriverStation::GetInstance().IsDisabled());
-		match_data_.setAutonomous(DriverStation::GetInstance().IsAutonomous());
-		match_data_.setFMSAttached(DriverStation::GetInstance().IsFMSAttached());
-		match_data_.setOperatorControl(DriverStation::GetInstance().IsOperatorControl());
-		match_data_.setTest(DriverStation::GetInstance().IsTest());
-		match_data_.setBatteryVoltage(DriverStation::GetInstance().GetBatteryVoltage());
-
-		clock_gettime(CLOCK_MONOTONIC, &end_time);
-		time_sum_match_data +=
-			((double)end_time.tv_sec -  (double)start_timespec.tv_sec) +
-			((double)end_time.tv_nsec - (double)start_timespec.tv_nsec) / 1000000000.;
-		iteration_count_match_data += 1;
-
-
 		ROS_INFO_STREAM_THROTTLE(2, "hw_keepalive nt = " << time_sum_nt / iteration_count_nt
-				<< " joystick = " << time_sum_joystick / iteration_count_joystick
-				<< " match_data = " << time_sum_match_data / iteration_count_match_data);
+				<< " joystick = " << time_sum_joystick / iteration_count_joystick);
 	}
 
 	if (run_hal_robot_)
 	{
 		int32_t status = 0;
+		match_data_.setMatchTimeRemaining(HAL_GetMatchTime(&status));
+		HAL_MatchInfo info;
+		HAL_GetMatchInfo(&info);
+
+		match_data_.setGameSpecificData(std::string(reinterpret_cast<char*>(info.gameSpecificMessage),
+                     info.gameSpecificMessageSize));
+		match_data_.setEventName(info.eventName);
+
+		status = 0;
+		auto allianceStationID = HAL_GetAllianceStation(&status);
+		DriverStation::Alliance color;
+		switch (allianceStationID) {
+			case HAL_AllianceStationID_kRed1:
+			case HAL_AllianceStationID_kRed2:
+			case HAL_AllianceStationID_kRed3:
+				color = DriverStation::kRed;
+			case HAL_AllianceStationID_kBlue1:
+			case HAL_AllianceStationID_kBlue2:
+			case HAL_AllianceStationID_kBlue3:
+				color = DriverStation::kBlue;
+			default:
+				color = DriverStation::kInvalid;
+		}
+		match_data_.setAllianceColor(color);
+
+		match_data_.setMatchType(static_cast<DriverStation::MatchType>(info.matchType));
+
+		int station_location;
+		switch (allianceStationID) {
+			case HAL_AllianceStationID_kRed1:
+			case HAL_AllianceStationID_kBlue1:
+				station_location = 1;
+			case HAL_AllianceStationID_kRed2:
+			case HAL_AllianceStationID_kBlue2:
+				station_location = 2;
+			case HAL_AllianceStationID_kRed3:
+			case HAL_AllianceStationID_kBlue3:
+				station_location = 3;
+			default:
+				station_location = 0;
+		}
+		match_data_.setDriverStationLocation(station_location);
+
+		match_data_.setMatchNumber(info.matchNumber);
+		match_data_.setReplayNumber(info.replayNumber);
+
+		HAL_ControlWord controlWord;
+		HAL_GetControlWord(&controlWord);
+		match_data_.setEnabled(controlWord.enabled && controlWord.dsAttached);
+		match_data_.setDisabled(!(controlWord.enabled && controlWord.dsAttached));
+		match_data_.setAutonomous(controlWord.autonomous);
+		match_data_.setOperatorControl(!(controlWord.autonomous || controlWord.test));
+		match_data_.setTest(controlWord.test);
+		match_data_.setDSAttached(controlWord.dsAttached);
+		match_data_.setFMSAttached(controlWord.fmsAttached);
+		status = 0;
+		match_data_.setBatteryVoltage(HAL_GetVinVoltage(&status));
+
+		status = 0;
 		robot_controller_state_.SetFPGAVersion(HAL_GetFPGAVersion(&status));
 		robot_controller_state_.SetFPGARevision(HAL_GetFPGARevision(&status));
 		robot_controller_state_.SetFPGATime(HAL_GetFPGATime(&status));

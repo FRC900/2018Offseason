@@ -264,7 +264,7 @@ class MatchStateListenerController :
 			hardware_interface::MatchHWState data;
 			data.setMatchTimeRemaining(msg->matchTimeRemaining);
 
-			data.setAllianceData(msg->allianceData);
+			data.setGameSpecificData(msg->gameSpecificData);
 			data.setEventName(msg->eventName);
 
 			data.setAllianceColor(msg->allianceColor);
@@ -277,6 +277,7 @@ class MatchStateListenerController :
 			data.setDisabled(msg->Disabled);
 			data.setAutonomous(msg->Autonomous);
 			data.setFMSAttached(msg->FMSAttached);
+			data.setDSAttached(msg->DSAttached);
 			data.setOperatorControl(msg->OperatorControl);
 			data.setTest(msg->Test);
 

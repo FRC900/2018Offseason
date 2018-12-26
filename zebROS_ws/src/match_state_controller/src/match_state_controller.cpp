@@ -31,7 +31,7 @@ namespace match_state_controller
 	     auto &m = realtime_pub_->msg_;
 
 	     m.matchTimeRemaining = 0.0;
-	     m.allianceData = "";
+	     m.gameSpecificData = "";
 	     m.eventName = "";
 	     m.allianceColor = 0.0;
 	     m.matchType = 0.0;
@@ -41,6 +41,7 @@ namespace match_state_controller
 	     m.Enabled = false;
 	     m.Disabled = false;
 	     m.Autonomous = false;
+		 m.DSAttached = false;
 		 m.FMSAttached = false;
 	     m.OperatorControl = false;
 	     m.Test = false;
@@ -73,7 +74,7 @@ namespace match_state_controller
 
 				//read from the object and stuff it in a msg
 				m.matchTimeRemaining = ms->getMatchTimeRemaining();
-				m.allianceData = ms->getAllianceData();
+				m.gameSpecificData = ms->getGameSpecificData();
 				m.eventName = ms->getEventName();
 				m.allianceColor = ms->getAllianceColor();
 				m.matchType = ms->getMatchType();
@@ -83,6 +84,7 @@ namespace match_state_controller
 				m.Enabled = ms->isEnabled();
 				m.Disabled = ms->isDisabled();
 				m.Autonomous = ms->isAutonomous();
+				m.DSAttached = ms->isDSAttached();
 				m.FMSAttached = ms->isFMSAttached();
 				m.OperatorControl = ms->isOperatorControl();
 				m.Test = ms->isTest();

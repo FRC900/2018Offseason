@@ -206,41 +206,11 @@ frc::DriverStation::~DriverStation()
 {
 	ROS_ERROR("Called DriverStation:~:DriverStation() on unsupported platform");
 }
-frc::DriverStation::Alliance frc::DriverStation::GetAlliance() const
-{
-	ROS_ERROR("Called DriverStation::GetAlliance() const on unsupported platform");
-	return kInvalid;
-}
-std::string frc::DriverStation::GetGameSpecificMessage() const
-{
-	ROS_ERROR("Called DriverStation::GetGameSpecificMessage[abi:cxx11]() const on unsupported platform");
-	return std::string();
-}
 frc::DriverStation & frc::DriverStation::GetInstance()
 {
 	ROS_ERROR("Called DriverStation::GetInstance() on unsupported platform");
 	static frc::DriverStation d;
 	return d;
-}
-int frc::DriverStation::GetLocation() const
-{
-	ROS_ERROR("Called DriverStation::GetLocation() const on unsupported platform");
-	return -1;
-}
-int frc::DriverStation::GetMatchNumber() const
-{
-	ROS_ERROR("Called DriverStation::GetMatchNumber() const on unsupported platform");
-	return -1;
-}
-double frc::DriverStation::GetMatchTime() const
-{
-	ROS_ERROR("Called DriverStation::GetMatchTime() const on unsupported platform");
-	return -1;
-}
-frc::DriverStation::MatchType frc::DriverStation::GetMatchType() const
-{
-	ROS_ERROR("Called DriverStation::GetMatchType() const on unsupported platform");
-	return kNone;
 }
 bool frc::DriverStation::IsNewControlData() const
 {
@@ -251,56 +221,6 @@ void frc::DriverStation::WaitForData()
 {
 	ROS_ERROR("Called DriverStation::WaitForData() on unsupported platform");
 }
-bool frc::DriverStation::IsEnabled() const
-{
-	ROS_ERROR("Called frc::DriverStation::IsEnabled() const on unsupported platform");
-	return false;
-}
-bool frc::DriverStation::IsDisabled() const
-{
-	ROS_ERROR("Called frc::DriverStation::IsDisabled() const on unsupported platform");
-	return false;
-}
-bool frc::DriverStation::IsAutonomous() const
-{
-	ROS_ERROR("Called frc::DriverStation::IsAutonomous() const on unsupported platform");
-	return false;
-}
-bool frc::DriverStation::IsOperatorControl() const
-{
-	ROS_ERROR("Called frc::DriverStation::IsOperatorControl() const on unsupported platform");
-	return false;
-}
-bool frc::DriverStation::IsTest() const
-{
-	ROS_ERROR("Called frc::DriverStation::IsTest() const on unsupported platform");
-	return false;
-}
-
-std::string frc::DriverStation::GetEventName() const
-{
-	ROS_ERROR("Called frc::DriverStation::GetEventName() const on unsupported platform");
-	return std::string("");
-}
-
-int frc::DriverStation::GetReplayNumber() const
-{
-	ROS_ERROR("Called frc::DriverStation::GetReplayNumber() const on unsupported platform");
-	return -900;
-}
-
-bool frc::DriverStation::IsFMSAttached() const
-{
-	ROS_ERROR("Called frc::DriverStation::IsFMSAttached() const on unsupported platform");
-	return false;
-}
-
-double frc::DriverStation::GetBatteryVoltage() const
-{
-	ROS_ERROR("Called frc::DriverStation::GetBatteryVoltage() const on unsupported platform");
-	return -900;
-}
-
 
 #include <frc/ErrorBase.h>
 frc::ErrorBase::ErrorBase()
@@ -645,9 +565,6 @@ void HAL_CAN_GetCANStatus(float* percentBusUtilization, uint32_t* busOffCount,
 	*status = 0;
 }
 
-} /// extern "C"
-
-extern "C" {
 int64_t HAL_Report(int32_t resource, int32_t instanceNumber,
 		int32_t context, const char* feature)
 {
@@ -655,7 +572,30 @@ int64_t HAL_Report(int32_t resource, int32_t instanceNumber,
 			" context = " << context << " feature = " << feature);
 	return -1;
 }
+
+int32_t HAL_GetControlWord(HAL_ControlWord* controlWord)
+{
+	ROS_INFO_STREAM("Called HAL_GetControlWord() on unsupported platform");
+	return -1;
 }
+
+HAL_AllianceStationID HAL_GetAllianceStation(int32_t* status)
+{
+	ROS_INFO_STREAM("Called HAL_GetAllianceStation() on unsupported platform");
+	return static_cast<HAL_AllianceStationID>(-1);
+}
+double HAL_GetMatchTime(int32_t* status)
+{
+	ROS_INFO_STREAM("Called HAL_GetMatchTime() on unsupported platform");
+	return -1;
+}
+int32_t HAL_GetMatchInfo(HAL_MatchInfo* info)
+{
+	ROS_INFO_STREAM("Called HAL_GetMatchInfo() on unsupported platform");
+	return -1;
+}
+
+} /// extern "C"
 
 #include <hal/DriverStation.h>
 
@@ -685,6 +625,8 @@ int32_t HAL_SetJoystickOutputs(int32_t joystickNum, int64_t outputs,
 	ROS_ERROR("Called HAL_SetJoystickOutputs(int32_t joystickNum, int64_t outputs, int32_t leftRumble, int32_t rightRumble) on unsupported device");
 	return -1;
 }
+
+
 
 // From wpilib HAL.cpp
 /*----------------------------------------------------------------------------*/

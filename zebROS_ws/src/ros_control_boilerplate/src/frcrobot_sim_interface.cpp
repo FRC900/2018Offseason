@@ -516,7 +516,7 @@ void FRCRobotSimInterface::cube_state_callback(const elevator_controller::CubeSt
 void FRCRobotSimInterface::match_data_callback(const match_state_controller::MatchSpecificData &match_data) {
 	std::lock_guard<std::mutex> l(match_data_mutex_);
 	match_data_.setMatchTimeRemaining(match_data.matchTimeRemaining);
-	match_data_.setAllianceData(match_data.allianceData);
+	match_data_.setGameSpecificData(match_data.gameSpecificData);
 	match_data_.setEventName(match_data.eventName);
 	match_data_.setAllianceColor(match_data.allianceColor);
 	match_data_.setMatchType(match_data.matchType);
@@ -526,6 +526,7 @@ void FRCRobotSimInterface::match_data_callback(const match_state_controller::Mat
 	match_data_.setEnabled(match_data.Enabled);
 	match_data_.setDisabled(match_data.Disabled);
 	match_data_.setAutonomous(match_data.Autonomous);
+	match_data_.setDSAttached(match_data.DSAttached);
 	match_data_.setFMSAttached(match_data.FMSAttached);
 	match_data_.setOperatorControl(match_data.OperatorControl);
 	match_data_.setTest(match_data.Test);

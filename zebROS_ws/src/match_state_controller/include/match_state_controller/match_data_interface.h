@@ -13,7 +13,7 @@ class MatchHWState
 		MatchHWState(void) :
 			match_time_remaining_(0),
 
-			alliance_data_(""),
+			game_specific_data_(""),
 			event_name_(""),
 
 			alliance_color_(0),
@@ -26,6 +26,7 @@ class MatchHWState
 			disabled_(true),
 			autonomous_(false),
 			fms_attached_(false),
+			ds_attached_(false),
 			operator_control_(true),
 			test_(false),
 
@@ -35,7 +36,7 @@ class MatchHWState
 		//access and set
 		int getMatchTimeRemaining(void) const		{return match_time_remaining_;}
 
-		std::string getAllianceData(void) const		{return alliance_data_;}
+		std::string getGameSpecificData(void) const	{return game_specific_data_;}
 		std::string getEventName(void) const		{return event_name_;}
 
 		int getAllianceColor(void) const		{return alliance_color_;}
@@ -48,6 +49,7 @@ class MatchHWState
 		bool isDisabled(void) const			{return disabled_;}
 		bool isAutonomous(void) const			{return autonomous_;}
 		bool isFMSAttached(void) const			{return fms_attached_;}
+		bool isDSAttached(void) const			{return ds_attached_;}
 		bool isOperatorControl(void) const		{return operator_control_;}
 		bool isTest(void) const				{return test_;}
 
@@ -55,7 +57,7 @@ class MatchHWState
 
 		void setMatchTimeRemaining(int match_time_remaining)		{match_time_remaining_ = match_time_remaining;}
 
-		void setAllianceData(std::string alliance_data)			{alliance_data_ = alliance_data;}
+		void setGameSpecificData(std::string game_specific_data)	{game_specific_data_ = game_specific_data;}
 		void setEventName(std::string event_name)			{event_name_ = event_name;}
 
 		void setAllianceColor(int alliance_color)			{alliance_color_ = alliance_color;}
@@ -68,6 +70,7 @@ class MatchHWState
 		void setDisabled(bool disabled)					{disabled_ = disabled;}
 		void setAutonomous(bool autonomous)				{autonomous_ = autonomous;}
 		void setFMSAttached(bool fms_attached)				{fms_attached_ = fms_attached;}
+		void setDSAttached(bool ds_attached)				{ds_attached_ = ds_attached;}
 		void setOperatorControl(bool operator_control)			{operator_control_ = operator_control;}
 		void setTest(bool test)					{test_ = test;}
 
@@ -76,7 +79,7 @@ class MatchHWState
 
 		int match_time_remaining_;
 
-		std::string alliance_data_;
+		std::string game_specific_data_;
 		std::string event_name_;
 
 		int alliance_color_;
@@ -89,6 +92,7 @@ class MatchHWState
 		bool disabled_;
 		bool autonomous_;
 		bool fms_attached_;
+		bool ds_attached_;
 		bool operator_control_;
 		bool test_;
 
