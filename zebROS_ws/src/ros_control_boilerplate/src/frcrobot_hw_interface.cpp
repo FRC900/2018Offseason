@@ -1271,15 +1271,10 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 		}
 	}
 
-	bool new_control_data = false;
 	if (robot_code_ready_)
-	{
 		robot_->OneIteration();
-		if (DriverStation::GetInstance().IsNewControlData())
-			new_control_data = true;
-	}
 
-	if (new_control_data)
+	if (run_hal_robot_ && robot_code_ready_)
 	{
 		static double time_sum_nt = 0.;
 		static double time_sum_joystick = 0.;
@@ -1490,10 +1485,7 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 
 		ROS_INFO_STREAM_THROTTLE(2, "hw_keepalive nt = " << time_sum_nt / iteration_count_nt
 				<< " joystick = " << time_sum_joystick / iteration_count_joystick);
-	}
 
-	if (run_hal_robot_)
-	{
 		int32_t status = 0;
 		match_data_.setMatchTimeRemaining(HAL_GetMatchTime(&status));
 		HAL_MatchInfo info;
