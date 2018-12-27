@@ -1,15 +1,14 @@
 Header header
 
-int32 matchTimeRemaining
-
-string gameSpecificData
 string eventName
-
-int8 allianceColor
 int8 matchType
-int8 driverStationLocation
 int8 matchNumber
 int8 replayNumber
+
+float64 matchTimeRemaining
+int8 allianceColor
+int8 driverStationLocation
+string gameSpecificData
 
 bool Enabled
 bool Disabled

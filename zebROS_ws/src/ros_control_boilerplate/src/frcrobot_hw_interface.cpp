@@ -1272,10 +1272,9 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 	}
 
 	if (robot_code_ready_)
+	{
 		robot_->OneIteration();
 
-	if (run_hal_robot_ && robot_code_ready_)
-	{
 		static double time_sum_nt = 0.;
 		static double time_sum_joystick = 0.;
 		static unsigned iteration_count_nt = 0;
@@ -1503,10 +1502,12 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 			case HAL_AllianceStationID_kRed2:
 			case HAL_AllianceStationID_kRed3:
 				color = DriverStation::kRed;
+				break;
 			case HAL_AllianceStationID_kBlue1:
 			case HAL_AllianceStationID_kBlue2:
 			case HAL_AllianceStationID_kBlue3:
 				color = DriverStation::kBlue;
+				break;
 			default:
 				color = DriverStation::kInvalid;
 		}
@@ -1519,12 +1520,15 @@ void FRCRobotHWInterface::read(ros::Duration &/*elapsed_time*/)
 			case HAL_AllianceStationID_kRed1:
 			case HAL_AllianceStationID_kBlue1:
 				station_location = 1;
+				break;
 			case HAL_AllianceStationID_kRed2:
 			case HAL_AllianceStationID_kBlue2:
 				station_location = 2;
+				break;
 			case HAL_AllianceStationID_kRed3:
 			case HAL_AllianceStationID_kBlue3:
 				station_location = 3;
+				break;
 			default:
 				station_location = 0;
 		}

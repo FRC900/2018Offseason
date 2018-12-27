@@ -34,7 +34,7 @@ class MatchHWState
 		{}
 
 		//access and set
-		int getMatchTimeRemaining(void) const		{return match_time_remaining_;}
+		double getMatchTimeRemaining(void) const		{return match_time_remaining_;}
 
 		std::string getGameSpecificData(void) const	{return game_specific_data_;}
 		std::string getEventName(void) const		{return event_name_;}
@@ -55,7 +55,7 @@ class MatchHWState
 
 		double getBatteryVoltage(void) const		{return battery_voltage_;}
 
-		void setMatchTimeRemaining(int match_time_remaining)		{match_time_remaining_ = match_time_remaining;}
+		void setMatchTimeRemaining(double match_time_remaining)		{match_time_remaining_ = match_time_remaining;}
 
 		void setGameSpecificData(std::string game_specific_data)	{game_specific_data_ = game_specific_data;}
 		void setEventName(std::string event_name)			{event_name_ = event_name;}
@@ -77,7 +77,7 @@ class MatchHWState
 		void setBatteryVoltage(double battery_voltage)			{battery_voltage_ = battery_voltage;}
 	private:
 
-		int match_time_remaining_;
+		double match_time_remaining_;
 
 		std::string game_specific_data_;
 		std::string event_name_;
